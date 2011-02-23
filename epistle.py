@@ -56,8 +56,9 @@ for x in range((numinbox - 50),numinbox):
 		# we are interested only in the simple text messages
 		if mailpart.get_content_subtype() != 'plain':
 			continue
- 
+
 		payload = mailpart.get_payload()
   		print payload
 
-mail.logout()
+imapmail.logout()
+smtpmail.quit()
