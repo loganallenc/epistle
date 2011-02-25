@@ -36,12 +36,12 @@ print 'Recent: ', recent
 status, email_ids = imapmail.search(None, '(UNSEEN)')
 print email_ids
 
-for x in range((numinbox - 50),numinbox):
+for x in range((numinbox - 15),numinbox):
 	resp, data = imapmail.FETCH(x, '(RFC822)')
-	msg = HeaderParser().parsestr(data[0][1])
-	print '\n\n\nFrom: ', msg['From']
-	print 'To: ', msg['To']
-	print 'Subject: ', msg['Subject'], '\n\n'
+	message = HeaderParser().parsestr(data[0][1])
+	print '\n\n\nFrom: ', message['From']
+	print 'To: ', message['To']
+	print 'Subject: ', message['Subject'], '\n\n'
 	
 	mailitem = email.message_from_string(data[0][1])
  
@@ -50,6 +50,7 @@ for x in range((numinbox - 50),numinbox):
 		#print 'Main Content:', mailpart.get_content_maintype()
 		#print 'Sub Content:', mailpart.get_content_subtype()
 		# multipart are just containers, so we skip them
+		
 		if mailpart.get_content_maintype() == 'multipart':
 			continue
 
@@ -59,6 +60,10 @@ for x in range((numinbox - 50),numinbox):
 
 		payload = mailpart.get_payload()
   		print payload
+to = raw_input('To: ')
+mailmessage = raw_input('Message: ')
+smtpmail.sendmail(user,to,mailmessage)
+
 
 imapmail.logout()
 smtpmail.quit()
