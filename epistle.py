@@ -2,7 +2,9 @@
 Written by: loganfynne
 '''
 from email.parser import HeaderParser
-import imaplib, smtplib, email, re
+import imaplib, smtplib, email
+#import twitter
+import re
 
 user = raw_input('What is your username: ')
 password = raw_input('What is your password: ')
@@ -14,10 +16,12 @@ smtpmail = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 auth, logged = smtpmail.login(user, password)
 print auth, logged #Outputs success or failure of login.
 
+
+
 class Epistle:
 	def __init__(self):
 		from email.parser import HeaderParser
-		import imaplib, smtplib, email, re
+		import imaplib, smtplib, email, re, twitter
 		global imapmail
 		global smtpmail
 		global user
@@ -44,8 +48,8 @@ class Epistle:
 		print 'Unread: ', unread
 		recent = imapmail.status('Inbox', '(RECENT)')
 		print 'Recent: ', recent
-		status, email_ids = imapmail.search(None, '(UNSEEN)')
-		print email_ids
+		#status, email_ids = imapmail.search(None, '(UNSEEN)')
+		#print email_ids
 
 		for x in range((numinbox - 15),numinbox):
 			resp, data = imapmail.FETCH(x, '(RFC822)')
