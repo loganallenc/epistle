@@ -22,9 +22,7 @@ class Epistle:
 	def __init__(self):
 		from email.parser import HeaderParser
 		import imaplib, smtplib, email, re, twitter
-		global imapmail
-		global smtpmail
-		global user
+
 	def readmail(self):
 		global imapmail
 		global smtpmail
