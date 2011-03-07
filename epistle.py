@@ -4,10 +4,11 @@ Written by: loganfynne
 from email.parser import HeaderParser
 import imaplib, smtplib, email
 #import twitter
+import facebook
 import re
 
-user = raw_input('What is your username: ')
-password = raw_input('What is your password: ')
+user = raw_input('What is your email username: ')
+password = raw_input('What is your email password: ')
 
 imapmail = imaplib.IMAP4_SSL('imap.gmail.com', 993) #Connects to Gmail.
 auth, logged = imapmail.login(user, password) #Logs in to Gmail.
@@ -16,6 +17,24 @@ smtpmail = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 auth, logged = smtpmail.login(user, password)
 print auth, logged #Outputs success or failure of login.
 
+api_key = ''
+secret_key = ''
+
+Facebook = facebook.Facebook(api_key, secret_key)
+
+Facebook.auth.createToken()
+
+# Show login window
+# Set popup=True if you want login without navigational elements
+Facebook.login()
+
+# Login to the window, then press enter
+print 'After logging in, press enter...'
+raw_input()
+
+Facebook.auth.getSession()
+print 'Session Key:   ', Facebook.session_key
+print 'Your UID:      ', Facebook.uid
 
 
 class Epistle:
@@ -79,17 +98,22 @@ class Epistle:
 		global imapmail
 		global smtpmail
 		global user
-		to = raw_input('To: ')
-		subject = raw_input('Subject: ')
-		mailmessage = raw_input('Message: ')
-		smtpmail.sendmail(user,to,'Subject: '+subject+'\n'+mailmessage)
+		choice = raw_input('Send email message(1)? ')
+		if choice == "1":
+			to = raw_input('To: ')
+			subject = raw_input('Subject: ')
+			mailmessage = raw_input('Message: ')
+			smtpmail.sendmail(user,to,'Subject: '+subject+'\n'+mailmessage)
+		elif choice == "2":
+			fbstatus = raw_input("Set your Facebook status: ")
+			facebook.status.set(fbstatus)
 
 		
 	def main(self):
 		global imapmail
 		global smtpmail
 		global user
-		choose = raw_input ('Do you want to read your most recent mail(1), or send a message(2): ')
+		choose = raw_input ('Do you want to read your most recent mail(1), or write a message(2)? ')
 		if choose == "1":
 			Epistle().readmail()
 		if choose == "2":
