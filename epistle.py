@@ -4,7 +4,7 @@ Written by: loganfynne
 from email.parser import HeaderParser
 import imaplib, smtplib, email
 #import twitter
-import facebook
+#import facebook
 import re
 
 user = raw_input('What is your email username: ')
@@ -17,24 +17,24 @@ smtpmail = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 auth, logged = smtpmail.login(user, password)
 print auth, logged #Outputs success or failure of login.
 
-api_key = ''
-secret_key = ''
+#api_key = ''
+#secret_key = ''
 
-Facebook = facebook.Facebook(api_key, secret_key)
+#Facebook = facebook.Facebook(api_key, secret_key)
 
-Facebook.auth.createToken()
+#Facebook.auth.createToken()
 
 # Show login window
 # Set popup=True if you want login without navigational elements
-Facebook.login()
+#Facebook.login()
 
 # Login to the window, then press enter
-print 'After logging in, press enter...'
-raw_input()
+#print 'After logging in, press enter...'
+#raw_input()
 
-Facebook.auth.getSession()
-print 'Session Key:   ', Facebook.session_key
-print 'Your UID:      ', Facebook.uid
+#Facebook.auth.getSession()
+#print 'Session Key:   ', Facebook.session_key
+#print 'Your UID:      ', Facebook.uid
 
 
 class Epistle:
@@ -104,9 +104,9 @@ class Epistle:
 			subject = raw_input('Subject: ')
 			mailmessage = raw_input('Message: ')
 			smtpmail.sendmail(user,to,'Subject: '+subject+'\n'+mailmessage)
-		elif choice == "2":
-			fbstatus = raw_input("Set your Facebook status: ")
-			facebook.status.set(fbstatus)
+		#elif choice == "2":
+			#fbstatus = raw_input("Set your Facebook status: ")
+			#facebook.status.set(fbstatus)
 
 		
 	def main(self):
