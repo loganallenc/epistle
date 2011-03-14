@@ -6,8 +6,19 @@ import imaplib, smtplib, email
 #import twitter
 import facebook
 import re
+
+imapmail = ''
+smtpmail = ''
+user = ''
+
 class Addaccount:
+	global imapmail
+	global smtpmail
+	global user
 	def gmail(self):
+		global imapmail
+		global smtpmail
+		global user
 		user = raw_input('What is your email username: ')
 		password = raw_input('What is your email password: ')
 
@@ -126,14 +137,14 @@ class Epistle:
 			if choice == "1": Epistle().readmail()
 			elif choice == "2": Epistle().sendmail()
 
-		elif choose == "2":
-			choice = raw_input('Do you want to (1)read updates or (2)post updates')
-			if choice == "1": Epistle().updatefb()
-			elif choice == "2": Epistle().postfb()
+		#elif choose == "2":
+		#	choice = raw_input('Do you want to (1)read updates or (2)post updates')
+		#	if choice == "1": Epistle().updatefb()
+		#	elif choice == "2": Epistle().postfb()
 
 
 Addaccount().gmail()
-Addaccount().facebook()
+#Addaccount().facebook()
 Epistle().main()
 imapmail.logout()
 smtpmail.quit()
