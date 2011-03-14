@@ -6,7 +6,7 @@ import imaplib, smtplib, email
 #import twitter
 import facebook
 import re
-class addaccount(self):
+class Addaccount:
 	def gmail(self):
 		user = raw_input('What is your email username: ')
 		password = raw_input('What is your email password: ')
