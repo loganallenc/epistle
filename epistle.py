@@ -132,8 +132,8 @@ class Epistle:
 			elif choice == "2": Epistle().postfb()
 
 
-addaccount().gmail()
-addaccount().facebook()
+Addaccount().gmail()
+Addaccount().facebook()
 Epistle().main()
 imapmail.logout()
 smtpmail.quit()
