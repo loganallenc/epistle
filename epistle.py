@@ -4,44 +4,49 @@ Written by: loganfynne
 from email.parser import HeaderParser
 import imaplib, smtplib, email
 #import twitter
-#import facebook
+import facebook
 import re
+class addaccount(self):
+	def gmail(self):
+		user = raw_input('What is your email username: ')
+		password = raw_input('What is your email password: ')
 
-user = raw_input('What is your email username: ')
-password = raw_input('What is your email password: ')
+		imapmail = imaplib.IMAP4_SSL('imap.gmail.com', 993) #Connects to Gmail.
+		auth, logged = imapmail.login(user, password) #Logs in to Gmail.
+		print auth, logged #Outputs success or failure of login.
 
-imapmail = imaplib.IMAP4_SSL('imap.gmail.com', 993) #Connects to Gmail.
-auth, logged = imapmail.login(user, password) #Logs in to Gmail.
-print auth, logged #Outputs success or failure of login.
-smtpmail = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-auth, logged = smtpmail.login(user, password)
-print auth, logged #Outputs success or failure of login.
+		smtpmail = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+		auth, logged = smtpmail.login(user, password)
+		print auth, logged #Outputs success or failure of login.
 
-#api_key = ''
-#secret_key = ''
+	def facebook(self):
+		fbapi_key = '967f7407da4bc19095c5bcc94b5375ac'
+		fbsecret_key = '84a11f3e972a9c94034af84a3b87cfe0'
 
-#Facebook = facebook.Facebook(api_key, secret_key)
+		Facebook = facebook.Facebook(fbapi_key, fbsecret_key)
 
-#Facebook.auth.createToken()
+		Facebook.auth.createToken()
 
-# Show login window
-# Set popup=True if you want login without navigational elements
-#Facebook.login()
+		# Show login window
+		# Set popup=True if you want login without navigational elements
+		Facebook.login(popup=True)
 
-# Login to the window, then press enter
-#print 'After logging in, press enter...'
-#raw_input()
-
-#Facebook.auth.getSession()
-#print 'Session Key:   ', Facebook.session_key
-#print 'Your UID:      ', Facebook.uid
+		# Login to the window, then press enter
+		print 'After logging in, press enter...'
+		raw_input()
+		Facebook.auth.getSession()
+		Facebook.request_extended_permission('read_stream')
+		Facebook.request_extended_permission('publish_stream')
+		print 'After logging in, press enter...'
+		raw_input()
+		print 'Login successful.'
+		print 'Session Key:   ', Facebook.session_key
+		print 'Your UID:      ', Facebook.uid
+	def twitter():
+		pass
 
 
 class Epistle:
-	def __init__(self):
-		from email.parser import HeaderParser
-		import imaplib, smtplib, email, re, twitter
-
 	def readmail(self):
 		global imapmail
 		global smtpmail
@@ -93,7 +98,7 @@ class Epistle:
 
 				payload = mailpart.get_payload()
 		  		print payload
-		
+	
 	def sendmail(self):
 		global imapmail
 		global smtpmail
@@ -104,21 +109,31 @@ class Epistle:
 			subject = raw_input('Subject: ')
 			mailmessage = raw_input('Message: ')
 			smtpmail.sendmail(user,to,'Subject: '+subject+'\n'+mailmessage)
-		#elif choice == "2":
-			#fbstatus = raw_input("Set your Facebook status: ")
-			#facebook.status.set(fbstatus)
 
-		
+	def postfb(self):
+		fbstatus = raw_input("Set your Facebook status: ")
+		Facebook.status.set(fbstatus)
+
+	def updatefb(self): Facebook.stream.get()
+
 	def main(self):
 		global imapmail
 		global smtpmail
 		global user
-		choose = raw_input ('Do you want to read your most recent mail(1), or write a message(2)? ')
+		choose = raw_input ('Do you want to (1)access your mail or (2)post to Facebook: ')
 		if choose == "1":
-			Epistle().readmail()
-		if choose == "2":
-			Epistle().sendmail()
+			choice = raw_input('Do you want to (1)read mail or (2)send mail: ')
+			if choice == "1": Epistle().readmail()
+			elif choice == "2": Epistle().sendmail()
 
+		elif choose == "2":
+			choice = raw_input('Do you want to (1)read updates or (2)post updates')
+			if choice == "1": Epistle().updatefb()
+			elif choice == "2": Epistle().postfb()
+
+
+addaccount().gmail()
+addaccount().facebook()
 Epistle().main()
 imapmail.logout()
 smtpmail.quit()
