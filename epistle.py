@@ -66,25 +66,30 @@ class Epistle:
 		print 'Inbox: ', selectlabel[1]
 		numinbox = re.split('', str(selectlabel[1]))
 		numinbox = '0-9'.join(numinbox)
-		number = len(numinbox)
 		x = 0
 		addto = []
-		while x < number: #Converts number of items in the inbox into an 'int' object.
+		while x < len(numinbox): #Converts number of items in the inbox into an 'int' object.
 			if numinbox[x].isdigit(): addto.append(numinbox[x])
 			x = x + 1
 		numinbox = ''.join(addto)
 		numinbox = int(numinbox)
 
-		messages = imapmail.status('Inbox', '(MESSAGES)')
-		print 'Total: ', messages
 		unread = imapmail.status('Inbox', '(UNSEEN)')
 		print 'Unread: ', unread
-		recent = imapmail.status('Inbox', '(RECENT)')
-		print 'Recent: ', recent
-		#status, email_ids = imapmail.search(None, '(UNSEEN)')
-		#print email_ids
 
-		for x in range((numinbox - 15),numinbox):
+		unread = str(unread)
+		numunread = re.split('', unread)
+		numunread = '0-9'.join(numunread)
+
+		x = 0
+		addto = []
+		while x < len(unread):
+			if unread[x].isdigit(): addto.append(numunread[x])
+			x = x + 1
+		numunread = ''.join(addto)
+		numunread = int(numunread)
+
+		for x in range((numinbox - 1),numinbox):
 			resp, data = imapmail.FETCH(x, '(RFC822)')
 			message = HeaderParser().parsestr(data[0][1])
 			print '\n\n'
@@ -121,11 +126,18 @@ class Epistle:
 			mailmessage = raw_input('Message: ')
 			smtpmail.sendmail(user,to,'Subject: '+subject+'\n'+mailmessage)
 
+	def updatetwitter(self):
+		pass
+
+	def posttwitter(self):
+		pass
+
+	def updatefb(self):
+		Facebook.stream.get()
+
 	def postfb(self):
 		fbstatus = raw_input("Set your Facebook status: ")
 		Facebook.status.set(fbstatus)
-
-	def updatefb(self): Facebook.stream.get()
 
 	def main(self):
 		global imapmail
@@ -137,10 +149,10 @@ class Epistle:
 			if choice == "1": Epistle().readmail()
 			elif choice == "2": Epistle().sendmail()
 
-		#elif choose == "2":
-		#	choice = raw_input('Do you want to (1)read updates or (2)post updates')
-		#	if choice == "1": Epistle().updatefb()
-		#	elif choice == "2": Epistle().postfb()
+		elif choose == "2":
+			choice = raw_input('Do you want to (1)read updates or (2)post updates')
+			if choice == "1": Epistle().updatefb()
+			elif choice == "2": Epistle().postfb()
 
 
 Addaccount().gmail()
