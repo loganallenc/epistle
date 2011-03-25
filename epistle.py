@@ -89,7 +89,7 @@ class Epistle:
 		numunread = ''.join(addto)
 		numunread = int(numunread)
 
-		for x in range((numinbox - 1),numinbox):
+		for x in range((numinbox - numunread),numinbox):
 			resp, data = imapmail.FETCH(x, '(RFC822)')
 			message = HeaderParser().parsestr(data[0][1])
 			print '\n\n'
