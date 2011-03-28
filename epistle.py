@@ -3,7 +3,7 @@ Written by: loganfynne
 '''
 from email.parser import HeaderParser
 import imaplib, smtplib, email
-#import twitter
+import oauthtwitter
 import facebook
 import re
 
@@ -54,7 +54,17 @@ class Addaccount:
 		print 'Session Key:   ', Facebook.session_key
 		print 'Your UID:      ', Facebook.uid
 	def twitter():
-		pass
+		consumer_key = "yE6isPwi45JwhEnHMphdcQ"
+		consumer_secret = "90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw"
+		twitter = OAuthApi(consumer_key, consumer_secret)
+		request_token = twitter.getRequestToken()
+		auth_url = twitter.getAuthorizationURL(request_token)
+		twitter = OAuthApi(consumer_key, consumer_secret, request_token)
+		access_token = twitter.getAccessToken()
+		twitter = OAuthApi(consumer_key, consumer_secret, access_token)
+ 
+		user = twitter.GetUserInfo()
+
 
 
 class Epistle:
