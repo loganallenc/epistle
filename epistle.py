@@ -142,11 +142,17 @@ class Epistle:
 			to = raw_input('To: ')
 			subject = raw_input('Subject: ')
 			mailmessage = raw_input('Message: ')
-			smtpmail.sendmail(gmailuser,to,'Subject: '+subject+'\n'+mailmessage)
+			smtpmail.sendmail(gmailuser, to, 'Subject: ', subject, '\n', mailmessage)
 
 	def updatetwitter(self):
 		global Twitter
-		pass
+		tweet = raw_input('Update Twitter: ')
+		if len(tweet) >= 140:
+			while (len(tweet) >= 140):
+				print('The character limit of 140 was exceeded.')
+				tweet = raw_input('Update Twitter: ')
+		Twitter.update_status(tweet)
+
 	def posttwitter(self):
 		global Twitter
 		pass
