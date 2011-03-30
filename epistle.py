@@ -66,7 +66,6 @@ class Addaccount:
 		global Twitter
 		auth = tweepy.OAuthHandler(twitter_key, twitter_secret)
 		auth.set_request_token(twitter_key, twitter_secret)
-		auth.set_access_token(twitter_key, twitter_secret)
 		auth_url = auth.get_authorization_url()
 		print ('Please authorize: ' + auth_url)
 		pin = raw_input('PIN: ')
@@ -146,16 +145,15 @@ class Epistle:
 
 	def updatetwitter(self):
 		global Twitter
+
+	def posttwitter(self):
+		global Twitter
 		tweet = raw_input('Update Twitter: ')
 		if len(tweet) >= 140:
 			while (len(tweet) >= 140):
 				print('The character limit of 140 was exceeded.')
 				tweet = raw_input('Update Twitter: ')
 		Twitter.update_status(tweet)
-
-	def posttwitter(self):
-		global Twitter
-		pass
 
 	def updatefb(self):
 		global Facebook
@@ -172,6 +170,6 @@ class Epistle:
 #Addaccount().gmail()
 Addaccount().twitter()
 #Addaccount().facebook()
-Epistle().updatetwitter()
+Epistle().posttwitter()
 #imapmail.logout()
 #smtpmail.quit()
