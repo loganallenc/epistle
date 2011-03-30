@@ -8,7 +8,12 @@ import re
 
 imapmail = ''
 smtpmail = ''
+
+Twitter = ''
+Facebook = ''
+
 gmailuser = ''
+
 twitter_key = 'yE6isPwi45JwhEnHMphdcQ'
 twitter_secret = '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw'
 fb_key = '967f7407da4bc19095c5bcc94b5375ac'
@@ -33,6 +38,7 @@ class Addaccount:
 	def facebook(self):
 		global fb_key
 		global fb_secret
+		global Facebook
 
 		Facebook = facebook.Facebook(fb_key, fb_secret)
 
@@ -57,6 +63,7 @@ class Addaccount:
 	def twitter(self):
 		global twitter_key
 		global twitter_secret
+		global Twitter
 		auth = tweepy.OAuthHandler(twitter_key, twitter_secret)
 		auth.set_request_token(twitter_key, twitter_secret)
 		auth.set_access_token(twitter_key, twitter_secret)
@@ -66,7 +73,7 @@ class Addaccount:
 		auth.get_access_token(pin)
 		print ('access_key = ' + auth.access_token.key)
 		print ('access_secret = ' + auth.access_token.secret)
-		twitter = tweepy.API(auth)
+		Twitter = tweepy.API(auth)
 
 class Epistle:
 	def readmail(self):
@@ -138,33 +145,27 @@ class Epistle:
 			smtpmail.sendmail(gmailuser,to,'Subject: '+subject+'\n'+mailmessage)
 
 	def updatetwitter(self):
+		global Twitter
 		pass
 	def posttwitter(self):
+		global Twitter
 		pass
 
 	def updatefb(self):
+		global Facebook
 		Facebook.stream.get()
 
 	def postfb(self):
+		global Facebook
 		fbstatus = raw_input('Set your Facebook status: ')
 		Facebook.status.set(fbstatus)
 
 	def main(self):
-		choose = raw_input ('Do you want to (1)access your mail or (2)post to Facebook: ')
-		if choose == '1':
-			choice = raw_input('Do you want to (1)read mail or (2)send mail: ')
-			if choice == '1': Epistle().readmail()
-			elif choice == '2': Epistle().sendmail()
-
-		elif choose == '2':
-			choice = raw_input('Do you want to (1)read updates or (2)post updates')
-			if choice == '1': Epistle().updatefb()
-			elif choice == '2': Epistle().postfb()
-
+		pass
 
 #Addaccount().gmail()
 Addaccount().twitter()
 #Addaccount().facebook()
-#Epistle().main()
-imapmail.logout()
-smtpmail.quit()
+Epistle().updatetwitter()
+#imapmail.logout()
+#smtpmail.quit()
