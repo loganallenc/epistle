@@ -3,38 +3,38 @@ Written by: loganfynne
 '''
 from email.parser import HeaderParser
 import imaplib, smtplib, email
-import oauthtwitter
-import facebook
+import tweepy, facebook
 import re
 
 imapmail = ''
 smtpmail = ''
-user = ''
+gmailuser = ''
+twitter_key = 'yE6isPwi45JwhEnHMphdcQ'
+twitter_secret = '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw'
+fb_key = '967f7407da4bc19095c5bcc94b5375ac'
+fb_secret = '84a11f3e972a9c94034af84a3b87cfe0'
 
 class Addaccount:
-	global imapmail
-	global smtpmail
-	global user
 	def gmail(self):
 		global imapmail
 		global smtpmail
-		global user
-		user = raw_input('What is your email username: ')
+		global gmailuser
+		gmailuser = raw_input('What is your email username: ')
 		password = raw_input('What is your email password: ')
 
 		imapmail = imaplib.IMAP4_SSL('imap.gmail.com', 993) #Connects to Gmail.
-		auth, logged = imapmail.login(user, password) #Logs in to Gmail.
+		auth, logged = imapmail.login(gmailuser, password) #Logs in to Gmail.
 		print auth, logged #Outputs success or failure of login.
 
 		smtpmail = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-		auth, logged = smtpmail.login(user, password)
+		auth, logged = smtpmail.login(gmailuser, password)
 		print auth, logged #Outputs success or failure of login.
 
 	def facebook(self):
-		fbapi_key = '967f7407da4bc19095c5bcc94b5375ac'
-		fbsecret_key = '84a11f3e972a9c94034af84a3b87cfe0'
+		global fb_key
+		global fb_secret
 
-		Facebook = facebook.Facebook(fbapi_key, fbsecret_key)
+		Facebook = facebook.Facebook(fb_key, fb_secret)
 
 		Facebook.auth.createToken()
 
@@ -53,25 +53,26 @@ class Addaccount:
 		print 'Login successful.'
 		print 'Session Key:   ', Facebook.session_key
 		print 'Your UID:      ', Facebook.uid
-	def twitter():
-		consumer_key = "yE6isPwi45JwhEnHMphdcQ"
-		consumer_secret = "90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw"
-		twitter = OAuthApi(consumer_key, consumer_secret)
-		request_token = twitter.getRequestToken()
-		auth_url = twitter.getAuthorizationURL(request_token)
-		twitter = OAuthApi(consumer_key, consumer_secret, request_token)
-		access_token = twitter.getAccessToken()
-		twitter = OAuthApi(consumer_key, consumer_secret, access_token)
- 
-		user = twitter.GetUserInfo()
 
-
+	def twitter(self):
+		global twitter_key
+		global twitter_secret
+		auth = tweepy.OAuthHandler(twitter_key, twitter_secret)
+		auth.set_request_token(twitter_key, twitter_secret)
+		auth.set_access_token(twitter_key, twitter_secret)
+		auth_url = auth.get_authorization_url()
+		print ('Please authorize: ' + auth_url)
+		pin = raw_input('PIN: ')
+		auth.get_access_token(pin)
+		print ('access_key = ' + auth.access_token.key)
+		print ('access_secret = ' + auth.access_token.secret)
+		twitter = tweepy.API(auth)
 
 class Epistle:
 	def readmail(self):
 		global imapmail
 		global smtpmail
-		global user
+		global gmailuser
 		selectlabel = imapmail.select('Inbox')
 		print 'Inbox: ', selectlabel[1]
 		numinbox = re.split('', str(selectlabel[1]))
@@ -128,17 +129,16 @@ class Epistle:
 	def sendmail(self):
 		global imapmail
 		global smtpmail
-		global user
+		global gmailuser
 		choice = raw_input('Send email message(1)? ')
-		if choice == "1":
+		if choice == '1':
 			to = raw_input('To: ')
 			subject = raw_input('Subject: ')
 			mailmessage = raw_input('Message: ')
-			smtpmail.sendmail(user,to,'Subject: '+subject+'\n'+mailmessage)
+			smtpmail.sendmail(gmailuser,to,'Subject: '+subject+'\n'+mailmessage)
 
 	def updatetwitter(self):
 		pass
-
 	def posttwitter(self):
 		pass
 
@@ -146,27 +146,25 @@ class Epistle:
 		Facebook.stream.get()
 
 	def postfb(self):
-		fbstatus = raw_input("Set your Facebook status: ")
+		fbstatus = raw_input('Set your Facebook status: ')
 		Facebook.status.set(fbstatus)
 
 	def main(self):
-		global imapmail
-		global smtpmail
-		global user
 		choose = raw_input ('Do you want to (1)access your mail or (2)post to Facebook: ')
-		if choose == "1":
+		if choose == '1':
 			choice = raw_input('Do you want to (1)read mail or (2)send mail: ')
-			if choice == "1": Epistle().readmail()
-			elif choice == "2": Epistle().sendmail()
+			if choice == '1': Epistle().readmail()
+			elif choice == '2': Epistle().sendmail()
 
-		elif choose == "2":
+		elif choose == '2':
 			choice = raw_input('Do you want to (1)read updates or (2)post updates')
-			if choice == "1": Epistle().updatefb()
-			elif choice == "2": Epistle().postfb()
+			if choice == '1': Epistle().updatefb()
+			elif choice == '2': Epistle().postfb()
 
 
-Addaccount().gmail()
+#Addaccount().gmail()
+Addaccount().twitter()
 #Addaccount().facebook()
-Epistle().main()
+#Epistle().main()
 imapmail.logout()
 smtpmail.quit()
