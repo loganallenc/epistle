@@ -1,5 +1,6 @@
 == Epistle ==
 
-Epistle is a GTK+ Python Application which can be used to access Gmail, Facebook, and Twitter.
+Epistle is a GTK+ Python Application which can be used to access Gmail, Facebook, and Twitter. 
+Dependencies: Tweepy, PyFacebook
 
 Logan Allen/loganfynne <loganfynne@gmail.com>
