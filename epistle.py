@@ -145,6 +145,9 @@ class Epistle:
 
 	def updatetwitter(self):
 		global Twitter
+		twitterupdate = Twitter.home_timeline(count = 20)
+		for x in range(0,20):
+			print(twitterupdate[x].text + '\n')
 
 	def posttwitter(self):
 		global Twitter
@@ -170,6 +173,6 @@ class Epistle:
 #Addaccount().gmail()
 Addaccount().twitter()
 #Addaccount().facebook()
-Epistle().posttwitter()
+Epistle().updatetwitter()
 #imapmail.logout()
 #smtpmail.quit()
