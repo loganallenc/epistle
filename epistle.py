@@ -1,6 +1,4 @@
-'''
-Written by: loganfynne
-'''
+'''Written by: loganfynne'''
 from email.parser import HeaderParser
 import imaplib, smtplib, email
 import tweepy, facebook
@@ -19,23 +17,26 @@ twitter_secret = '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw'
 fb_key = '967f7407da4bc19095c5bcc94b5375ac'
 fb_secret = '84a11f3e972a9c94034af84a3b87cfe0'
 
-class Addaccount:
+class Account:
+	''' This function is responsible for adding and removing account information used in Epistle. '''
 	def gmail(self):
+		''' This function logs the user into their Gmail account. '''
 		global imapmail
 		global smtpmail
 		global gmailuser
 		gmailuser = raw_input('What is your email username: ')
 		password = raw_input('What is your email password: ')
 
-		imapmail = imaplib.IMAP4_SSL('imap.gmail.com', 993) #Connects to Gmail.
-		auth, logged = imapmail.login(gmailuser, password) #Logs in to Gmail.
-		print auth, logged #Outputs success or failure of login.
+		imapmail = imaplib.IMAP4_SSL('imap.gmail.com', 993)
+		auth, logged = imapmail.login(gmailuser, password)
+		print (auth, logged)
 
 		smtpmail = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 		auth, logged = smtpmail.login(gmailuser, password)
-		print auth, logged #Outputs success or failure of login.
+		print (auth, logged)
 
 	def facebook(self):
+		''' This function logs the user into their Facebook account. '''
 		global fb_key
 		global fb_secret
 		global Facebook
@@ -43,44 +44,41 @@ class Addaccount:
 		Facebook = facebook.Facebook(fb_key, fb_secret)
 
 		Facebook.auth.createToken()
-
-		# Show login window
-		# Set popup=True if you want login without navigational elements
 		Facebook.login(popup=True)
 
-		# Login to the window, then press enter
-		print 'After logging in, press enter...'
-		raw_input()
+		raw_input('After logging in, press enter...')
 		Facebook.auth.getSession()
 		Facebook.request_extended_permission('read_stream')
 		Facebook.request_extended_permission('publish_stream')
-		print 'After logging in, press enter...'
-		raw_input()
-		print 'Login successful.'
-		print 'Session Key:   ', Facebook.session_key
-		print 'Your UID:      ', Facebook.uid
+		raw_input('After logging in, press enter...')
+		print ('Login successful.')
+		print ('Session Key:   ', Facebook.session_key)
+		print ('Your UID:      ', Facebook.uid)
 
 	def twitter(self):
+		''' This function logs the user into their Twitter account. '''
 		global twitter_key
 		global twitter_secret
 		global Twitter
 		auth = tweepy.OAuthHandler(twitter_key, twitter_secret)
 		auth.set_request_token(twitter_key, twitter_secret)
 		auth_url = auth.get_authorization_url()
-		print ('Please authorize: ' + auth_url)
+		print ('Please authorize: ', auth_url)
 		pin = raw_input('PIN: ')
 		auth.get_access_token(pin)
-		print ('access_key = ' + auth.access_token.key)
-		print ('access_secret = ' + auth.access_token.secret)
+		print ('access_key = ', auth.access_token.key)
+		print ('access_secret = ', auth.access_token.secret)
 		Twitter = tweepy.API(auth)
 
 class Epistle:
+	''' This is the main application class. '''
 	def readmail(self):
+		''' This function reads unread messages from Gmail. '''
 		global imapmail
 		global smtpmail
 		global gmailuser
 		selectlabel = imapmail.select('Inbox')
-		print 'Inbox: ', selectlabel[1]
+		print ('Inbox: ', selectlabel[1])
 		numinbox = re.split('', str(selectlabel[1]))
 		numinbox = '0-9'.join(numinbox)
 		x = 0
@@ -92,7 +90,7 @@ class Epistle:
 		numinbox = int(numinbox)
 
 		unread = imapmail.status('Inbox', '(UNSEEN)')
-		print 'Unread: ', unread
+		print ('Unread: ', unread)
 
 		unread = str(unread)
 		numunread = re.split('', unread)
@@ -120,19 +118,18 @@ class Epistle:
 				#print 'Content-Type:', mailpart.get_content_type()
 				#print 'Main Content:', mailpart.get_content_maintype()
 				#print 'Sub Content:', mailpart.get_content_subtype()
-				# multipart are just containers, so we skip them
 		
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
 
-				# we are interested only in the simple text messages
 				if mailpart.get_content_subtype() != 'plain':
 					continue
 
-				payload = mailpart.get_payload()
-		  		print payload
+				message = mailpart.get_payload()
+		  		print (message)
 	
 	def sendmail(self):
+		''' This function sends an email using Gmail. '''
 		global imapmail
 		global smtpmail
 		global gmailuser
@@ -144,12 +141,14 @@ class Epistle:
 			smtpmail.sendmail(gmailuser, to, 'Subject: ', subject, '\n', mailmessage)
 
 	def updatetwitter(self):
+		''' This function updates the user's Tweets. '''
 		global Twitter
-		twitterupdate = Twitter.home_timeline(count = 20)
-		for x in range(0,20):
-			print(twitterupdate[x].text + '\n')
+		twitterupdate = Twitter.home_timeline()
+		for x in range(0,19):
+			print(twitterupdate[x].text, '\n')
 
 	def posttwitter(self):
+		''' This function posts a Tweet. '''
 		global Twitter
 		tweet = raw_input('Update Twitter: ')
 		if len(tweet) >= 140:
@@ -159,20 +158,23 @@ class Epistle:
 		Twitter.update_status(tweet)
 
 	def updatefb(self):
+		''' This function updates the Facebook stream. '''
 		global Facebook
 		Facebook.stream.get()
 
 	def postfb(self):
+		''' This function posts to Facebook. '''
 		global Facebook
 		fbstatus = raw_input('Set your Facebook status: ')
 		Facebook.status.set(fbstatus)
 
 	def main(self):
+		''' This function will include the interface of Epistle, and all the function calls. '''
 		pass
 
-#Addaccount().gmail()
-Addaccount().twitter()
-#Addaccount().facebook()
+#Account().gmail()
+Account().twitter()
+#Account().facebook()
 Epistle().updatetwitter()
 #imapmail.logout()
 #smtpmail.quit()
