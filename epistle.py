@@ -29,11 +29,11 @@ class Account:
 
 		imapmail = imaplib.IMAP4_SSL('imap.gmail.com', 993)
 		auth, logged = imapmail.login(gmailuser, password)
-		print (auth, logged)
+		print auth, logged
 
 		smtpmail = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 		auth, logged = smtpmail.login(gmailuser, password)
-		print (auth, logged)
+		print auth, logged
 
 	def facebook(self):
 		''' This function logs the user into their Facebook account. '''
@@ -51,9 +51,9 @@ class Account:
 		Facebook.request_extended_permission('read_stream')
 		Facebook.request_extended_permission('publish_stream')
 		raw_input('After logging in, press enter...')
-		print ('Login successful.')
-		print ('Session Key:   ', Facebook.session_key)
-		print ('Your UID:      ', Facebook.uid)
+		print 'Login successful.'
+		print 'Session Key:   ', Facebook.session_key
+		print 'Your UID:      ', Facebook.uid
 
 	def twitter(self):
 		''' This function logs the user into their Twitter account. '''
@@ -63,11 +63,11 @@ class Account:
 		auth = tweepy.OAuthHandler(twitter_key, twitter_secret)
 		auth.set_request_token(twitter_key, twitter_secret)
 		auth_url = auth.get_authorization_url()
-		print ('Please authorize: ', auth_url)
+		print 'Please authorize: ', auth_url
 		pin = raw_input('PIN: ')
 		auth.get_access_token(pin)
-		print ('access_key = ', auth.access_token.key)
-		print ('access_secret = ', auth.access_token.secret)
+		print 'access_key = ', auth.access_token.key
+		print 'access_secret = ', auth.access_token.secret
 		Twitter = tweepy.API(auth)
 
 class Epistle:
@@ -90,7 +90,7 @@ class Epistle:
 		numinbox = int(numinbox)
 
 		unread = imapmail.status('Inbox', '(UNSEEN)')
-		print ('Unread: ', unread)
+		print 'Unread: ', unread
 
 		unread = str(unread)
 		numunread = re.split('', unread)
@@ -145,7 +145,7 @@ class Epistle:
 		global Twitter
 		twitterupdate = Twitter.home_timeline()
 		for x in range(0,19):
-			print(twitterupdate[x].text, '\n')
+			print twitterupdate[x].text, '\n'
 
 	def posttwitter(self):
 		''' This function posts a Tweet. '''
