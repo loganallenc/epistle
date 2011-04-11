@@ -8,10 +8,6 @@ objects = {}
 
 class Account(dict):
 	''' This function is responsible for adding and removing account information used in Epistle. '''
-	#def __init__(self, objects):
-	#	''' Initializes variables for the class.'''
-	#	self.objects = objects
-
 	def gmail(self):
 		''' This function logs the user into their Gmail account. '''
 		global objects
@@ -59,10 +55,6 @@ class Account(dict):
 
 class Epistle(dict):
 	''' This is the main application class. '''
-	#def __init__(self, objects):
-	#	''' Initializes variables for the class.'''
-	#	self.objects = objects
-		
 	def readmail(self):
 		''' This function reads unread messages from Gmail. '''
 		global objects
