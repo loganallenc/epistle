@@ -1,7 +1,8 @@
 '''Written by: loganfynne'''
 from email.parser import HeaderParser
 import imaplib, smtplib, email
-import tweepy, facebook
+import facebooksdk, facebook
+import tweepy
 import re
 
 objects = {}
@@ -25,19 +26,11 @@ class Account(dict):
 	def facebook(self):
 		''' This function logs the user into their Facebook account. '''
 		global objects
-		objects['Facebook'] = facebook.Facebook('967f7407da4bc19095c5bcc94b5375ac', '84a11f3e972a9c94034af84a3b87cfe0')
-
-		objects['Facebook'].auth.createToken()
-		objects['Facebook'].login(popup=True)
-
-		raw_input('After logging in, press enter...')
-		objects['Facebook'].auth.getSession()
-		objects['Facebook'].request_extended_permission('read_stream')
-		objects['Facebook'].request_extended_permission('publish_stream')
-		raw_input('After logging in, press enter...')
-		print 'Login successful.'
-		print 'Session Key: ', objects['Facebook'].session_key
-		print 'Your UID:    ', objects['Facebook'].uid
+		fb = facebook.Facebook('967f7407da4bc19095c5bcc94b5375ac', '84a11f3e972a9c94034af84a3b87cfe0')
+		oauth_access_token = fb.auth.createToken()
+		objects['Facebook'] = facebooksdk.GraphAPI(oauth_access_token)
+		profile = objects['Facebook'].get_object('me')
+		friends = objects['Facebook'].get_connections('me', 'friends')
 
 	def twitter(self):
 		''' This function logs the user into their Twitter account. '''
@@ -59,7 +52,6 @@ class Epistle(dict):
 		''' This function reads unread messages from Gmail. '''
 		global objects
 		selectlabel = objects['imapmail'].select('Inbox')
-		print ('Inbox: ', selectlabel[1])
 		numinbox = re.split('', str(selectlabel[1]))
 		numinbox = '0-9'.join(numinbox)
 		x = 0
@@ -71,7 +63,6 @@ class Epistle(dict):
 		numinbox = int(numinbox)
 
 		unread = objects['imapmail'].status('Inbox', '(UNSEEN)')
-		print 'Unread: ', unread
 
 		unread = str(unread)
 		numunread = re.split('', unread)
@@ -119,7 +110,7 @@ class Epistle(dict):
 		''' This function updates the user's Tweets. '''
 		twitterupdate = objects['Twitter'].home_timeline()
 		for x in range(0,19):
-			print twitterupdate[x].text, '\n'
+			print twitterupdate[x].user.screen_name, ' : ', twitterupdate[x].text, '\n'
 
 	def posttwitter(self):
 		global objects
@@ -135,13 +126,13 @@ class Epistle(dict):
 	def updatefb(self):
 		global objects
 		''' This function updates the Facebook stream. '''
-		objects['Facebook'].stream.get()
+		pass
 
 	def postfb(self):
 		global objects
 		''' This function posts to Facebook. '''
 		fbstatus = raw_input('Set your Facebook status: ')
-		objects['Facebook'].status.set(fbstatus)
+		objects['Facebook'].put_object("me", "feed", message=fbstatus)
 
 	def main(self):
 		''' This function will include the interface of Epistle, and all the function calls. '''
@@ -149,11 +140,11 @@ class Epistle(dict):
 		pass
 
 #Account().gmail()
+#Epistle().readmail()
 Account().twitter()
 #Account().facebook()
-#Epistle(objects).updatetwitter(objects)
-Epistle().posttwitter()
+#Epistle().postfb()
+Epistle().updatetwitter()
+#Epistle().posttwitter()
 #objects['imapmail'].logout()
 #objects['smtpmail'].quit()
-#imapmail.logout()
-#smtpmail.quit()
