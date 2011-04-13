@@ -25,7 +25,8 @@ class Account(dict):
 	def facebook(self):
 		''' This function logs the user into their Facebook account. '''
 		global objects
-		#Completely nonfunctional. Look to Account.twitter for some symblance of what to do.
+		fb = facebook.Facebook('967f7407da4bc19095c5bcc94b5375ac', '84a11f3e972a9c94034af84a3b87cfe0')
+		oauth_access_token = fb.auth.createToken()
 		objects['Facebook'] = facebooksdk.GraphAPI(oauth_access_token)
 		profile = objects['Facebook'].get_object('me')
 		friends = objects['Facebook'].get_connections('me', 'friends')
