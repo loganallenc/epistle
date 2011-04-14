@@ -1,6 +1,6 @@
 '''Written by: loganfynne'''
 from email.parser import HeaderParser
-import imaplib, smtplib, email
+import imaplib, smtplib
 import facebook, tweepy
 import re
 
@@ -8,6 +8,8 @@ objects = {}
 
 class Account(dict):
 	''' This function is responsible for adding and removing account information used in Epistle. '''
+	#def __init__(self, objects):
+		#self.Account
 	def gmail(self):
 		''' This function logs the user into their Gmail account. '''
 		global objects
@@ -97,12 +99,10 @@ class Epistle(dict):
 	def sendmail(self):
 		global objects
 		''' This function sends an email using Gmail. '''
-		choice = raw_input('Send email message(1)? ')
-		if choice == '1':
-			to = raw_input('To: ')
-			subject = raw_input('Subject: ')
-			mailmessage = raw_input('Message: ')
-			objects['smtpmail'].sendmail(objects['gmailuser'], to, 'Subject: ', subject, '\n', mailmessage)
+		to = raw_input('To: ')
+		subject = raw_input('Subject: ')
+		mailmessage = raw_input('Message: ')
+		objects['smtpmail'].sendmail(objects['gmailuser'], to, 'Subject: ', subject, '\n', mailmessage)
 
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
@@ -137,12 +137,13 @@ class Epistle(dict):
 		global objects
 		pass
 
-#Account().gmail()
-#Epistle().readmail()
-Account().twitter()
+Account().gmail()
+Epistle().readmail()
+Epistle().sendmail()
+#Account().twitter()
 #Account().facebook()
 #Epistle().postfb()
-Epistle().updatetwitter()
+#Epistle().updatetwitter()
 #Epistle().posttwitter()
 #objects['imapmail'].logout()
 #objects['smtpmail'].quit()
