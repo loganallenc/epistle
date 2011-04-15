@@ -115,7 +115,7 @@ class Epistle:
 		to = raw_input('To: ')
 		subject = raw_input('Subject: ')
 		mailmessage = raw_input('Message: ')
-		self.Gmail['smtp'].sendmail(self.Gmail['gmailuser'], to, 'Subject: ', subject, '\n', mailmessage)
+		self.Gmail['smtp'].sendmail(self.Gmail['gmailuser'], to, subject, mailmessage)
 		self.Gmail['smtp'].quit()
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
