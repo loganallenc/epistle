@@ -27,8 +27,8 @@ class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		#self.Gmail = gmail()
-		self.Twitter = twitter()
+		self.Gmail = gmail()
+		#self.Twitter = twitter()
 		#self.Facebook = facebook()
 
 	def gmail(self):
@@ -54,8 +54,8 @@ class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		#self.Gmail = Account().gmail()
-		self.Twitter = Account().twitter()
+		self.Gmail = Account().gmail()
+		#self.Twitter = Account().twitter()
 		#self.Facebook = Account().facebook()
 
 	def readmail(self):
@@ -114,7 +114,7 @@ class Epistle:
 		to = raw_input('To: ')
 		subject = raw_input('Subject: ')
 		mailmessage = raw_input('Message: ')
-		self.Gmail['smtp'].sendmail(self.Gmail['gmailuser'], to, subject, mailmessage)
+		self.Gmail['smtp'].sendmail(self.Gmail['gmailuser'], to, 'Subject: ' + subject + '\n' +mailmessage)
 		self.Gmail['smtp'].quit()
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
@@ -145,8 +145,8 @@ class Epistle:
 		pass
 
 #Epistle().readmail()
-#Epistle().sendmail()
-Epistle().updatetwitter()
+Epistle().sendmail()
+#Epistle().updatetwitter()
 #Epistle().posttwitter()
 #Epistle().updatefb()
 #Epistle().postfb()
