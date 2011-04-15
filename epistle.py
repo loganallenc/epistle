@@ -4,54 +4,65 @@ import imaplib, smtplib
 import facebook, tweepy
 import re
 
-objects = {}
+def gmail():
+	gmailuser = raw_input('What is your email username: ')
+	password = raw_input('What is your email password: ')
+	returned = {'gmailuser':gmailuser, 'password':password}
+	return returned
+def twitter():
+	auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+	auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+	auth_url = auth.get_authorization_url()
+	print 'Please authorize: ', auth_url
+	pin = raw_input('PIN: ')
+	auth.get_access_token(pin)
+	#print 'access_key = ', auth.access_token.key
+	#print 'access_secret = ', auth.access_token.secret
+	returned = {'auth':auth}
+	return returned
+def facebook():
+	pass
 
-class Account(dict):
+class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
-	#def __init__(self, objects):
-		#self.Account
+	def __init__(self, *args, **kwargs):
+		self.__dict__.update(kwargs)
+		self.Gmail = gmail()
+		#self.Twitter = twitter()
+		#self.Facebook = facebook()
+
 	def gmail(self):
 		''' This function logs the user into their Gmail account. '''
-		global objects
-		objects['gmailuser'] = raw_input('What is your email username: ')
-		password = raw_input('What is your email password: ')
-
-		objects['imapmail'] = imaplib.IMAP4_SSL('imap.gmail.com', 993)
-		auth, logged = objects['imapmail'].login(objects['gmailuser'], password)
-		print auth, logged
-
-		objects['smtpmail'] = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-		auth, logged = objects['smtpmail'].login(objects['gmailuser'], password)
-		print auth, logged
+		self.Gmail['imap'] = imaplib.IMAP4_SSL('imap.gmail.com', 993)
+		self.Gmail['smtp'] = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+		return self.Gmail
+		
+	def twitter(self):
+		''' This function logs the user into their Twitter account. '''
+		self.Twitter['Twitter'] = tweepy.API(self.Twitter['auth'])
+		return self.Twitter
 
 	def facebook(self):
 		''' This function logs the user into their Facebook account. '''
-		global objects
 		#Completely nonfunctional. Look to Account.twitter for some symblance of what to do.
-		objects['Facebook'] = facebooksdk.GraphAPI(oauth_access_token)
-		profile = objects['Facebook'].get_object('me')
-		friends = objects['Facebook'].get_connections('me', 'friends')
+		self.Facebook['Facebook'] = facebook.GraphAPI(oauth_access_token)
+		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
+		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
+		return self.Facebook
 
-	def twitter(self):
-		''' This function logs the user into their Twitter account. '''
-		global objects
-		auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-		auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-		auth_url = auth.get_authorization_url()
-		print 'Please authorize: ', auth_url
-		pin = raw_input('PIN: ')
-		auth.get_access_token(pin)
-		print 'access_key = ', auth.access_token.key
-		print 'access_secret = ', auth.access_token.secret
-		objects['Twitter'] = tweepy.API(auth)
-		print objects['Twitter']
-
-class Epistle(dict):
+class Epistle:
 	''' This is the main application class. '''
+	def __init__(self, *args, **kwargs):
+		self.__dict__.update(kwargs)
+		self.Gmail = Account().gmail()
+		#self.Twitter = Account().twitter()
+		#self.Facebook = Account().facebook()
+
 	def readmail(self):
 		''' This function reads unread messages from Gmail. '''
-		global objects
-		selectlabel = objects['imapmail'].select('Inbox')
+		self.Gmail['imap'].login(self.Gmail['gmailuser'], self.Gmail['password'])
+
+		selectlabel = self.Gmail['imap'].select('Inbox')
 		numinbox = re.split('', str(selectlabel[1]))
 		numinbox = '0-9'.join(numinbox)
 		x = 0
@@ -62,7 +73,7 @@ class Epistle(dict):
 		numinbox = ''.join(addto)
 		numinbox = int(numinbox)
 
-		unread = objects['imapmail'].status('Inbox', '(UNSEEN)')
+		unread = self.Gmail['imap'].status('Inbox', '(UNSEEN)')
 
 		unread = str(unread)
 		numunread = re.split('', unread)
@@ -77,7 +88,7 @@ class Epistle(dict):
 		numunread = int(numunread)
 
 		for x in range((numinbox - numunread),numinbox):
-			resp, data = objects['imapmail'].FETCH(x, '(RFC822)')
+			resp, data = objects['imap'].FETCH(x, '(RFC822)')
 			message = HeaderParser().parsestr(data[0][1])
 			print '\n\n'
 			print 'From: ', message['From']
@@ -95,15 +106,17 @@ class Epistle(dict):
 					
 				message = mailpart.get_payload()
 		  		print (message)
+			self.Gmail['imap'].logout()
 
 	def sendmail(self):
-		global objects
+		smtp.login(self.Gmail['gmailuser'], self.Gmail['password'])
+		
 		''' This function sends an email using Gmail. '''
 		to = raw_input('To: ')
 		subject = raw_input('Subject: ')
 		mailmessage = raw_input('Message: ')
-		objects['smtpmail'].sendmail(objects['gmailuser'], to, 'Subject: ', subject, '\n', mailmessage)
-
+		self.Gmail['smtp'].sendmail(self.Gmail['gmailuser'], to, 'Subject: ', subject, '\n', mailmessage)
+		self.Gmail['smtp'].quit()
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
 		twitterupdate = objects['Twitter'].home_timeline()
@@ -111,39 +124,30 @@ class Epistle(dict):
 			print twitterupdate[x].user.screen_name, ' : ', twitterupdate[x].text, '\n'
 
 	def posttwitter(self):
-		global objects
 		''' This function posts a Tweet. '''
-		print objects
 		tweet = raw_input('Update Twitter: ')
 		if len(tweet) >= 140:
 			while (len(tweet) >= 140):
 				print('The character limit of 140 was exceeded.')
 				tweet = raw_input('Update Twitter: ')
-		objects['Twitter'].update_status(tweet)
+		self.Twitter['Twitter'].update_status(tweet)
 
 	def updatefb(self):
-		global objects
 		''' This function updates the Facebook stream. '''
 		pass
 
 	def postfb(self):
-		global objects
 		''' This function posts to Facebook. '''
 		fbstatus = raw_input('Set your Facebook status: ')
-		objects['Facebook'].put_object("me", "feed", message=fbstatus)
+		self.Facebook['Facebook'].put_object("me", "feed", message=fbstatus)
 
 	def main(self):
 		''' This function will include the interface of Epistle, and all the function calls. '''
-		global objects
 		pass
 
-Account().gmail()
 Epistle().readmail()
-Epistle().sendmail()
-#Account().twitter()
-#Account().facebook()
+#Epistle().sendmail()
+#Epistle().updatefb()
 #Epistle().postfb()
 #Epistle().updatetwitter()
 #Epistle().posttwitter()
-#objects['imapmail'].logout()
-#objects['smtpmail'].quit()
