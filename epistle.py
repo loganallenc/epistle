@@ -109,7 +109,7 @@ class Epistle:
 			self.Gmail['imap'].logout()
 
 	def sendmail(self):
-		smtp.login(self.Gmail['gmailuser'], self.Gmail['password'])
+		self.Gmail['smtp'].login(self.Gmail['gmailuser'], self.Gmail['password'])
 		
 		''' This function sends an email using Gmail. '''
 		to = raw_input('To: ')
@@ -145,8 +145,8 @@ class Epistle:
 		''' This function will include the interface of Epistle, and all the function calls. '''
 		pass
 
-Epistle().readmail()
-#Epistle().sendmail()
+#Epistle().readmail()
+Epistle().sendmail()
 #Epistle().updatefb()
 #Epistle().postfb()
 #Epistle().updatetwitter()
