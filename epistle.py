@@ -109,9 +109,8 @@ class Epistle:
 			self.Gmail['imap'].logout()
 
 	def sendmail(self):
-		self.Gmail['smtp'].login(self.Gmail['gmailuser'], self.Gmail['password'])
-		
 		''' This function sends an email using Gmail. '''
+		self.Gmail['smtp'].login(self.Gmail['gmailuser'], self.Gmail['password'])
 		to = raw_input('To: ')
 		subject = raw_input('Subject: ')
 		mailmessage = raw_input('Message: ')
