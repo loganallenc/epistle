@@ -5,11 +5,13 @@ import facebook, tweepy
 import re
 
 def gmail():
+	''' Collect data for Gmail.'''
 	gmailuser = raw_input('What is your email username: ')
 	password = raw_input('What is your email password: ')
 	returned = {'gmailuser':gmailuser, 'password':password}
 	return returned
 def twitter():
+	''' Collect data for Twitter.'''
 	auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 	auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 	auth_url = auth.get_authorization_url()
@@ -21,6 +23,7 @@ def twitter():
 	returned = {'auth':auth}
 	return returned
 def facebook():
+	'''Collect data for Facebook.'''
 	pass
 
 class Account:
