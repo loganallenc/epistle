@@ -1,6 +1,6 @@
 '''Written by: loganfynne'''
 from email.parser import HeaderParser
-import imaplib, smtplib
+import imaplib, smtplib, email
 import facebook, tweepy
 import re
 
@@ -147,8 +147,8 @@ class Epistle:
 		''' This function will include the interface of Epistle, and all the function calls. '''
 		pass
 
-#Epistle().readmail()
-Epistle().sendmail()
+Epistle().readmail()
+#Epistle().sendmail()
 #Epistle().updatetwitter()
 #Epistle().posttwitter()
 #Epistle().updatefb()
