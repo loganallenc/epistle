@@ -48,7 +48,6 @@ class Account:
 
 	def facebook(self):
 		''' This function logs the user into their Facebook account. '''
-		#Completely nonfunctional. Look to Account.twitter for some symblance of what to do.
 		fb = pyfacebook.Facebook('967f7407da4bc19095c5bcc94b5375ac', '84a11f3e972a9c94034af84a3b87cfe0')
 		fb.auth.createToken()
 		fb.login(popup=True)
