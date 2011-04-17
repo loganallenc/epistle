@@ -1,7 +1,8 @@
 '''Written by: loganfynne'''
 from email.parser import HeaderParser
 import imaplib, smtplib, email
-import facebook, tweepy
+import pyfacebook, facebooksdk, tweepy
+import gtk, gobject, webbrowser
 import re
 
 def gmail():
@@ -48,7 +49,11 @@ class Account:
 	def facebook(self):
 		''' This function logs the user into their Facebook account. '''
 		#Completely nonfunctional. Look to Account.twitter for some symblance of what to do.
-		self.Facebook['Facebook'] = facebook.GraphAPI(oauth_access_token)
+		fb = pyfacebook.Facebook('967f7407da4bc19095c5bcc94b5375ac', '84a11f3e972a9c94034af84a3b87cfe0')
+		fb.auth.createToken()
+		fb.login(popup=True)
+		print oauth_access_token
+		self.Facebook['Facebook'] = facebooksdk.GraphAPI(oauth_access_token)
 		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
 		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
 		return self.Facebook
@@ -90,7 +95,7 @@ class Epistle:
 		numunread = ''.join(addto)
 		numunread = int(numunread)
 
-		for x in range((numinbox - numunread),numinbox):
+		for x in range(((numinbox - numunread)),numinbox):
 			resp, data = self.Gmail['imap'].FETCH(x, '(RFC822)')
 			message = HeaderParser().parsestr(data[0][1])
 			print '\n\n'
@@ -109,7 +114,7 @@ class Epistle:
 					
 				message = mailpart.get_payload()
 		  		print (message)
-			self.Gmail['imap'].logout()
+		self.Gmail['imap'].logout()
 
 	def sendmail(self):
 		''' This function sends an email using Gmail. '''
@@ -147,9 +152,11 @@ class Epistle:
 		''' This function will include the interface of Epistle, and all the function calls. '''
 		pass
 
-Epistle().readmail()
-#Epistle().sendmail()
-#Epistle().updatetwitter()
-#Epistle().posttwitter()
-#Epistle().updatefb()
-#Epistle().postfb()
+if __name__ == '__main__':
+	app = Epistle()
+	app.readmail()
+	#app.sendmail()
+	#app.updatetwitter()
+	#app.posttwitter()
+	#app.updatefb()
+	#app.postfb()
