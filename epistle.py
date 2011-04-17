@@ -1,7 +1,11 @@
 '''Written by: loganfynne'''
+from tyoi.oauth2 import AccessTokenRequest
+from tyoi.oauth2.grants import AuthorizationCode
+from tyoi.oauth2.authenticators import ClientPassword
 from email.parser import HeaderParser
+from urlparse import parse_qs
 import imaplib, smtplib, email
-import pyfacebook, facebooksdk, tweepy
+import facebooksdk, tweepy
 #import gtk, gobject, webbrowser
 import re
 
@@ -23,17 +27,37 @@ def twitter():
 	#print 'access_secret = ', auth.access_token.secret
 	returned = {'auth':auth}
 	return returned
+
 def facebook():
 	'''Collect data for Facebook.'''
-	pass
+	if 'code' not in query_params:
+		auth_uri = AuthorizationCode.build_auth_uri('https://www.facebook.com/dialog/oauth', '170127879706659', 'http://www.facebook.com/connect/login_success.html')
+		# Redirect to auth_uri
+
+	grant = AuthorizationCode(query_params['code'], 'http://www.facebook.com/connect/login_success.html')
+	authenticator = ClientPassword('170127879706659', '84a11f3e972a9c94034af84a3b87cfe0')
+	request = AccessTokenRequest(authenticator, grant, 'https://graph.facebook.com/oauth/access_token')
+	token = request.send(response_decoder)
+	returned = {'auth':token.access_token}
+
+def response_decoder(body):
+	params = {}
+	for k, v in parse_qs(body).iteritems():
+		if len(v) > 1:
+			params[k] = v
+		else:
+			params[k] = v[0]
+	return params
+
+
 
 class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		self.Gmail = gmail()
+		#self.Gmail = gmail()
 		#self.Twitter = twitter()
-		#self.Facebook = facebook()
+		self.Facebook = facebook()
 
 	def gmail(self):
 		''' This function logs the user into their Gmail account. '''
@@ -48,11 +72,7 @@ class Account:
 
 	def facebook(self):
 		''' This function logs the user into their Facebook account. '''
-		fb = pyfacebook.Facebook('967f7407da4bc19095c5bcc94b5375ac', '84a11f3e972a9c94034af84a3b87cfe0')
-		fb.auth.createToken()
-		fb.login(popup=True)
-		print oauth_access_token
-		self.Facebook['Facebook'] = facebooksdk.GraphAPI(oauth_access_token)
+		self.Facebook['Facebook'] = facebooksdk.GraphAPI(self.Facebook['auth'])
 		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
 		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
 		return self.Facebook
@@ -61,9 +81,9 @@ class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		self.Gmail = Account().gmail()
+		#self.Gmail = Account().gmail()
 		#self.Twitter = Account().twitter()
-		#self.Facebook = Account().facebook()
+		self.Facebook = Account().facebook()
 
 	def readmail(self):
 		''' This function reads unread messages from Gmail. '''
@@ -153,9 +173,9 @@ class Epistle:
 
 if __name__ == '__main__':
 	app = Epistle()
-	app.readmail()
+	#app.readmail()
 	#app.sendmail()
 	#app.updatetwitter()
 	#app.posttwitter()
 	#app.updatefb()
-	#app.postfb()
+	app.postfb()
