@@ -2,7 +2,7 @@
 from email.parser import HeaderParser
 import imaplib, smtplib, email
 import pyfacebook, facebooksdk, tweepy
-import gtk, gobject, webbrowser
+#import gtk, gobject, webbrowser
 import re
 
 def gmail():
