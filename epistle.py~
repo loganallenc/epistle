@@ -1,8 +1,9 @@
 '''Written by: loganfynne'''
+from email.parser import HeaderParser
 import imaplib, smtplib, email
 import facebooksdk, tweepy
-#import gtk, gobject, webbrowser
-import re
+#import gtk, gobject, 
+import re, webkit
 
 def gmail():
 	''' Collect data for Gmail.'''
@@ -57,9 +58,9 @@ class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		#self.Gmail = Account().gmail()
+		self.Gmail = Account().gmail()
 		#self.Twitter = Account().twitter()
-		self.Facebook = Account().facebook()
+		#self.Facebook = Account().facebook()
 
 	def readmail(self):
 		''' This function reads unread messages from Gmail. '''
@@ -104,11 +105,14 @@ class Epistle:
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
 					
-				if mailpart.get_content_subtype() != 'plain':
-					continue
-					
-				message = mailpart.get_payload()
-		  		print (message)
+				if mailpart.get_content_subtype() == 'html':
+					message = mailpart.get_payload()
+					print message
+				
+				if mailpart.get_content_subtype() == 'text':
+					message = mailpart.get_payload()
+					print message
+				
 		self.Gmail['imap'].logout()
 
 	def sendmail(self):
@@ -149,9 +153,9 @@ class Epistle:
 
 if __name__ == '__main__':
 	app = Epistle()
-	#app.readmail()
+	app.readmail()
 	#app.sendmail()
 	#app.updatetwitter()
 	#app.posttwitter()
 	#app.updatefb()
-	app.postfb()
+	#app.postfb()
