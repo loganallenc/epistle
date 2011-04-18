@@ -1,9 +1,4 @@
 '''Written by: loganfynne'''
-from tyoi.oauth2 import AccessTokenRequest
-from tyoi.oauth2.grants import AuthorizationCode
-from tyoi.oauth2.authenticators import ClientPassword
-from email.parser import HeaderParser
-from urlparse import parse_qs
 import imaplib, smtplib, email
 import facebooksdk, tweepy
 #import gtk, gobject, webbrowser
@@ -30,34 +25,15 @@ def twitter():
 
 def facebook():
 	'''Collect data for Facebook.'''
-	if 'code' not in query_params:
-		auth_uri = AuthorizationCode.build_auth_uri('https://www.facebook.com/dialog/oauth', '170127879706659', 'http://www.facebook.com/connect/login_success.html')
-		# Redirect to auth_uri
-
-	grant = AuthorizationCode(query_params['code'], 'http://www.facebook.com/connect/login_success.html')
-	authenticator = ClientPassword('170127879706659', '84a11f3e972a9c94034af84a3b87cfe0')
-	request = AccessTokenRequest(authenticator, grant, 'https://graph.facebook.com/oauth/access_token')
-	token = request.send(response_decoder)
-	returned = {'auth':token.access_token}
-	
-def response_decoder(body):
-	params = {}
-	for k, v in parse_qs(body).iteritems():
-		if len(v) > 1:
-			params[k] = v
-		else:
-			params[k] = v[0]
-	return params
-
-
+	pass
 
 class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		#self.Gmail = gmail()
+		self.Gmail = gmail()
 		#self.Twitter = twitter()
-		self.Facebook = facebook()
+		#self.Facebook = facebook()
 
 	def gmail(self):
 		''' This function logs the user into their Gmail account. '''
