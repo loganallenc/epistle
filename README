@@ -3,7 +3,3 @@ Copyright 2011, Logan Allen
 
 Epistle is a GTK+ Python Application which can be used to access Gmail, Facebook, and Twitter. 
 Dependencies: Tweepy, Facebook Python SDK, Facebook Javascript SDK
-
-=======
-Coded by Logan Allen/loganfynne <loganfynne@gmail.com>
-Co-coded by Connor Lofton/13ncl <13ncl13@gmail.com>
