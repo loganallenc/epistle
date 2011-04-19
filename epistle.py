@@ -2,7 +2,7 @@
 from email.parser import HeaderParser
 import imaplib, smtplib, email
 import facebooksdk, tweepy
-#import gtk, gobject, 
+import gtk, gobject
 import re, webkit
 
 def gmail():
@@ -11,6 +11,7 @@ def gmail():
 	password = raw_input('What is your email password: ')
 	returned = {'gmailuser':gmailuser, 'password':password}
 	return returned
+
 def twitter():
 	''' Collect data for Twitter.'''
 	auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
@@ -61,6 +62,54 @@ class Epistle:
 		self.Gmail = Account().gmail()
 		#self.Twitter = Account().twitter()
 		#self.Facebook = Account().facebook()
+		
+		gobject.threads_init()
+		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		self.window.set_resizable(False)
+		self.window.set_title('Epistle')
+		self.window.set_size_request(650, 450)
+		self.window.connect('delete_event', self.delete_event)
+		self.window.connect('destroy', self.destroy)
+		self.window.set_border_width(0)
+		self.toolbar = gtk.Toolbar()
+		
+		#self.refresh_button = gtk.ToolButton(gtk.STOCK_REFRESH)
+		#self.refresh_button.connect("clicked", self.refresh)
+		
+		self.gmail_tab = gtk.Button('Gmail')
+		self.gmail_tab.connect('clicked', self.showmail)
+		
+		self.tweet_tab = gtk.Button('Twitter')
+		self.tweet_tab.connect('clicked', self.updatetwitter)
+
+	        #self.toolbar.add(self.refresh_button)
+		self.toolbar.add(self.gmail_tab)
+		self.toolbar.add(self.tweet_tab)
+		self.toolbar.set_size_request(650,30)
+		#self.search = gtk.Entry()
+		#self.search.connect("activate", self.searchdb)
+
+		self.buffer = gtk.TextBuffer()
+		self.html = webkit.WebView()
+		self.scroll_window = gtk.ScrolledWindow(None, None)
+		self.scroll_window.add(self.html)
+		
+		vbox = gtk.VBox(False, 0)
+		hbox = gtk.HBox(False, 0)
+		vbox.pack_start(hbox, expand=False, fill=False, padding=0)
+		#Edit the interface to how you like it
+		hbox.pack_start(self.toolbar, expand=False, fill=False, padding=0)
+		#hbox.pack_start(self.search, expand=True, fill=True, padding=0)
+		vbox.add(self.scroll_window)
+		self.window.add(vbox)
+		self.window.show_all()
+		
+	def delete_event(self, widget, data=None):
+		return False
+	
+	def destroy(self, widget, data=None):
+		gtk.main_quit()
+
 
 	def readmail(self):
 		''' This function reads unread messages from Gmail. '''
@@ -94,10 +143,14 @@ class Epistle:
 		for x in range(((numinbox - numunread)),numinbox):
 			resp, data = self.Gmail['imap'].FETCH(x, '(RFC822)')
 			message = HeaderParser().parsestr(data[0][1])
-			print '\n\n'
-			print 'From: ', message['From']
-			print 'To: ', message['To']
-			print 'Subject: ', message['Subject'], '\n\n'
+			#print '\n\n'
+			#print 'From: ', message['From']
+			#print 'To: ', message['To']
+			#print 'Subject: ', message['Subject'], '\n\n'
+			self.gmailmessage = {}
+			self.gmailmessage['From'] = message['From']
+			self.gmailmessage['To'] = message['To']
+			self.gmailmessage['Subject'] = message['Subject']
 
 			mailitem = email.message_from_string(data[0][1])
 
@@ -105,13 +158,16 @@ class Epistle:
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
 					
-				if mailpart.get_content_subtype() == 'html':
-					message = mailpart.get_payload()
-					print message
-				
 				if mailpart.get_content_subtype() == 'text':
 					message = mailpart.get_payload()
-					print message
+					self.type = 'text'
+					self.gmailmessage['Body'] = message	
+					
+				if mailpart.get_content_subtype() == 'html':
+					message = mailpart.get_payload()
+					self.type = 'html'
+					self.gmailmessage['Body'] = message
+
 		self.Gmail['imap'].logout()
 
 	def sendmail(self):
@@ -122,6 +178,7 @@ class Epistle:
 		mailmessage = raw_input('Message: ')
 		self.Gmail['smtp'].sendmail(self.Gmail['gmailuser'], to, 'Subject: ' + subject + '\n' +mailmessage)
 		self.Gmail['smtp'].quit()
+	
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
 		twitterupdate = self.Twitter['Twitter'].home_timeline()
@@ -146,13 +203,20 @@ class Epistle:
 		fbstatus = raw_input('Set your Facebook status: ')
 		self.Facebook['Facebook'].put_object("me", "feed", message=fbstatus)
 
+
+	def showmail(self, widget):
+		if self.type == 'text': pass
+		elif self.type == 'html': 
+			self.html.load_html_string(self.gmailmessage['Body'], "file:///")
+
 	def main(self):
 		''' This function will include the interface of Epistle, and all the function calls. '''
-		pass
+		gtk.main()
 
 if __name__ == '__main__':
 	app = Epistle()
 	app.readmail()
+	app.main()
 	#app.sendmail()
 	#app.updatetwitter()
 	#app.posttwitter()
