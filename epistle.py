@@ -3,12 +3,12 @@ from email.parser import HeaderParser
 import imaplib, smtplib, email
 import facebooksdk, tweepy
 import gtk, gobject
-import re, webkit
+import re, getpass, webkit
 
 def gmail():
 	''' Collect data for Gmail.'''
 	gmailuser = raw_input('What is your email username: ')
-	password = raw_input('What is your email password: ')
+	password = getpass.getpass('What is your email password: ')
 	returned = {'gmailuser':gmailuser, 'password':password}
 	return returned
 
