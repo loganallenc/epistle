@@ -124,22 +124,10 @@ class Epistle:
 			x = x + 1
 		numinbox = ''.join(addto)
 		numinbox = int(numinbox)
+		
+		unread = len(self.Gmail['imap'].search('Inbox', '(UNSEEN)')[1][0].split())
 
-		unread = self.Gmail['imap'].status('Inbox', '(UNSEEN)')
-
-		unread = str(unread)
-		numunread = re.split('', unread)
-		numunread = '0-9'.join(numunread)
-
-		x = 0
-		addto = []
-		while x < len(unread):
-			if unread[x].isdigit(): addto.append(numunread[x])
-			x = x + 1
-		numunread = ''.join(addto)
-		numunread = int(numunread)
-
-		for x in range(((numinbox - numunread)),numinbox):
+		for x in range(((numinbox - unread)),numinbox):
 			resp, data = self.Gmail['imap'].FETCH(x, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
 			message = HeaderParser().parsestr(data[0][1])
