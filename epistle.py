@@ -1,4 +1,3 @@
-'''Written by: loganfynne'''
 from email.parser import HeaderParser
 import imaplib, smtplib, email
 import facebooksdk, tweepy
