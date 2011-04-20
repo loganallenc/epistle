@@ -206,7 +206,6 @@ class Epistle:
 	def showmail(self, widget):
 		if self.type == 'text': pass
 		elif self.type == 'html':
-			#self.gmailmessage['From'] = ''.join([ x for x in self.gmailmessage['From'] if x not in ('<', '>')])
 			self.gmailmessage['From'] = self.gmailmessage['From'].replace('<', '&lt;')
 			self.gmailmessage['From'] = self.gmailmessage['From'].replace('>', '&gt;')
 			self.html.load_html_string('<p>Subject: ' + self.gmailmessage['Subject'] + '</p><p>From: ' + self.gmailmessage['From'] + '</p><br />' + self.gmailmessage['Body'], 'file:///')

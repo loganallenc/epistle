@@ -208,7 +208,7 @@ class Epistle:
 		elif self.type == 'html':
 			self.gmailmessage['From'] = self.gmailmessage['From'].replace('<', '&lt;')
 			self.gmailmessage['From'] = self.gmailmessage['From'].replace('>', '&gt;')
-			self.html.load_html_string('<p>Subject: ' + self.gmailmessage['Subject'] + '</p><p>From: ' + self.gmailmessage['From'] + '</p><br />' + self.gmailmessage['Body'], 'file:///')
+			self.html.load_html_string('<p>Subject: ' + self.gmailmessage['Subject'] + '</p><p>From: ' + self.gmailmessage['From'] + '</p><hr />' + self.gmailmessage['Body'], 'file:///')
 
 	def main(self):
 		''' This function will include the interface of Epistle, and all the function calls. '''
