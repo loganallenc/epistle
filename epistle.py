@@ -142,6 +142,7 @@ class Epistle:
 
 		for x in range(((numinbox - numunread)),numinbox):
 			resp, data = self.Gmail['imap'].FETCH(x, '(RFC822)')
+			mailitem = email.message_from_string(data[0][1])
 			message = HeaderParser().parsestr(data[0][1])
 			#print '\n\n'
 			#print 'From: ', message['From']
@@ -152,8 +153,6 @@ class Epistle:
 			self.gmailmessage['To'] = message['To']
 			self.gmailmessage['Subject'] = message['Subject']
 
-			mailitem = email.message_from_string(data[0][1])
-
 			for mailpart in mailitem.walk():
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
@@ -161,7 +160,7 @@ class Epistle:
 				if mailpart.get_content_subtype() == 'text':
 					message = mailpart.get_payload()
 					self.type = 'text'
-					self.gmailmessage['Body'] = message	
+					self.gmailmessage['Body'] = message
 					
 				if mailpart.get_content_subtype() == 'html':
 					message = mailpart.get_payload()
@@ -201,13 +200,15 @@ class Epistle:
 	def postfb(self):
 		''' This function posts to Facebook. '''
 		fbstatus = raw_input('Set your Facebook status: ')
-		self.Facebook['Facebook'].put_object("me", "feed", message=fbstatus)
+		self.Facebook['Facebook'].put_object('me', 'feed', message=fbstatus)
 
 
 	def showmail(self, widget):
 		if self.type == 'text': pass
-		elif self.type == 'html': 
-			self.html.load_html_string(self.gmailmessage['Body'], "file:///")
+		elif self.type == 'html':
+			self.gmailmessage['From'] = self.gmailmessage['From'].replace('<', '&lt;')
+			self.gmailmessage['From'] = self.gmailmessage['From'].replace('>', '&gt;')
+			self.html.load_html_string('<p>Subject: ' + self.gmailmessage['Subject'] + '</p><p>From: ' + self.gmailmessage['From'] + '</p><br />' + self.gmailmessage['Body'], 'file:///')
 
 	def main(self):
 		''' This function will include the interface of Epistle, and all the function calls. '''
