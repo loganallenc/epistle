@@ -6,8 +6,8 @@ import re, getpass, webkit
 
 def gmail():
 	''' Collect data for Gmail.'''
-	gmailuser = raw_input('What is your email username: ')
-	password = getpass.getpass('What is your email password: ')
+	gmailuser = raw_input('What is your email username? ')
+	password = getpass.getpass('What is your email password? ')
 	returned = {'gmailuser':gmailuser, 'password':password}
 	return returned
 
