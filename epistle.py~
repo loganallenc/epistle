@@ -1,4 +1,3 @@
-'''Written by: loganfynne'''
 from email.parser import HeaderParser
 import imaplib, smtplib, email
 import facebooksdk, tweepy
@@ -7,8 +6,8 @@ import re, getpass, webkit
 
 def gmail():
 	''' Collect data for Gmail.'''
-	gmailuser = raw_input('What is your email username: ')
-	password = getpass.getpass('What is your email password: ')
+	gmailuser = raw_input('What is your email username? ')
+	password = getpass.getpass('What is your email password? ')
 	returned = {'gmailuser':gmailuser, 'password':password}
 	return returned
 
@@ -18,7 +17,7 @@ def twitter():
 	auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 	auth_url = auth.get_authorization_url()
 	print 'Please authorize: ', auth_url
-	pin = raw_input('PIN: ')
+	pin = raw_input('PIN(Personal Idenefecation Number): ')
 	auth.get_access_token(pin)
 	#print 'access_key = ', auth.access_token.key
 	#print 'access_secret = ', auth.access_token.secret
