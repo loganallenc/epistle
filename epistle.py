@@ -1,8 +1,5 @@
 from email.parser import HeaderParser
-import imaplib, smtplib, email
-import facebooksdk, tweepy
-import gtk, gobject
-import re, getpass, webkit
+import facebooksdk, gobject, getpass, imaplib, smtplib, tweepy, webkit, email, gtk, re
 
 def gmail():
 	''' Collect data for Gmail.'''
@@ -112,20 +109,13 @@ class Epistle:
 		self.Gmail = Account().gmail()
 		self.Gmail['imap'].login(self.Gmail['gmailuser'], self.Gmail['password'])
 
-		selectlabel = self.Gmail['imap'].select('Inbox')
-		numinbox = re.split('', str(selectlabel[1]))
-		numinbox = '0-9'.join(numinbox)
-		x = 0
-		addto = []
-		while x < len(numinbox):
-			if numinbox[x].isdigit(): addto.append(numinbox[x])
-			x = x + 1
-		numinbox = ''.join(addto)
-		numinbox = int(numinbox)
+		label,inbox = self.Gmail['imap'].select('Inbox')
+		inbox = int(inbox[0])
 		
 		unread = len(self.Gmail['imap'].search('Inbox', '(UNSEEN)')[1][0].split())
-
-		for x in range(((numinbox - unread)),numinbox):
+		print unread
+		
+		for x in range(((inbox - unread)),inbox):
 			resp, data = self.Gmail['imap'].FETCH(x, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
 			message = HeaderParser().parsestr(data[0][1])

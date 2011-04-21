@@ -1,8 +1,5 @@
 from email.parser import HeaderParser
-import imaplib, smtplib, email
-import facebooksdk, tweepy
-import gtk, gobject
-import re, getpass, webkit
+import facebooksdk, gobject, getpass, imaplib, smtplib, tweepy, webkit, email, gtk, re
 
 def gmail():
 	''' Collect data for Gmail.'''
@@ -112,20 +109,13 @@ class Epistle:
 		self.Gmail = Account().gmail()
 		self.Gmail['imap'].login(self.Gmail['gmailuser'], self.Gmail['password'])
 
-		selectlabel = self.Gmail['imap'].select('Inbox')
-		numinbox = re.split('', str(selectlabel[1]))
-		numinbox = '0-9'.join(numinbox)
-		x = 0
-		addto = []
-		while x < len(numinbox):
-			if numinbox[x].isdigit(): addto.append(numinbox[x])
-			x = x + 1
-		numinbox = ''.join(addto)
-		numinbox = int(numinbox)
+		label,inbox = self.Gmail['imap'].select('Inbox')
+		inbox = inbox[0]
 		
 		unread = len(self.Gmail['imap'].search('Inbox', '(UNSEEN)')[1][0].split())
-
-		for x in range(((numinbox - unread)),numinbox):
+		print unread
+		
+		for x in range(((inbox - unread)),inbox):
 			resp, data = self.Gmail['imap'].FETCH(x, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
 			message = HeaderParser().parsestr(data[0][1])
@@ -185,11 +175,13 @@ class Epistle:
 
 
 	def showmail(self, widget):
+		''' This function displays email messages. '''
 		self.gmailmessage['From'] = self.gmailmessage['From'].replace('<', '&lt;')
 		self.gmailmessage['From'] = self.gmailmessage['From'].replace('>', '&gt;')
 		self.html.load_html_string('<p>Subject: ' + self.gmailmessage['Subject'] + '</p><p>From: ' + self.gmailmessage['From'] + '</p><hr />' + self.gmailmessage['Body'], 'file:///')
 
 	def showtwitter(self, widget):
+		''' This function displays the user's Twitter home timeline. '''
 		self.tweets = ''
 		for x in range(0, 19):
 			self.tweets = self.tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
