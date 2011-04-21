@@ -32,7 +32,6 @@ class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		#self.Facebook = facebook()
 
 	def gmail(self):
 		''' This function logs the user into their Gmail account. '''
@@ -49,6 +48,7 @@ class Account:
 
 	def facebook(self):
 		''' This function logs the user into their Facebook account. '''
+		self.Facebook = facebook()
 		self.Facebook['Facebook'] = facebooksdk.GraphAPI(self.Facebook['auth'])
 		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
 		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
@@ -58,11 +58,10 @@ class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		#self.Facebook = Account().facebook()
 		
 		gobject.threads_init()
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		self.window.set_resizable(True)
+		self.window.set_resizable(False)
 		self.window.set_title('Epistle')
 		self.window.set_size_request(700, 450)
 		self.window.connect('delete_event', self.delete_event)
@@ -182,10 +181,12 @@ class Epistle:
 
 	def updatefb(self):
 		''' This function updates the Facebook stream. '''
+		self.Facebook = Account().facebook()
 		pass
 
 	def postfb(self):
 		''' This function posts to Facebook. '''
+		self.Facebook = Account().facebook()
 		fbstatus = raw_input('Set your Facebook status: ')
 		self.Facebook['Facebook'].put_object('me', 'feed', message=fbstatus)
 
@@ -196,10 +197,9 @@ class Epistle:
 		self.html.load_html_string('<p>Subject: ' + self.gmailmessage['Subject'] + '</p><p>From: ' + self.gmailmessage['From'] + '</p><hr />' + self.gmailmessage['Body'], 'file:///')
 
 	def showtwitter(self, widget):
-		self.tweets = '<p><b>' + self.twitterupdate[0].user.screen_name + '</b>: ' + self.twitterupdate[0].text + '</p><hr />'
+		self.tweets = '<p><img src="' + self.twitterupdate[0].user.profile_image_url + '"></img><b>' + self.twitterupdate[0].user.screen_name + '</b>: ' + self.twitterupdate[0].text + '</p><hr />'
 		for x in range(1, 19):
-			self.tweets = self.tweets + '<p><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
-		#self.html.load_html_string('<p><b>' + self.twitterupdate[19].user.screen_name + '</b>: ' + self.twitterupdate[19].text + '</p><hr />', 'file:///')
+			self.tweets = self.tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
 		self.html.load_html_string(self.tweets, 'file:///')
 
 	def main(self):
@@ -212,7 +212,6 @@ if __name__ == '__main__':
 	app.updatetwitter()
 	app.main()
 	#app.sendmail()
-	#app.updatetwitter()
 	#app.posttwitter()
 	#app.updatefb()
 	#app.postfb()
