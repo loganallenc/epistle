@@ -140,17 +140,10 @@ class Epistle:
 
 			for mailpart in mailitem.walk():
 				if mailpart.get_content_maintype() == 'multipart':
-					continue
-					
-				if mailpart.get_content_subtype() == 'text':
-					message = mailpart.get_payload()
-					self.type = 'text'
-					self.gmailmessage['Body'] = message
-					
-				if mailpart.get_content_subtype() == 'html':
-					message = mailpart.get_payload()
-					self.type = 'html'
-					self.gmailmessage['Body'] = message
+					continue	
+				message = mailpart.get_payload()
+				self.gmailmessage['Body'] = message
+				print 'Success.'
 
 		self.Gmail['imap'].logout()
 
@@ -192,11 +185,13 @@ class Epistle:
 
 
 	def showmail(self, widget):
+		''' This function displays email messages. '''
 		self.gmailmessage['From'] = self.gmailmessage['From'].replace('<', '&lt;')
 		self.gmailmessage['From'] = self.gmailmessage['From'].replace('>', '&gt;')
 		self.html.load_html_string('<p>Subject: ' + self.gmailmessage['Subject'] + '</p><p>From: ' + self.gmailmessage['From'] + '</p><hr />' + self.gmailmessage['Body'], 'file:///')
 
 	def showtwitter(self, widget):
+		''' This function displays the user's Twitter home timeline. '''
 		self.tweets = ''
 		for x in range(0, 19):
 			self.tweets = self.tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
@@ -208,8 +203,8 @@ class Epistle:
 
 if __name__ == '__main__':
 	app = Epistle()
-	#app.readmail()
-	app.updatetwitter()
+	app.readmail()
+	#app.updatetwitter()
 	app.main()
 	#app.sendmail()
 	#app.posttwitter()
