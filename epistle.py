@@ -199,7 +199,6 @@ class Epistle:
 		self.tweets = '<p><b>' + self.twitterupdate[0].user.screen_name + '</b>: ' + self.twitterupdate[0].text + '</p><hr />'
 		for x in range(1, 19):
 			self.tweets = self.tweets + '<p><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
-		#self.html.load_html_string('<p><b>' + self.twitterupdate[19].user.screen_name + '</b>: ' + self.twitterupdate[19].text + '</p><hr />', 'file:///')
 		self.html.load_html_string(self.tweets, 'file:///')
 
 	def main(self):
