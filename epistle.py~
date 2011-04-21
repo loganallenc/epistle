@@ -32,18 +32,18 @@ class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		self.Gmail = gmail()
-		#self.Twitter = twitter()
 		#self.Facebook = facebook()
 
 	def gmail(self):
 		''' This function logs the user into their Gmail account. '''
+		self.Gmail = gmail()
 		self.Gmail['imap'] = imaplib.IMAP4_SSL('imap.gmail.com', 993)
 		self.Gmail['smtp'] = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 		return self.Gmail
 		
 	def twitter(self):
 		''' This function logs the user into their Twitter account. '''
+		self.Twitter = twitter()
 		self.Twitter['Twitter'] = tweepy.API(self.Twitter['auth'])
 		return self.Twitter
 
@@ -58,15 +58,13 @@ class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		self.Gmail = Account().gmail()
-		#self.Twitter = Account().twitter()
 		#self.Facebook = Account().facebook()
 		
 		gobject.threads_init()
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		self.window.set_resizable(False)
+		self.window.set_resizable(True)
 		self.window.set_title('Epistle')
-		self.window.set_size_request(650, 450)
+		self.window.set_size_request(700, 450)
 		self.window.connect('delete_event', self.delete_event)
 		self.window.connect('destroy', self.destroy)
 		self.window.set_border_width(0)
@@ -79,12 +77,12 @@ class Epistle:
 		self.gmail_tab.connect('clicked', self.showmail)
 		
 		self.tweet_tab = gtk.Button('Twitter')
-		self.tweet_tab.connect('clicked', self.updatetwitter)
+		self.tweet_tab.connect('clicked', self.showtwitter)
 
 	        #self.toolbar.add(self.refresh_button)
 		self.toolbar.add(self.gmail_tab)
 		self.toolbar.add(self.tweet_tab)
-		self.toolbar.set_size_request(650,30)
+		self.toolbar.set_size_request(700,30)
 		#self.search = gtk.Entry()
 		#self.search.connect("activate", self.searchdb)
 
@@ -112,6 +110,7 @@ class Epistle:
 
 	def readmail(self):
 		''' This function reads unread messages from Gmail. '''
+		self.Gmail = Account().gmail()
 		self.Gmail['imap'].login(self.Gmail['gmailuser'], self.Gmail['password'])
 
 		selectlabel = self.Gmail['imap'].select('Inbox')
@@ -127,7 +126,7 @@ class Epistle:
 		
 		unread = len(self.Gmail['imap'].search('Inbox', '(UNSEEN)')[1][0].split())
 
-		for x in range(((numinbox - numunread)),numinbox):
+		for x in range(((numinbox - unread)),numinbox):
 			resp, data = self.Gmail['imap'].FETCH(x, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
 			message = HeaderParser().parsestr(data[0][1])
@@ -167,9 +166,10 @@ class Epistle:
 	
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
-		twitterupdate = self.Twitter['Twitter'].home_timeline()
-		for x in range(0,19):
-			print twitterupdate[x].user.screen_name, ' : ', twitterupdate[x].text, '\n'
+		self.Twitter = Account().twitter()
+		self.twitterupdate = self.Twitter['Twitter'].home_timeline()
+		#for x in range(0,19):
+			#print self.twitterupdate[x].user.screen_name, ': ', self.twitterupdate[x].text, '\n'
 
 	def posttwitter(self):
 		''' This function posts a Tweet. '''
@@ -191,11 +191,16 @@ class Epistle:
 
 
 	def showmail(self, widget):
-		if self.type == 'text': pass
-		elif self.type == 'html':
-			self.gmailmessage['From'] = self.gmailmessage['From'].replace('<', '&lt;')
-			self.gmailmessage['From'] = self.gmailmessage['From'].replace('>', '&gt;')
-			self.html.load_html_string('<p>Subject: ' + self.gmailmessage['Subject'] + '</p><p>From: ' + self.gmailmessage['From'] + '</p><hr />' + self.gmailmessage['Body'], 'file:///')
+		self.gmailmessage['From'] = self.gmailmessage['From'].replace('<', '&lt;')
+		self.gmailmessage['From'] = self.gmailmessage['From'].replace('>', '&gt;')
+		self.html.load_html_string('<p>Subject: ' + self.gmailmessage['Subject'] + '</p><p>From: ' + self.gmailmessage['From'] + '</p><hr />' + self.gmailmessage['Body'], 'file:///')
+
+	def showtwitter(self, widget):
+		self.tweets = '<p><b>' + self.twitterupdate[0].user.screen_name + '</b>: ' + self.twitterupdate[0].text + '</p><hr />'
+		for x in range(1, 19):
+			self.tweets = self.tweets + '<p><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />')
+		#self.html.load_html_string('<p><b>' + self.twitterupdate[19].user.screen_name + '</b>: ' + self.twitterupdate[19].text + '</p><hr />', 'file:///')
+		self.html.load_html_string(self.tweets, 'file:///')
 
 	def main(self):
 		''' This function will include the interface of Epistle, and all the function calls. '''
@@ -203,7 +208,8 @@ class Epistle:
 
 if __name__ == '__main__':
 	app = Epistle()
-	app.readmail()
+	#app.readmail()
+	app.updatetwitter()
 	app.main()
 	#app.sendmail()
 	#app.updatetwitter()
