@@ -1,5 +1,5 @@
 from email.parser import HeaderParser
-import facebooksdk, gobject, getpass, imaplib, smtplib, tweepy, webkit, email, gtk, re
+import facebooksdk, gobject, getpass, imaplib, smtplib, tweepy, webkit, email, gtk
 
 def gmail():
 	''' Collect data for Gmail.'''

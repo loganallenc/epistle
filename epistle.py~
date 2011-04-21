@@ -110,7 +110,7 @@ class Epistle:
 		self.Gmail['imap'].login(self.Gmail['gmailuser'], self.Gmail['password'])
 
 		label,inbox = self.Gmail['imap'].select('Inbox')
-		inbox = inbox[0]
+		inbox = int(inbox[0])
 		
 		unread = len(self.Gmail['imap'].search('Inbox', '(UNSEEN)')[1][0].split())
 		print unread
