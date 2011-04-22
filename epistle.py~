@@ -1,5 +1,6 @@
+from sqlite3 import *
 from email.parser import HeaderParser
-import facebooksdk, gobject, getpass, imaplib, smtplib, tweepy, webkit, email, gtk, re
+import facebooksdk, gobject, getpass, imaplib, smtplib, tweepy, webkit, email, gtk, sys, os
 
 def gmail():
 	''' Collect data for Gmail.'''
@@ -25,6 +26,44 @@ def facebook():
 	'''Collect data for Facebook.'''
 	pass
 
+class Database:
+	''' Checks for existing database and if one does not exist creates the database. '''
+	def __init__(self, *args, **kwargs):
+		self.__dict__.update(kwargs)
+
+	def check(self):
+		if sys.platform == 'win32':
+			self.checkdb = os.path.exists('C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle/epistle.db')
+			self.db = connect('C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle/epistle.db')
+			self.database = self.db.cursor()
+		else:
+			self.checkdb = os.path.exists('/home/' + os.environ['USER'] + '/.local/share/epistle/epistle.db')
+			self.db = connect('/home/' + os.environ['USER'] + '/.local/share/epistle/epistle.db')
+			self.database = self.db.cursor()
+		if self.checkdb == False:
+			#Run account GTK dialogue then put data into the database.
+			Database().setup()
+	def read(self):
+		self.database.execute('select * from auth')
+		self.Objects = self.database.fetchall()
+		self.Gmail = self.Objects[0]
+		self.Twitter = self.Objects[1]
+		self.Facebook = self.Objects[2]
+		
+		self.database.execute('select * from mail')
+		self.Mail = self.database.fetchall()
+
+	def setup(self):
+		self.database.execute('''create table auth (main)''')
+		self.database.execute('insert into auth(main) values (?)', self.Gmail)
+		self.database.execute('insert into auth(main) values (?)', self.Twitter)
+		self.database.execute('insert into auth(main) values (?)', self.Facebook)
+		
+		self.database.execute('''create table mail (main)''')
+		self.database.commit()
+		self.database.close()
+
+
 class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
 	def __init__(self, *args, **kwargs):
@@ -33,22 +72,16 @@ class Account:
 	def gmail(self):
 		''' This function logs the user into their Gmail account. '''
 		self.Gmail = gmail()
-		self.Gmail['imap'] = imaplib.IMAP4_SSL('imap.gmail.com', 993)
-		self.Gmail['smtp'] = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 		return self.Gmail
 		
 	def twitter(self):
 		''' This function logs the user into their Twitter account. '''
 		self.Twitter = twitter()
-		self.Twitter['Twitter'] = tweepy.API(self.Twitter['auth'])
 		return self.Twitter
 
 	def facebook(self):
 		''' This function logs the user into their Facebook account. '''
 		self.Facebook = facebook()
-		self.Facebook['Facebook'] = facebooksdk.GraphAPI(self.Facebook['auth'])
-		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
-		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
 		return self.Facebook
 
 class Epistle:
@@ -107,6 +140,7 @@ class Epistle:
 	def readmail(self):
 		''' This function reads unread messages from Gmail. '''
 		self.Gmail = Account().gmail()
+		self.Gmail['imap'] = imaplib.IMAP4_SSL('imap.gmail.com', 993)
 		self.Gmail['imap'].login(self.Gmail['gmailuser'], self.Gmail['password'])
 
 		label,inbox = self.Gmail['imap'].select('Inbox')
@@ -133,12 +167,13 @@ class Epistle:
 					continue	
 				message = mailpart.get_payload()
 				self.gmailmessage['Body'] = message
-				print 'Success.'
-
+				break
 		self.Gmail['imap'].logout()
 
 	def sendmail(self):
+		self.Gmail = Account().gmail()
 		''' This function sends an email using Gmail. '''
+		self.Gmail['smtp'] = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 		self.Gmail['smtp'].login(self.Gmail['gmailuser'], self.Gmail['password'])
 		to = raw_input('To: ')
 		subject = raw_input('Subject: ')
@@ -149,12 +184,13 @@ class Epistle:
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
 		self.Twitter = Account().twitter()
+		self.Twitter['Twitter'] = tweepy.API(self.Twitter['auth'])
 		self.twitterupdate = self.Twitter['Twitter'].home_timeline()
-		#for x in range(0,19):
-			#print self.twitterupdate[x].user.screen_name, ': ', self.twitterupdate[x].text, '\n'
 
 	def posttwitter(self):
 		''' This function posts a Tweet. '''
+		self.Twitter = Account().twitter()
+		self.Twitter['Twitter'] = tweepy.API(self.Twitter['auth'])
 		tweet = raw_input('Update Twitter: ')
 		if len(tweet) >= 140:
 			while (len(tweet) >= 140):
@@ -165,23 +201,32 @@ class Epistle:
 	def updatefb(self):
 		''' This function updates the Facebook stream. '''
 		self.Facebook = Account().facebook()
+		self.Facebook['Facebook'] = facebooksdk.GraphAPI(self.Facebook['auth'])
+		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
+		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
 		pass
 
 	def postfb(self):
 		''' This function posts to Facebook. '''
 		self.Facebook = Account().facebook()
+		self.Facebook['Facebook'] = facebooksdk.GraphAPI(self.Facebook['auth'])
+		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
+		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
 		fbstatus = raw_input('Set your Facebook status: ')
 		self.Facebook['Facebook'].put_object('me', 'feed', message=fbstatus)
 
 
 	def showmail(self, widget):
 		''' This function displays email messages. '''
+		self.readmail()
 		self.gmailmessage['From'] = self.gmailmessage['From'].replace('<', '&lt;')
 		self.gmailmessage['From'] = self.gmailmessage['From'].replace('>', '&gt;')
+		self.gmailmessage['Body'] = self.gmailmessage['Body'].replace('\n', '<br />')
 		self.html.load_html_string('<p>Subject: ' + self.gmailmessage['Subject'] + '</p><p>From: ' + self.gmailmessage['From'] + '</p><hr />' + self.gmailmessage['Body'], 'file:///')
 
 	def showtwitter(self, widget):
 		''' This function displays the user's Twitter home timeline. '''
+		self.updatetwitter()
 		self.tweets = ''
 		for x in range(0, 19):
 			self.tweets = self.tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
@@ -193,10 +238,4 @@ class Epistle:
 
 if __name__ == '__main__':
 	app = Epistle()
-	app.readmail()
-	#app.updatetwitter()
 	app.main()
-	#app.sendmail()
-	#app.posttwitter()
-	#app.updatefb()
-	#app.postfb()
