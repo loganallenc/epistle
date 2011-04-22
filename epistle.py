@@ -16,8 +16,6 @@ def twitter():
 	print 'Please authorize: ', auth_url
 	pin = raw_input('PIN: ')
 	auth.get_access_token(pin)
-	#print 'access_key = ', auth.access_token.key
-	#print 'access_secret = ', auth.access_token.secret
 	return auth
 
 def facebook():
@@ -28,13 +26,17 @@ class Database:
 	''' Checks for existing database and if one does not exist creates the database. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		if sys.platform == 'win32':
+		if sys.platform == 'linux2':
+			self.checkdb = os.path.exists('/home/' + os.environ['USER'] + '/.local/share/epistle.db')
+			self.db = sqlite3.connect('/home/' + os.environ['USER'] + '/.local/share/epistle.db')
+			self.database = self.db.cursor()
+		elif sys.platform == 'win32':
 			self.checkdb = os.path.exists('C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db')
 			self.db = sqlite3.connect('C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db')
 			self.database = self.db.cursor()
-		else:
-			self.checkdb = os.path.exists('/home/' + os.environ['USER'] + '/.local/share/epistle.db')
-			self.db = sqlite3.connect('/home/' + os.environ['USER'] + '/.local/share/epistle.db')
+		elif sys.platform == 'darwin':
+			self.checkdb = os.path.exists('/Users/' + os.getenv('USERNAME') + '/epistle.db')
+			self.db = sqlite3.connect('/Users/' + os.getenv('USERNAME') + '/epistle.db')
 			self.database = self.db.cursor()
 		if self.checkdb == False:
 			self.Gmail = gmail()
@@ -131,6 +133,8 @@ class Epistle:
 		self.window.show_all()
 		
 	def delete_event(self, widget, data=None):
+		self.imap.logout()
+		self.smtp.quit()
 		return False
 	
 	def destroy(self, widget, data=None):
@@ -160,7 +164,6 @@ class Epistle:
 				message = mailpart.get_payload()
 				self.gmailmessage['Body'] = message
 				break
-		self.imap.logout()
 
 	def sendmail(self):
 		''' This function sends an email using Gmail. '''
@@ -168,7 +171,6 @@ class Epistle:
 		subject = raw_input('Subject: ')
 		mailmessage = raw_input('Message: ')
 		self.smtp.sendmail(self.Gmail[0], to, 'Subject: ' + subject + '\n' +mailmessage)
-		self.smtp.quit()
 
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
@@ -217,7 +219,6 @@ class Epistle:
 		
 	def logingmail(self):
 		user = self.Auth[0][0]
-		print user
 		password = self.Auth[1][0]
 		self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
 		self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
@@ -235,7 +236,6 @@ class Epistle:
 	def main(self):
 		''' This function will include the interface of Epistle, and all the function calls. '''
 		gtk.main()
-
 if __name__ == '__main__':
 	app = Epistle()
 	app.main()
