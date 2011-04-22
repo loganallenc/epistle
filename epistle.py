@@ -28,8 +28,6 @@ class Database:
 	''' Checks for existing database and if one does not exist creates the database. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-
-	def check(self):
 		if sys.platform == 'win32':
 			self.checkdb = os.path.exists('C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db')
 			self.db = sqlite3.connect('C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db')
@@ -43,15 +41,14 @@ class Database:
 			self.Twitter = twitter()
 			#self.Facebook = facebook()
 			self.setup()
+
 	def read(self):
 		self.database.execute('select * from auth')
-		self.Objects = self.database.fetchall()
-		self.Gmail = self.Objects[0:1]
-		self.Twitter = self.Objects[1:2]
-		#self.Facebook = self.Objects[3]
+		self.Auth = self.database.fetchall()
 		
 		self.database.execute('select * from mail')
 		self.Mail = self.database.fetchall()
+		return self.Auth
 
 	def setup(self):
 		self.database.execute('''create table auth (main)''')
@@ -73,23 +70,24 @@ class Account:
 
 	def gmail(self):
 		''' This function logs the user into their Gmail account. '''
-		self.Gmail = gmail()
-		return self.Gmail
+		pass
 		
 	def twitter(self):
 		''' This function logs the user into their Twitter account. '''
-		self.Twitter = twitter()
-		return self.Twitter
+		pass
 
 	def facebook(self):
 		''' This function logs the user into their Facebook account. '''
-		self.Facebook = facebook()
-		return self.Facebook
+		pass
 
 class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
+		Database()
+		self.Auth = Database().read()
+		self.logingmail()
+		self.logintwitter()
 		
 		gobject.threads_init()
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -141,24 +139,16 @@ class Epistle:
 
 	def readmail(self):
 		''' This function reads unread messages from Gmail. '''
-		self.Gmail = Account().gmail()
-		self.Gmail['imap'] = imaplib.IMAP4_SSL('imap.gmail.com', 993)
-		self.Gmail['imap'].login(self.Gmail['gmailuser'], self.Gmail['password'])
-
-		label,inbox = self.Gmail['imap'].select('Inbox')
+		label,inbox = self.imap.select('Inbox')
 		inbox = int(inbox[0])
 		
-		unread = len(self.Gmail['imap'].search('Inbox', '(UNSEEN)')[1][0].split())
+		unread = len(self.imap.search('Inbox', '(UNSEEN)')[1][0].split())
 		print unread
 		
 		for x in range(((inbox - unread)),inbox):
-			resp, data = self.Gmail['imap'].FETCH(x, '(RFC822)')
+			resp, data = self.imap.FETCH(x, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
 			message = HeaderParser().parsestr(data[0][1])
-			#print '\n\n'
-			#print 'From: ', message['From']
-			#print 'To: ', message['To']
-			#print 'Subject: ', message['Subject'], '\n\n'
 			self.gmailmessage = {}
 			self.gmailmessage['From'] = message['From']
 			self.gmailmessage['To'] = message['To']
@@ -170,39 +160,31 @@ class Epistle:
 				message = mailpart.get_payload()
 				self.gmailmessage['Body'] = message
 				break
-		self.Gmail['imap'].logout()
+		self.imap.logout()
 
 	def sendmail(self):
-		self.Gmail = Account().gmail()
 		''' This function sends an email using Gmail. '''
-		self.Gmail['smtp'] = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-		self.Gmail['smtp'].login(self.Gmail['gmailuser'], self.Gmail['password'])
 		to = raw_input('To: ')
 		subject = raw_input('Subject: ')
 		mailmessage = raw_input('Message: ')
-		self.Gmail['smtp'].sendmail(self.Gmail['gmailuser'], to, 'Subject: ' + subject + '\n' +mailmessage)
-		self.Gmail['smtp'].quit()
-	
+		self.smtp.sendmail(self.Gmail[0], to, 'Subject: ' + subject + '\n' +mailmessage)
+		self.smtp.quit()
+
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
-		self.Twitter = Account().twitter()
-		self.Twitter['Twitter'] = tweepy.API(self.Twitter['auth'])
-		self.twitterupdate = self.Twitter['Twitter'].home_timeline()
+		self.twitterupdate = self.Twitter.home_timeline()
 
 	def posttwitter(self):
 		''' This function posts a Tweet. '''
-		self.Twitter = Account().twitter()
-		self.Twitter['Twitter'] = tweepy.API(self.Twitter['auth'])
 		tweet = raw_input('Update Twitter: ')
 		if len(tweet) >= 140:
 			while (len(tweet) >= 140):
 				print('The character limit of 140 was exceeded.')
 				tweet = raw_input('Update Twitter: ')
-		self.Twitter['Twitter'].update_status(tweet)
+		self.Twitter.update_status(tweet)
 
 	def updatefb(self):
 		''' This function updates the Facebook stream. '''
-		self.Facebook = Account().facebook()
 		self.Facebook['Facebook'] = facebooksdk.GraphAPI(self.Facebook['auth'])
 		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
 		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
@@ -210,7 +192,6 @@ class Epistle:
 
 	def postfb(self):
 		''' This function posts to Facebook. '''
-		self.Facebook = Account().facebook()
 		self.Facebook['Facebook'] = facebooksdk.GraphAPI(self.Facebook['auth'])
 		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
 		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
@@ -233,12 +214,28 @@ class Epistle:
 		for x in range(0, 19):
 			self.tweets = self.tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
 		self.html.load_html_string(self.tweets, 'file:///')
+		
+	def logingmail(self):
+		user = self.Auth[0][0]
+		print user
+		password = self.Auth[1][0]
+		self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
+		self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+		self.imap.login(user, password)
+		self.smtp.login(user, password)
+
+	def logintwitter(self):
+		twkey = self.Auth[2][0]
+		twsec = self.Auth[3][0]
+		self.auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+		self.auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+		self.auth.set_access_token(twkey, twsec)
+		self.Twitter = tweepy.API(self.auth)
 
 	def main(self):
 		''' This function will include the interface of Epistle, and all the function calls. '''
 		gtk.main()
 
-#if __name__ == '__main__':
-#	app = Epistle()
-#	app.main()
-Database().check()
+if __name__ == '__main__':
+	app = Epistle()
+	app.main()
