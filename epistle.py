@@ -1,6 +1,5 @@
-from sqlite3 import *
 from email.parser import HeaderParser
-import facebooksdk, gobject, getpass, imaplib, smtplib, tweepy, webkit, email, gtk, sys, os
+import facebooksdk, sqlite3, gobject, getpass, imaplib, smtplib, tweepy, webkit, email, gtk, sys, os
 
 def gmail():
 	''' Collect data for Gmail.'''
@@ -19,8 +18,7 @@ def twitter():
 	auth.get_access_token(pin)
 	#print 'access_key = ', auth.access_token.key
 	#print 'access_secret = ', auth.access_token.secret
-	returned = {'auth':auth}
-	return returned
+	return auth
 
 def facebook():
 	'''Collect data for Facebook.'''
@@ -33,37 +31,39 @@ class Database:
 
 	def check(self):
 		if sys.platform == 'win32':
-			self.checkdb = os.path.exists('C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle/epistle.db')
-			self.db = connect('C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle/epistle.db')
+			self.checkdb = os.path.exists('C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db')
+			self.db = sqlite3.connect('C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db')
 			self.database = self.db.cursor()
 		else:
-			self.checkdb = os.path.exists('/home/' + os.environ['USER'] + '/.local/share/epistle/epistle.db')
-			self.db = connect('/home/' + os.environ['USER'] + '/.local/share/epistle/epistle.db')
+			self.checkdb = os.path.exists('/home/' + os.environ['USER'] + '/.local/share/epistle.db')
+			self.db = sqlite3.connect('/home/' + os.environ['USER'] + '/.local/share/epistle.db')
 			self.database = self.db.cursor()
 		if self.checkdb == False:
-			gmail()
-			facebook()
-			twitter()
-			Database().setup()
+			self.Gmail = gmail()
+			self.Twitter = twitter()
+			#self.Facebook = facebook()
+			self.setup()
 	def read(self):
 		self.database.execute('select * from auth')
 		self.Objects = self.database.fetchall()
-		self.Gmail = self.Objects[0]
-		self.Twitter = self.Objects[1]
-		self.Facebook = self.Objects[2]
+		self.Gmail = self.Objects[0:1]
+		self.Twitter = self.Objects[1:2]
+		#self.Facebook = self.Objects[3]
 		
 		self.database.execute('select * from mail')
 		self.Mail = self.database.fetchall()
 
 	def setup(self):
 		self.database.execute('''create table auth (main)''')
-		self.database.execute('insert into auth(main) values (?)', self.Gmail)
-		self.database.execute('insert into auth(main) values (?)', self.Twitter)
-		self.database.execute('insert into auth(main) values (?)', self.Facebook)
+		self.database.execute('insert into auth (main) values (?)', [self.Gmail['gmailuser']])
+		self.database.execute('insert into auth (main) values (?)', [self.Gmail['password']])
+		self.database.execute('insert into auth (main) values (?)', [self.Twitter.access_token.key])
+		self.database.execute('insert into auth (main) values (?)', [self.Twitter.access_token.secret])
+		#self.database.execute('insert into auth (main) values (?)', [self.Facebook])
 		
 		self.database.execute('''create table mail (main)''')
-		self.database.commit()
-		self.database.close()
+		self.db.commit()
+		self.db.close()
 
 
 class Account:
@@ -238,6 +238,7 @@ class Epistle:
 		''' This function will include the interface of Epistle, and all the function calls. '''
 		gtk.main()
 
-if __name__ == '__main__':
-	app = Epistle()
-	app.main()
+#if __name__ == '__main__':
+#	app = Epistle()
+#	app.main()
+Database().check()
