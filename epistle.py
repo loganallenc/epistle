@@ -88,7 +88,6 @@ class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		Database()
 		self.Auth = Database().read()
 		self.logingmail()
 		self.logintwitter()
