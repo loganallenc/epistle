@@ -27,12 +27,14 @@ class Database:
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
 		if sys.platform == 'linux2':
-			self.checkdb = os.path.exists('/home/' + os.environ['USER'] + '/.local/share/epistle.db')
-			self.db = sqlite3.connect('/home/' + os.environ['USER'] + '/.local/share/epistle.db')
+			self.path = '/home/' + os.environ['USER'] + '/.local/share/epistle.db'
+			self.checkdb = os.path.exists(self.path)
+			self.db = sqlite3.connect(self.path)
 			self.database = self.db.cursor()
 		elif sys.platform == 'win32':
-			self.checkdb = os.path.exists('C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db')
-			self.db = sqlite3.connect('C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db')
+			self.path = 'C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db'
+			self.checkdb = os.path.exists(self.path)
+			self.db = sqlite3.connect(self.path)
 			self.database = self.db.cursor()
 		elif sys.platform == 'darwin':
 			self.checkdb = os.path.exists('/Users/' + os.getenv('USERNAME') + '/epistle.db')
@@ -48,8 +50,8 @@ class Database:
 		self.database.execute('select * from auth')
 		self.Auth = self.database.fetchall()
 		
-		self.database.execute('select * from mail')
-		self.Mail = self.database.fetchall()
+		#self.database.execute('select * from mail')
+		#self.Mail = self.database.fetchall()
 		return self.Auth
 
 	def setup(self):
@@ -113,7 +115,7 @@ class Epistle:
 	        #self.toolbar.add(self.refresh_button)
 		self.toolbar.add(self.gmail_tab)
 		self.toolbar.add(self.tweet_tab)
-		self.toolbar.set_size_request(700,30)
+		self.toolbar.set_size_request(700,35)
 		#self.search = gtk.Entry()
 		#self.search.connect("activate", self.searchdb)
 
@@ -134,7 +136,6 @@ class Epistle:
 		
 	def delete_event(self, widget, data=None):
 		self.imap.logout()
-		self.smtp.quit()
 		return False
 	
 	def destroy(self, widget, data=None):
@@ -145,9 +146,7 @@ class Epistle:
 		''' This function reads unread messages from Gmail. '''
 		label,inbox = self.imap.select('Inbox')
 		inbox = int(inbox[0])
-		
 		unread = len(self.imap.search('Inbox', '(UNSEEN)')[1][0].split())
-		print unread
 		
 		for x in range(((inbox - unread)),inbox):
 			resp, data = self.imap.FETCH(x, '(RFC822)')
@@ -167,10 +166,13 @@ class Epistle:
 
 	def sendmail(self):
 		''' This function sends an email using Gmail. '''
+		self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+		self.smtp.login(user, password)
 		to = raw_input('To: ')
 		subject = raw_input('Subject: ')
 		mailmessage = raw_input('Message: ')
 		self.smtp.sendmail(self.Gmail[0], to, 'Subject: ' + subject + '\n' +mailmessage)
+		self.smtp.quit()
 
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
@@ -214,16 +216,14 @@ class Epistle:
 		self.updatetwitter()
 		self.tweets = ''
 		for x in range(0, 19):
-			self.tweets = self.tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
+			self.tweets = self.tweets + '<img width="24" height="24" src="' + self.twitterupdate[x].user.profile_image_url + '"></img><p><b>' + self.twitterupdate[x].user.screen_name + '</b>:' + self.twitterupdate[x].text + '</p><hr />'
 		self.html.load_html_string(self.tweets, 'file:///')
 		
 	def logingmail(self):
 		user = self.Auth[0][0]
 		password = self.Auth[1][0]
 		self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
-		self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 		self.imap.login(user, password)
-		self.smtp.login(user, password)
 
 	def logintwitter(self):
 		twkey = self.Auth[2][0]
