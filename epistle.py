@@ -1,26 +1,16 @@
 from email.parser import HeaderParser
-import facebooksdk, sqlite3, gobject, getpass, imaplib, smtplib, tweepy, webkit, email, gtk, sys, os
-
-def gmail():
-	''' Collect data for Gmail.'''
-	gmailuser = raw_input('What is your email username? ')
-	password = getpass.getpass('What is your email password? ')
-	returned = {'gmailuser':gmailuser, 'password':password}
-	return returned
-
-def twitter():
-	''' Collect data for Twitter.'''
-	auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-	auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-	auth_url = auth.get_authorization_url()
-	print 'Please authorize: ', auth_url
-	pin = raw_input('PIN: ')
-	auth.get_access_token(pin)
-	return auth
-
-def facebook():
-	'''Collect data for Facebook.'''
-	pass
+import facebooksdk
+import sqlite3
+import gobject
+import getpass
+import imaplib
+import smtplib
+import tweepy
+import webkit
+import email
+import gtk
+import sys
+import os
 
 class Database:
 	''' Checks for existing database and if one does not exist creates the database. '''
@@ -41,9 +31,9 @@ class Database:
 			self.db = sqlite3.connect('/Users/' + os.getenv('USERNAME') + '/epistle.db')
 			self.database = self.db.cursor()
 		if self.checkdb == False:
-			self.Gmail = gmail()
-			self.Twitter = twitter()
-			#self.Facebook = facebook()
+			self.Gmail = Account().gmail()
+			self.Twitter = Account().twitter()
+			#self.Facebook = Account().facebook()
 			self.setup()
 
 	def read(self):
@@ -78,16 +68,25 @@ class Account:
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
 
-	def gmail(self):
-		''' This function logs the user into their Gmail account. '''
-		pass
-		
-	def twitter(self):
-		''' This function logs the user into their Twitter account. '''
-		pass
+	def gmail():
+		''' Collect data for Gmail.'''
+		gmailuser = raw_input('What is your email username? ')
+		password = getpass.getpass('What is your email password? ')
+		returned = {'gmailuser':gmailuser, 'password':password}
+		return returned
 
-	def facebook(self):
-		''' This function logs the user into their Facebook account. '''
+	def twitter():
+		''' Collect data for Twitter.'''
+		auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+		auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+		auth_url = auth.get_authorization_url()
+		print 'Please authorize: ', auth_url
+		pin = raw_input('PIN: ')
+		auth.get_access_token(pin)
+		return auth
+
+	def facebook():
+		'''Collect data for Facebook.'''
 		pass
 
 class Epistle:
@@ -104,8 +103,8 @@ class Epistle:
 		window.connect('delete_event', self.delete_event)
 		window.connect('destroy', self.destroy)
 		window.set_border_width(0)
+
 		toolbar = gtk.Toolbar()
-		
 		compose = gtk.Button('Compose')
 		compose.connect('clicked', self.showcompose)
 		toolbar.add(compose)
@@ -169,6 +168,8 @@ class Epistle:
 		vbox.add(scroll_window)
 		window.add(vbox)
 		window.show_all()
+		self.readmail()
+		self.updatetwitter()
 		
 	def delete_event(self, widget, data=None):
 		self.imap.logout()
@@ -239,11 +240,11 @@ class Epistle:
 		self.Facebook['Facebook'].put_object('me', 'feed', message=fbstatus)
 
 	def refresh(self, widget):
-		pass
+		self.readmail()
+		self.updatetwitter()
 
 	def showmail(self, widget):
 		''' This function displays email messages. '''
-		self.readmail()
 		self.gmailmessage['From'] = self.gmailmessage['From'].replace('<', '&lt;')
 		self.gmailmessage['From'] = self.gmailmessage['From'].replace('>', '&gt;')
 		self.gmailmessage['Body'] = self.gmailmessage['Body'].replace('\n', '<br />')
@@ -251,7 +252,6 @@ class Epistle:
 
 	def showtwitter(self, widget):
 		''' This function displays the user's Twitter home timeline. '''
-		self.updatetwitter()
 		tweets = ''
 		for x in range(0, 19):
 			tweets = tweets + '<img width="24" height="24" src="' + self.twitterupdate[x].user.profile_image_url + '"></img><p><b>' + self.twitterupdate[x].user.screen_name + '</b>:' + self.twitterupdate[x].text + '</p><hr />'
