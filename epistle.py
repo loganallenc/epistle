@@ -104,7 +104,7 @@ class Epistle:
 		window.set_resizable(False)
 		window.set_title('Epistle')
 		window.set_size_request(800, 450)
-		window.set_icon(gtk.gdk.pixbuf_new_from_file('/home/logan/epistle/Epistle-Icon.png'))
+		gtk.window_set_default_icon_from_file('/home/logan/epistle/Epistle-Icon.png')
 		window.connect('delete_event', self.delete_event)
 		window.connect('destroy', self.destroy)
 		window.set_border_width(0)
