@@ -16,6 +16,8 @@ class Database:
 	''' Checks for existing database and if one does not exist creates the database. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
+
+	def check(self):
 		if sys.platform == 'linux2':
 			self.path = '/home/' + os.environ['USER'] + '/.local/share/epistle.db'
 			self.checkdb = os.path.exists(self.path)
@@ -35,6 +37,8 @@ class Database:
 			self.Twitter = Account().twitter()
 			#self.Facebook = Account().facebook()
 			self.setup()
+		self.Auth = self.read()
+		return self.path,self.Auth
 
 	def read(self):
 		self.database.execute('select * from auth')
@@ -93,13 +97,14 @@ class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		self.Auth = Database().read()
+		self.path,self.Auth = Database().check()
 		
 		gobject.threads_init()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		window.set_resizable(False)
 		window.set_title('Epistle')
-		window.set_size_request(700, 450)
+		window.set_size_request(800, 450)
+		window.set_icon(gtk.gdk.pixbuf_new_from_file('/home/logan/epistle/Epistle-Icon.png'))
 		window.connect('delete_event', self.delete_event)
 		window.connect('destroy', self.destroy)
 		window.set_border_width(0)
@@ -142,34 +147,27 @@ class Epistle:
 
 		self.html = webkit.WebView()
 
-		#model = gtk.ListStore(gobject.TYPE_STRING)
-		#tree_view = gtk.TreeView(model)
-		#scrolled_window.add_with_viewport (tree_view)
-		#tree_view.show()
+		self.scrollmsg = gtk.ScrolledWindow(None, None)
+		self.scrollmsg.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+		self.scrollmsg.set_size_request(400,415)
 
-		# Add some messages to the window
-		#for i in range(10):
-		#	msg = "Message #%d" % i
-		#	iter = model.append()
-		#	model.set(iter, 0, msg)
-
-		#cell = gtk.CellRendererText()
-		#column = gtk.TreeViewColumn("Messages", cell, text=0)
-		#tree_view.append_column(column)
 		scroll_window = gtk.ScrolledWindow(None, None)
+		scroll_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+		scroll_window.set_size_request(400,415)
 		scroll_window.add(self.html)
 		
-		vbox = gtk.VBox(False, 0)
-		hbox = gtk.HBox(False, 0)
-		vbox.pack_start(hbox, expand=False, fill=False, padding=0)
-		#Edit the interface to how you like it
-		hbox.pack_start(toolbar, expand=False, fill=False, padding=0)
-		#hbox.pack_start(self.search, expand=True, fill=True, padding=0)
-		vbox.add(scroll_window)
+		vbox = gtk.VBox()
+		hpane = gtk.HPaned()
+		hpane.pack1(self.scrollmsg)
+		hpane.pack2(scroll_window)
+		#vbox.pack_start(hpane, True, True)
+		vbox.add(toolbar)
+		vbox.add(hpane)
 		window.add(vbox)
 		window.show_all()
 		self.readmail()
 		self.updatetwitter()
+		self.listmail()
 		
 	def delete_event(self, widget, data=None):
 		self.imap.logout()
@@ -243,6 +241,23 @@ class Epistle:
 		self.readmail()
 		self.updatetwitter()
 
+	def listmail(self):
+		model = gtk.ListStore(gobject.TYPE_STRING)
+		tree_view = gtk.TreeView(model)
+		self.scrollmsg.add_with_viewport(tree_view)
+		tree_view.set_headers_visible(False)
+		tree_view.show()
+
+		# Add some messages to the window
+		for i in range(10):
+			msg = self.gmailmessage['Subject'] + ' - ' + self.gmailmessage['From']
+			iterator = model.append()
+			model.set(iterator, 0, msg)
+
+		cell = gtk.CellRendererText()
+		column = gtk.TreeViewColumn(None, cell, text=0)
+		tree_view.append_column(column)
+
 	def showmail(self, widget):
 		''' This function displays email messages. '''
 		self.gmailmessage['From'] = self.gmailmessage['From'].replace('<', '&lt;')
@@ -253,9 +268,9 @@ class Epistle:
 	def showtwitter(self, widget):
 		''' This function displays the user's Twitter home timeline. '''
 		tweets = ''
-		for x in range(0, 19):
-			tweets = tweets + '<img width="24" height="24" src="' + self.twitterupdate[x].user.profile_image_url + '"></img><p><b>' + self.twitterupdate[x].user.screen_name + '</b>:' + self.twitterupdate[x].text + '</p><hr />'
-		self.html.load_html_string(tweets, 'file:///')
+		for x in range(0, 17):
+			tweets = tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
+			self.html.load_html_string(tweets, 'file:///')
 		
 	def showcompose(self, widget):
 		pass
