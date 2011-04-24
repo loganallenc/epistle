@@ -55,6 +55,12 @@ class Database:
 		return self.Auth
 
 	def setup(self):
+		try: self.Gmail['gmailuser']
+		except NameError: self.Gmail['gmailuser'] = 0
+		try: self.Gmail['password']
+		except NameError: self.Gmail['password'] = 0
+		try: self.Twitter.access_token
+		except NameError: self.Twitter.access_token.key,self.Twitter.access_token.secret = 0,0
 		self.database.execute('''create table auth (main)''')
 		self.database.execute('insert into auth (main) values (?)', [self.Gmail['gmailuser']])
 		self.database.execute('insert into auth (main) values (?)', [self.Gmail['password']])
@@ -89,8 +95,6 @@ class Epistle:
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
 		self.Auth = Database().read()
-		self.logingmail()
-		self.logintwitter()
 		
 		gobject.threads_init()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -104,30 +108,55 @@ class Epistle:
 		
 		compose = gtk.Button('Compose')
 		compose.connect('clicked', self.showcompose)
+		toolbar.add(compose)
 		
-		gmail_tab = gtk.Button('Gmail')
-		gmail_tab.connect('clicked', self.showmail)
+		if self.Auth[0][0] != int:
+			self.logingmail()
+			gmail_tab = gtk.Button('Gmail')
+			gmail_tab.connect('clicked', self.showmail)
+			toolbar.add(gmail_tab)
+
+		if self.Auth[2][0] != int:
+			self.logintwitter()
+			tweet_tab = gtk.Button('Twitter')
+			tweet_tab.connect('clicked', self.showtwitter)
+			toolbar.add(tweet_tab)
+
+#		if self.Auth[4][0] != int:
+			#self.logingmail()
+#			fb_tab = gtk.Button('Facebook')
+#			fb_tab.connect('clicked', self.showfb)
+#			toolbar.add(fb_tab)
 		
-		tweet_tab = gtk.Button('Twitter')
-		tweet_tab.connect('clicked', self.showtwitter)
-			
 		image = gtk.Image()
 		image.set_from_stock(gtk.STOCK_REFRESH,gtk.ICON_SIZE_BUTTON)
 		refresh_button = gtk.Button()
 		refresh_button.set_image(image)
 		refresh_button.set_label('')
 		refresh_button.connect('clicked', self.refresh)
-
-		toolbar.add(compose)
-		toolbar.add(gmail_tab)
-		toolbar.add(tweet_tab)
-		#toolbar.insert_space(200)
 		toolbar.add(refresh_button)
-		toolbar.set_size_request(700,35)
+
+		#toolbar.insert_space(200)
 		#self.search = gtk.Entry()
 		#self.search.connect("activate", self.searchdb)
+		toolbar.set_size_request(700,35)
 
 		self.html = webkit.WebView()
+
+		#model = gtk.ListStore(gobject.TYPE_STRING)
+		#tree_view = gtk.TreeView(model)
+		#scrolled_window.add_with_viewport (tree_view)
+		#tree_view.show()
+
+		# Add some messages to the window
+		#for i in range(10):
+		#	msg = "Message #%d" % i
+		#	iter = model.append()
+		#	model.set(iter, 0, msg)
+
+		#cell = gtk.CellRendererText()
+		#column = gtk.TreeViewColumn("Messages", cell, text=0)
+		#tree_view.append_column(column)
 		scroll_window = gtk.ScrolledWindow(None, None)
 		scroll_window.add(self.html)
 		
