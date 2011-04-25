@@ -20,33 +20,31 @@ class Database:
 	def check(self):
 		if sys.platform == 'linux2':
 			self.path = '/home/' + os.environ['USER'] + '/.local/share/epistle.db'
-			self.checkdb = os.path.exists(self.path)
-			self.db = sqlite3.connect(self.path)
-			self.database = self.db.cursor()
+
 		elif sys.platform == 'win32':
 			self.path = 'C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db'
-			self.checkdb = os.path.exists(self.path)
-			self.db = sqlite3.connect(self.path)
-			self.database = self.db.cursor()
+
 		elif sys.platform == 'darwin':
-			self.checkdb = os.path.exists('/Users/' + os.getenv('USERNAME') + '/epistle.db')
-			self.db = sqlite3.connect('/Users/' + os.getenv('USERNAME') + '/epistle.db')
-			self.database = self.db.cursor()
+			self.path = '/Users/' + os.getenv('USERNAME') + '/epistle.db'
+
+		self.checkdb = os.path.exists(self.path)
+		self.db = sqlite3.connect(self.path)
+		self.database = self.db.cursor()
 		if self.checkdb == False:
 			self.Gmail = Account().gmail()
 			self.Twitter = Account().twitter()
 			#self.Facebook = Account().facebook()
 			self.setup()
-		self.Auth = self.read()
-		return self.path,self.Auth
+		self.Auth,self.Mail = self.read()
+		return self.path,self.Auth,self.Mail
 
 	def read(self):
 		self.database.execute('select * from auth')
 		self.Auth = self.database.fetchall()
 		
-		#self.database.execute('select * from mail')
-		#self.Mail = self.database.fetchall()
-		return self.Auth
+		self.database.execute('select * from mail where id in (select max(id))')
+		self.Mail = self.database.fetchall()
+		return self.Auth, self.Mail
 
 	def setup(self):
 		try: self.Gmail['gmailuser']
@@ -55,14 +53,16 @@ class Database:
 		except NameError: self.Gmail['password'] = 0
 		try: self.Twitter.access_token
 		except NameError: self.Twitter.access_token.key,self.Twitter.access_token.secret = 0,0
-		self.database.execute('''create table auth (main)''')
-		self.database.execute('insert into auth (main) values (?)', [self.Gmail['gmailuser']])
-		self.database.execute('insert into auth (main) values (?)', [self.Gmail['password']])
-		self.database.execute('insert into auth (main) values (?)', [self.Twitter.access_token.key])
-		self.database.execute('insert into auth (main) values (?)', [self.Twitter.access_token.secret])
-		#self.database.execute('insert into auth (main) values (?)', [self.Facebook])
+		self.database.execute('''create table auth (id integer primary key, main)''')
+		self.database.execute('insert into auth (id, main) values (1,1)')
+		self.database.execute('insert into auth (id, main) values (2,?)', [self.Gmail['gmailuser']])
+		self.database.execute('insert into auth (id, main) values (3,?)', [self.Gmail['password']])
+		self.database.execute('insert into auth (id, main) values (4,?)', [self.Twitter.access_token.key])
+		self.database.execute('insert into auth (id, main) values (5,?)', [self.Twitter.access_token.secret])
+		#self.database.execute('insert into auth (main) values (6,?)', [self.Facebook])
 		
-		self.database.execute('''create table mail (main)''')
+		self.database.execute('''create table mail (id integer primary key,fromaddress,subject,toaddress,body)''')
+		self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (1,"","","","")')
 		self.db.commit()
 		self.db.close()
 
@@ -72,14 +72,14 @@ class Account:
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
 
-	def gmail():
+	def gmail(self):
 		''' Collect data for Gmail.'''
 		gmailuser = raw_input('What is your email username? ')
 		password = getpass.getpass('What is your email password? ')
 		returned = {'gmailuser':gmailuser, 'password':password}
 		return returned
 
-	def twitter():
+	def twitter(self):
 		''' Collect data for Twitter.'''
 		auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 		auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
@@ -89,7 +89,7 @@ class Account:
 		auth.get_access_token(pin)
 		return auth
 
-	def facebook():
+	def facebook(self):
 		'''Collect data for Facebook.'''
 		pass
 
@@ -97,7 +97,7 @@ class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		self.path,self.Auth = Database().check()
+		self.path,self.Auth,self.Mail = Database().check()
 		
 		gobject.threads_init()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -114,19 +114,19 @@ class Epistle:
 		compose.connect('clicked', self.showcompose)
 		toolbar.add(compose)
 		
-		if self.Auth[0][0] != int:
+		if self.Auth[1][0] != int:
 			self.logingmail()
 			gmail_tab = gtk.Button('Gmail')
 			gmail_tab.connect('clicked', self.showmail)
 			toolbar.add(gmail_tab)
 
-		if self.Auth[2][0] != int:
+		if self.Auth[3][0] != int:
 			self.logintwitter()
 			tweet_tab = gtk.Button('Twitter')
 			tweet_tab.connect('clicked', self.showtwitter)
 			toolbar.add(tweet_tab)
 
-#		if self.Auth[4][0] != int:
+#		if self.Auth[5][0] != int:
 			#self.logingmail()
 #			fb_tab = gtk.Button('Facebook')
 #			fb_tab.connect('clicked', self.showfb)
@@ -165,7 +165,8 @@ class Epistle:
 		vbox.add(hpane)
 		window.add(vbox)
 		window.show_all()
-		self.readmail()
+		self.getmail()
+		#self.readmail()
 		self.updatetwitter()
 		self.listmail()
 		
@@ -176,15 +177,19 @@ class Epistle:
 	def destroy(self, widget, data=None):
 		gtk.main_quit()
 
-
-	def readmail(self):
+	def getmail(self):
 		''' This function reads unread messages from Gmail. '''
-		label,inbox = self.imap.select('Inbox')
+		label,inbox = self.imap.select()
 		inbox = int(inbox[0])
 		unread = len(self.imap.search('Inbox', '(UNSEEN)')[1][0].split())
-		
-		for x in range(((inbox - unread)),inbox):
-			resp, data = self.imap.FETCH(x, '(RFC822)')
+		self.db = sqlite3.connect(self.path)
+		self.database = self.db.cursor()
+		self.database.execute('select * from auth where id=1')
+		for row in self.database:
+			save = row[0]
+			print save
+		for x in xrange(save+1,inbox):
+			resp, data = self.imap.fetch(x, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
 			message = HeaderParser().parsestr(data[0][1])
 			self.gmailmessage = {}
@@ -194,10 +199,11 @@ class Epistle:
 
 			for mailpart in mailitem.walk():
 				if mailpart.get_content_maintype() == 'multipart':
-					continue	
+					continue
 				message = mailpart.get_payload()
 				self.gmailmessage['Body'] = message
-				break
+			self.database.execute('update auth set main = ? where id = 1', [x])
+			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ x, self.gmailmessage['From'], self.gmailmessage['Subject'], self.gmailmessage['To'], buffer(self.gmailmessage['Body']) ])
 
 	def sendmail(self):
 		''' This function sends an email using Gmail. '''
@@ -238,8 +244,14 @@ class Epistle:
 		self.Facebook['Facebook'].put_object('me', 'feed', message=fbstatus)
 
 	def refresh(self, widget):
-		self.readmail()
+		self.getmail()
 		self.updatetwitter()
+
+	def readmail(self):
+		self.Mail[0][0] #From
+		self.Mail[1][0] #Subject
+		self.Mail[2][0] #To
+		self.Mail[3][0] #Body
 
 	def listmail(self):
 		model = gtk.ListStore(gobject.TYPE_STRING)
@@ -249,7 +261,7 @@ class Epistle:
 		tree_view.show()
 
 		# Add some messages to the window
-		for i in range(10):
+		for i in xrange(10):
 			msg = self.gmailmessage['Subject'] + ' - ' + self.gmailmessage['From']
 			iterator = model.append()
 			model.set(iterator, 0, msg)
@@ -268,7 +280,7 @@ class Epistle:
 	def showtwitter(self, widget):
 		''' This function displays the user's Twitter home timeline. '''
 		tweets = ''
-		for x in range(0, 17):
+		for x in xrange(0, 17):
 			tweets = tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
 			self.html.load_html_string(tweets, 'file:///')
 		
@@ -277,12 +289,12 @@ class Epistle:
 		
 	def logingmail(self):
 		self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
-		self.imap.login(self.Auth[0][0], self.Auth[1][0])
+		self.imap.login(self.Auth[1][1], self.Auth[2][1])
 
 	def logintwitter(self):
 		self.auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 		self.auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-		self.auth.set_access_token(self.Auth[2][0], self.Auth[3][0])
+		self.auth.set_access_token(self.Auth[3][1], self.Auth[4][1])
 		self.Twitter = tweepy.API(self.auth)
 
 	def main(self):
