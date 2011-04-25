@@ -35,16 +35,18 @@ class Database:
 			self.Twitter = Account().twitter()
 			#self.Facebook = Account().facebook()
 			self.setup()
-		self.Auth,self.Mail = self.read()
-		return self.path,self.Auth,self.Mail
+		self.Auth = self.authread()
+		return self.path,self.Auth
 
-	def read(self):
+	def authread(self):
 		self.database.execute('select * from auth')
 		self.Auth = self.database.fetchall()
-		
+		return self.Auth
+
+	def mailread(self):
 		self.database.execute('select * from mail where id in (select max(id))')
 		self.Mail = self.database.fetchall()
-		return self.Auth, self.Mail
+		return self.Mail
 
 	def setup(self):
 		try: self.Gmail['gmailuser']
@@ -61,10 +63,8 @@ class Database:
 		self.database.execute('insert into auth (id, main) values (5,?)', [self.Twitter.access_token.secret])
 		#self.database.execute('insert into auth (main) values (6,?)', [self.Facebook])
 		
-		self.database.execute('''create table mail (id integer primary key,fromaddress,subject,toaddress,body)''')
-		self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (1,"","","","")')
+		self.database.execute('''create table mail (id primary key,fromaddress,subject,toaddress,body)''')
 		self.db.commit()
-		self.db.close()
 
 
 class Account:
@@ -97,7 +97,7 @@ class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		self.path,self.Auth,self.Mail = Database().check()
+		self.path,self.Auth = Database().check()
 		
 		gobject.threads_init()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -165,13 +165,14 @@ class Epistle:
 		vbox.add(hpane)
 		window.add(vbox)
 		window.show_all()
-		#self.getmail()
+		self.getmail()
 		self.readmail()
 		self.updatetwitter()
 		self.listmail()
 		
 	def delete_event(self, widget, data=None):
 		self.imap.logout()
+		self.db.close()
 		return False
 	
 	def destroy(self, widget, data=None):
@@ -184,10 +185,11 @@ class Epistle:
 		unread = len(self.imap.search('Inbox', '(UNSEEN)')[1][0].split())
 		self.db = sqlite3.connect(self.path)
 		self.database = self.db.cursor()
-		self.database.execute('select * from auth where id=1')
+		self.database.execute('select main from auth where id=1')
 		for row in self.database:
 			save = row[0]
 		for x in xrange(save+1,inbox):
+			print x
 			resp, data = self.imap.fetch(x, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
 			message = HeaderParser().parsestr(data[0][1])
@@ -203,6 +205,7 @@ class Epistle:
 				self.gmailmessage['Body'] = message
 			self.database.execute('update auth set main = ? where id = 1', [x])
 			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ x, self.gmailmessage['From'], self.gmailmessage['Subject'], self.gmailmessage['To'], buffer(self.gmailmessage['Body']) ])
+			self.db.commit()
 
 	def sendmail(self):
 		''' This function sends an email using Gmail. '''
@@ -247,6 +250,7 @@ class Epistle:
 		self.updatetwitter()
 
 	def readmail(self):
+		self.Mail = Database().mailread()
 		print self.Mail[0][0] #From
 		print self.Mail[1][0] #Subject
 		print self.Mail[2][0] #To
