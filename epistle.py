@@ -104,7 +104,7 @@ class Epistle:
 		window.set_resizable(False)
 		window.set_title('Epistle')
 		window.set_size_request(800, 450)
-		gtk.window_set_default_icon_from_file('/home/logan/epistle/Epistle-Icon.png')
+		gtk.window_set_default_icon_from_file('Epistle-Icon.png')
 		window.connect('delete_event', self.delete_event)
 		window.connect('destroy', self.destroy)
 		window.set_border_width(0)
@@ -165,8 +165,8 @@ class Epistle:
 		vbox.add(hpane)
 		window.add(vbox)
 		window.show_all()
-		self.getmail()
-		#self.readmail()
+		#self.getmail()
+		self.readmail()
 		self.updatetwitter()
 		self.listmail()
 		
@@ -187,7 +187,6 @@ class Epistle:
 		self.database.execute('select * from auth where id=1')
 		for row in self.database:
 			save = row[0]
-			print save
 		for x in xrange(save+1,inbox):
 			resp, data = self.imap.fetch(x, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
@@ -248,10 +247,10 @@ class Epistle:
 		self.updatetwitter()
 
 	def readmail(self):
-		self.Mail[0][0] #From
-		self.Mail[1][0] #Subject
-		self.Mail[2][0] #To
-		self.Mail[3][0] #Body
+		print self.Mail[0][0] #From
+		print self.Mail[1][0] #Subject
+		print self.Mail[2][0] #To
+		print self.Mail[3][0] #Body
 
 	def listmail(self):
 		model = gtk.ListStore(gobject.TYPE_STRING)
