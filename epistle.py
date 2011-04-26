@@ -11,7 +11,6 @@ import email
 import gtk
 import sys
 import os
-import urlparse
 
 class Database:
 	''' Checks for existing database and if one does not exist creates the database. '''
