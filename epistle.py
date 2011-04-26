@@ -98,6 +98,9 @@ class Account:
 		self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/')
 		url = widget.get_main_frame().get_uri()
 		url = url.replace ('http://www.loganfynne.com/?code=','')
+		url = url.split('.', 1)
+		url = url.pop()
+		''.join(url)
 
 class Epistle:
 	''' This is the main application class. '''
