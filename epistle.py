@@ -11,6 +11,7 @@ import email
 import gtk
 import sys
 import os
+import urlparse
 
 class Database:
 	''' Checks for existing database and if one does not exist creates the database. '''
@@ -92,10 +93,12 @@ class Account:
 		auth.get_access_token(pin)
 		return auth
 
-	def facebook(self):
+	def facebook(self, widget):
 		'''Collect data for Facebook.'''
 		self.html = webkit.WebView()
 		self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/')
+		url = widget.get_main_frame().get_uri()
+		url = url.replace ('http://www.loganfynne.com/?code=','')
 
 class Epistle:
 	''' This is the main application class. '''
@@ -131,7 +134,7 @@ class Epistle:
 			toolbar.add(tweet_tab)
 
 #		if self.Auth[5][0] != int:
-			#self.logingmail()
+			#self.loginfb()
 #			fb_tab = gtk.Button('Facebook')
 #			fb_tab.connect('clicked', self.showfb)
 #			toolbar.add(fb_tab)
@@ -302,4 +305,5 @@ class Epistle:
 		gtk.main()
 if __name__ == '__main__':
 	app = Epistle()
-	app.main()
+	#app.main()
+	Account().facebook()
