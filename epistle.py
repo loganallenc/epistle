@@ -74,6 +74,32 @@ class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
+		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		self.window.set_resizable(False)
+		self.window.set_title("Epistle")
+		self.window.set_default_size(800, 450)
+		self.window.connect("delete_event", self.delete_event)
+		self.window.connect("destroy", self.destroy)
+
+		self.html = webkit.WebView()
+		self.html.connect('load_committed', self.facebook)
+
+		scroll_window = gtk.ScrolledWindow(None, None)
+		scroll_window.add(self.html)
+
+		vbox = gtk.VBox(False, 0)
+		vbox.pack_start(scroll_window, True, True)
+
+		self.window.add(vbox)
+		self.window.show_all()
+		self.openfb()
+		gtk.main()
+
+	def delete_event(self, widget, data=None):
+		return False
+	
+	def destroy(self, widget, data=None):
+		gtk.main_quit()
 
 	def gmail(self):
 		''' Collect data for Gmail.'''
@@ -92,15 +118,16 @@ class Account:
 		auth.get_access_token(pin)
 		return auth
 
-	def facebook(self, widget):
-		'''Collect data for Facebook.'''
-		self.html = webkit.WebView()
+	def openfb(self):
 		self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/')
+	def facebook(self,widget,data=None):
+		'''Collect data for Facebook.'''
 		url = widget.get_main_frame().get_uri()
 		url = url.replace ('http://www.loganfynne.com/?code=','')
 		url = url.split('.', 1)
 		url = url.pop()
 		url = ''.join(url)
+		print url
 
 class Epistle:
 	''' This is the main application class. '''
@@ -309,6 +336,6 @@ class Epistle:
 		''' This function will include the interface of Epistle, and all the function calls. '''
 		gtk.main()
 if __name__ == '__main__':
-	app = Epistle()
+	#app = Epistle()
 	#app.main()
-	Account().facebook()
+	Account()
