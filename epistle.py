@@ -16,20 +16,21 @@ class Database:
 	''' Checks for existing database and if one does not exist creates the database. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-
-	def check(self):
 		if sys.platform == 'linux2':
 			self.path = '/home/' + os.environ['USER'] + '/.local/share/epistle.db'
-
-		elif sys.platform == 'win32':
+		if sys.platform == 'win32':
 			self.path = 'C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db'
-
 		elif sys.platform == 'darwin':
 			self.path = '/Users/' + os.getenv('USERNAME') + '/epistle.db'
 
+	def connect(self):
 		self.checkdb = os.path.exists(self.path)
 		self.db = sqlite3.connect(self.path)
 		self.database = self.db.cursor()
+		return self.db, self.database
+	
+	def check(self):
+		self.connect()
 		if self.checkdb == False:
 			self.Gmail = Account().gmail()
 			self.Twitter = Account().twitter()
@@ -39,11 +40,13 @@ class Database:
 		return self.path,self.Auth
 
 	def authread(self):
+		self.connect()
 		self.database.execute('select * from auth')
 		self.Auth = self.database.fetchall()
 		return self.Auth
 
 	def mailread(self):
+		self.connect()
 		self.database.execute('select * from mail where id in (select max(id))')
 		self.Mail = self.database.fetchall()
 		return self.Mail
@@ -146,6 +149,7 @@ class Epistle:
 		toolbar.set_size_request(700,35)
 
 		self.html = webkit.WebView()
+		self.view = gtk.TextView()
 
 		self.scrollmsg = gtk.ScrolledWindow(None, None)
 		self.scrollmsg.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -154,7 +158,7 @@ class Epistle:
 		scroll_window = gtk.ScrolledWindow(None, None)
 		scroll_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 		scroll_window.set_size_request(400,415)
-		scroll_window.add(self.html)
+		scroll_window.add(self.view)
 		
 		vbox = gtk.VBox()
 		hpane = gtk.HPaned()
@@ -166,7 +170,6 @@ class Epistle:
 		window.add(vbox)
 		window.show_all()
 		self.getmail()
-		self.readmail()
 		self.updatetwitter()
 		self.listmail()
 		
@@ -183,28 +186,25 @@ class Epistle:
 		label,inbox = self.imap.select()
 		inbox = int(inbox[0])
 		unread = len(self.imap.search('Inbox', '(UNSEEN)')[1][0].split())
-		self.db = sqlite3.connect(self.path)
-		self.database = self.db.cursor()
+		self.db,self.database = Database().connect()
 		self.database.execute('select main from auth where id=1')
 		for row in self.database:
 			save = row[0]
-		for x in xrange(save+1,inbox):
-			print x
-			resp, data = self.imap.fetch(x, '(RFC822)')
+			print 'Num in DB: ' + str(save)
+			print 'Inbox: ' + str(inbox)
+		while save < inbox:
+			save = save + 1
+			print save
+			resp, data = self.imap.fetch(save, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
-			message = HeaderParser().parsestr(data[0][1])
-			self.gmailmessage = {}
-			self.gmailmessage['From'] = message['From']
-			self.gmailmessage['To'] = message['To']
-			self.gmailmessage['Subject'] = message['Subject']
+			header = HeaderParser().parsestr(data[0][1])
 
 			for mailpart in mailitem.walk():
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
 				message = mailpart.get_payload()
-				self.gmailmessage['Body'] = message
-			self.database.execute('update auth set main = ? where id = 1', [x])
-			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ x, self.gmailmessage['From'], self.gmailmessage['Subject'], self.gmailmessage['To'], buffer(self.gmailmessage['Body']) ])
+			self.database.execute('update auth set main = ? where id = 1', [save])
+			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ save, header['From'], header['Subject'], header['To'], buffer(message) ])
 			self.db.commit()
 
 	def sendmail(self):
@@ -251,34 +251,30 @@ class Epistle:
 
 	def readmail(self):
 		self.Mail = Database().mailread()
-		print self.Mail[0][0] #From
-		print self.Mail[1][0] #Subject
-		print self.Mail[2][0] #To
-		print self.Mail[3][0] #Body
 
 	def listmail(self):
-		model = gtk.ListStore(gobject.TYPE_STRING)
-		tree_view = gtk.TreeView(model)
-		self.scrollmsg.add_with_viewport(tree_view)
-		tree_view.set_headers_visible(False)
-		tree_view.show()
+		self.readmail()
+		self.model = gtk.ListStore(gobject.TYPE_STRING)
+		treeview = gtk.TreeView(self.model)
+		self.scrollmsg.add_with_viewport(treeview)
+		treeview.set_headers_visible(False)
+		treeview.show()
 
 		# Add some messages to the window
-		for i in xrange(10):
-			msg = self.gmailmessage['Subject'] + ' - ' + self.gmailmessage['From']
-			iterator = model.append()
-			model.set(iterator, 0, msg)
+		for x in xrange(0,19):
+			print 'Listed Email: ' + x
+			msg = self.Mail[x][2] + ' - ' + self.Mail[x][1]
+			iterator = self.model.append()
+			self.model.set(iterator, x, msg)
 
 		cell = gtk.CellRendererText()
 		column = gtk.TreeViewColumn(None, cell, text=0)
-		tree_view.append_column(column)
+		treeview.append_column(column)
 
 	def showmail(self, widget):
 		''' This function displays email messages. '''
-		self.gmailmessage['From'] = self.gmailmessage['From'].replace('<', '&lt;')
-		self.gmailmessage['From'] = self.gmailmessage['From'].replace('>', '&gt;')
-		self.gmailmessage['Body'] = self.gmailmessage['Body'].replace('\n', '<br />')
-		self.html.load_html_string('<p>Subject: ' + self.gmailmessage['Subject'] + '</p><p>From: ' + self.gmailmessage['From'] + '</p><hr />' + self.gmailmessage['Body'], 'file:///')
+		self.model.get_value(iterator, 1)
+		self.view.set_buffer(self.Mail[0][4])
 
 	def showtwitter(self, widget):
 		''' This function displays the user's Twitter home timeline. '''
