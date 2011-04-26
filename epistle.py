@@ -100,7 +100,7 @@ class Account:
 		url = url.replace ('http://www.loganfynne.com/?code=','')
 		url = url.split('.', 1)
 		url = url.pop()
-		''.join(url)
+		url = ''.join(url)
 
 class Epistle:
 	''' This is the main application class. '''
@@ -155,6 +155,7 @@ class Epistle:
 		toolbar.set_size_request(700,35)
 
 		self.html = webkit.WebView()
+		self.gtkbuffer = gtk.TextBuffer()
 		self.view = gtk.TextView()
 
 		self.scrollmsg = gtk.ScrolledWindow(None, None)
@@ -208,9 +209,10 @@ class Epistle:
 			for mailpart in mailitem.walk():
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
-				message = mailpart.get_payload()
+				if mailpart.get_payload() == str: message = mailpart.get_payload()
+				else: message = '' 
 			self.database.execute('update auth set main = ? where id = 1', [save])
-			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ save, header['From'], header['Subject'], header['To'], buffer(message) ])
+			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ save, header['From'], header['Subject'], header['To'], message ])
 			self.db.commit()
 
 	def sendmail(self):
@@ -270,8 +272,8 @@ class Epistle:
 		for x in xrange(0,19):
 			print 'Listed Email: ' + str(x)
 			msg = self.Mail[x][2] + ' - ' + self.Mail[x][1]
-			iterator = self.model.append()
-			self.model.set(iterator, x, msg)
+			self.iterator = self.model.append()
+			self.model.set(self.iterator, 0, msg)
 
 		cell = gtk.CellRendererText()
 		column = gtk.TreeViewColumn(None, cell, text=0)
@@ -279,8 +281,9 @@ class Epistle:
 
 	def showmail(self, widget):
 		''' This function displays email messages. '''
-		self.model.get_value(iterator, 1)
-		self.view.set_buffer(self.Mail[0][4])
+		self.model.get_value(self.iterator, 0)
+		self.gtkbuffer.set_text(self.Mail[0][4])
+		self.view.set_buffer(gtkbuffer)
 
 	def showtwitter(self, widget):
 		''' This function displays the user's Twitter home timeline. '''
