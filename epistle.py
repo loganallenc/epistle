@@ -263,7 +263,7 @@ class Epistle:
 
 		# Add some messages to the window
 		for x in xrange(0,19):
-			print 'Listed Email: ' + x
+			print 'Listed Email: ' + str(x)
 			msg = self.Mail[x][2] + ' - ' + self.Mail[x][1]
 			iterator = self.model.append()
 			self.model.set(iterator, x, msg)
