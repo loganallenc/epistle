@@ -123,7 +123,7 @@ class Account:
 	def facebook(self,widget,data=None):
 		'''Collect data for Facebook.'''
 		url = widget.get_main_frame().get_uri()
-		url = url.replace ('http://www.loganfynne.com/?code=','')
+		url = url.replace ('http://www.loganfynne.com/?code=","')
 		url = url.split('.', 1)
 		url = url.pop()
 		url = ''.join(url)
