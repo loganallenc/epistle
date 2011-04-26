@@ -94,7 +94,8 @@ class Account:
 
 	def facebook(self):
 		'''Collect data for Facebook.'''
-		pass
+		self.html = webkit.WebView()
+		self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/')
 
 class Epistle:
 	''' This is the main application class. '''
