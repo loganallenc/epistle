@@ -74,12 +74,15 @@ class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		self.window.set_resizable(False)
-		self.window.set_title("Epistle")
-		self.window.set_default_size(800, 450)
-		self.window.connect("delete_event", self.delete_event)
-		self.window.connect("destroy", self.destroy)
+		gobject.threads_init()
+		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		window.set_resizable(False)
+		window.set_title('Epistle')
+		window.set_size_request(800, 450)
+		gtk.window_set_default_icon_from_file('Epistle-Icon.png')
+		window.connect('delete_event', self.delete_event)
+		window.connect('destroy', self.destroy)
+		window.set_border_width(0)
 
 		self.html = webkit.WebView()
 		self.html.connect('load_committed', self.facebook)
@@ -90,8 +93,8 @@ class Account:
 		vbox = gtk.VBox(False, 0)
 		vbox.pack_start(scroll_window, True, True)
 
-		self.window.add(vbox)
-		self.window.show_all()
+		window.add(vbox)
+		window.show_all()
 		self.openfb()
 		gtk.main()
 
@@ -123,7 +126,7 @@ class Account:
 	def facebook(self,widget,data=None):
 		'''Collect data for Facebook.'''
 		url = widget.get_main_frame().get_uri()
-		url = url.replace ('http://www.loganfynne.com/?code=","')
+		url = url.replace ('http://www.loganfynne.com/?code=','')
 		url = url.split('.', 1)
 		url = url.pop()
 		url = ''.join(url)
