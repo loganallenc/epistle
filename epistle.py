@@ -187,6 +187,8 @@ class Epistle:
 		self.html = webkit.WebView()
 		self.gtkbuffer = gtk.TextBuffer()
 		self.view = gtk.TextView()
+		self.view.set_cursor_visible(False)
+		self.view.set_editable(False)
 
 		self.scrollmsg = gtk.ScrolledWindow(None, None)
 		self.scrollmsg.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
@@ -195,7 +197,7 @@ class Epistle:
 		scroll_window = gtk.ScrolledWindow(None, None)
 		scroll_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 		scroll_window.set_size_request(400,415)
-		scroll_window.add(self.view)
+		scroll_window.add(self.html)
 		
 		vbox = gtk.VBox()
 		hpane = gtk.HPaned()
@@ -226,23 +228,22 @@ class Epistle:
 		self.db,self.database = Database().connect()
 		self.database.execute('select main from auth where id=1')
 		for row in self.database:
-			save = row[0]
-			print 'Num in DB: ' + str(save)
+			self.save = row[0]
+			print 'Num in DB: ' + str(self.save)
 			print 'Inbox: ' + str(inbox)
-		while save < inbox:
-			save = save + 1
-			print save
-			resp, data = self.imap.fetch(save, '(RFC822)')
+		while self.save < inbox:
+			self.save = self.save + 1
+			print self.save
+			resp, data = self.imap.fetch(self.save, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
 			header = HeaderParser().parsestr(data[0][1])
 
 			for mailpart in mailitem.walk():
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
-				if mailpart.get_payload() == str: message = mailpart.get_payload()
-				else: message = '' 
-			self.database.execute('update auth set main = ? where id = 1', [save])
-			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ save, header['From'], header['Subject'], header['To'], message ])
+				message = mailpart.get_payload()
+			self.database.execute('update auth set main = ? where id = 1', [self.save])
+			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ self.save, header['From'], header['Subject'], header['To'], message ])
 			self.db.commit()
 
 	def sendmail(self):
@@ -292,28 +293,51 @@ class Epistle:
 
 	def listmail(self):
 		self.readmail()
-		self.model = gtk.ListStore(gobject.TYPE_STRING)
-		treeview = gtk.TreeView(self.model)
-		self.scrollmsg.add_with_viewport(treeview)
-		treeview.set_headers_visible(False)
-		treeview.show()
+		#self.mainmodel = gtk.ListStore(gobject.TYPE_STRING)
+		#self.maintreeview = gtk.TreeView(self.mainmodel)
+		#self.scrollmsg.add_with_viewport(self.maintreeview)
+		#self.maintreeview.set_headers_visible(False)
+		#self.maintreeview.connect('cursor-changed', self.showmail)
+		#self.maintreeview.show()
 
-		# Add some messages to the window
+		self.idmodel = gtk.ListStore(gobject.TYPE_STRING)
+		self.idtreeview = gtk.TreeView(self.idmodel)
+		self.scrollmsg.add_with_viewport(self.idtreeview)
+		self.idtreeview.set_headers_visible(False)
+		self.idtreeview.set_visible(False)
+		self.idtreeview.connect('cursor-changed', self.showmail)
+		self.idtreeview.show()
+
 		for x in xrange(0,19):
+			y = self.save + x - 20
+			print y
 			print 'Listed Email: ' + str(x)
-			msg = self.Mail[x][2] + ' - ' + self.Mail[x][1]
-			self.iterator = self.model.append()
-			self.model.set(self.iterator, 0, msg)
+			if self.Mail[y][2] == None: msg = '(No Subject) - ' + self.Mail[y][1]
+			else: msg = self.Mail[y][2] + ' - ' + self.Mail[y][1]
+			print msg
+		#	self.mainiterator = self.mainmodel.prepend()
+		#	self.mainmodel.set(self.mainiterator, 0, msg)
+			self.iditerator = self.idmodel.prepend()
+			self.idmodel.set(self.iditerator, 0, x)
 
-		cell = gtk.CellRendererText()
-		column = gtk.TreeViewColumn(None, cell, text=0)
-		treeview.append_column(column)
+		#maincell = gtk.CellRendererText()
+		#maincolumn = gtk.TreeViewColumn(None, maincell, text=0)
+		#self.maintreeview.append_column(maincolumn)
+
+		idcell = gtk.CellRendererText()
+		idcolumn = gtk.TreeViewColumn(None, idcell, text=0)
+		self.idtreeview.append_column(idcolumn)
 
 	def showmail(self, widget):
 		''' This function displays email messages. '''
-		self.model.get_value(self.iterator, 0)
-		self.gtkbuffer.set_text(self.Mail[0][4])
-		self.view.set_buffer(gtkbuffer)
+		selection = self.idtreeview.get_selection()
+		selection.set_mode(gtk.SELECTION_SINGLE)
+		model, path = selection.get_selected()
+		x = int(model[path][0])
+		y = self.save + x - 20
+		#self.gtkbuffer.set_text(self.Mail[y][4])
+		#self.view.set_buffer(self.gtkbuffer)
+		self.html.load_html_string(self.Mail[y][4], 'file:///')
 
 	def showtwitter(self, widget):
 		''' This function displays the user's Twitter home timeline. '''
@@ -339,6 +363,5 @@ class Epistle:
 		''' This function will include the interface of Epistle, and all the function calls. '''
 		gtk.main()
 if __name__ == '__main__':
-	#app = Epistle()
-	#app.main()
-	Account()
+	app = Epistle()
+	app.main()
