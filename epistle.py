@@ -116,7 +116,7 @@ class Account:
 		auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 		auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 		auth_url = auth.get_authorization_url()
-		print 'Please authorize: ', auth_url
+		self.html.open(auth_url)
 		pin = raw_input('PIN: ')
 		auth.get_access_token(pin)
 		return auth
