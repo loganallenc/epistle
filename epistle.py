@@ -307,8 +307,6 @@ class Epistle:
 
 		for x in xrange(0,19):
 			y = self.save + x - 20
-			print y
-			print 'Listed Email: ' + str(x)
 			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' ' + str(x)
 			self.iterator = self.model.prepend()
 			self.model.set(self.iterator, 0, msg)
@@ -328,7 +326,6 @@ class Epistle:
 		if x[last-2].isdigit():
 			x = int(x[last-2] + x[last-1])
 		else: x = int(x[last-1])
-		print x
 		y = self.save + x - 20
 		#self.gtkbuffer.set_text(self.Mail[y][4])
 		#self.view.set_buffer(self.gtkbuffer)
