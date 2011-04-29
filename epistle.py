@@ -310,7 +310,6 @@ class Epistle:
 			print y
 			print 'Listed Email: ' + str(x)
 			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' ' + str(x)
-			print msg
 			self.iterator = self.model.prepend()
 			self.model.set(self.iterator, 0, msg)
 
@@ -326,10 +325,9 @@ class Epistle:
 		x = model[path][0]
 		last = len(x)
 		x = list(x)
-		if x[last-2] is int:
-			x = x[last-2 + last-1]
-		else: x = x[last-1]
-		x = int(x)
+		if x[last-2] == int:
+			x = int(x[last-2 + last-1])
+		else: x = int(x[last-1])
 		y = self.save + x - 20
 		#self.gtkbuffer.set_text(self.Mail[y][4])
 		#self.view.set_buffer(self.gtkbuffer)
