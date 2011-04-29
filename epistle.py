@@ -196,7 +196,6 @@ class Epistle:
 			twevent = gtk.EventBox()
 			twevent.set_visible_window(True)
 			twevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
-			#twevent.connect_after('button-press-event', self.listmail)
 			twevent.add(twlabel)
 			gtk.Widget.show(twlabel)
 
@@ -207,11 +206,11 @@ class Epistle:
 			scrolltw.add(self.viewtw)
 			twbox = gtk.VBox()
 			twbox.add(scrolltw)
+
 			tweets = ''
 			for x in xrange(0, 17):
 				tweets = tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
 				self.viewtw.load_html_string(tweets, 'file:///')
-
 			notebook.append_page(twbox, twevent)
 
 #		if self.Auth[5][0] != None:
