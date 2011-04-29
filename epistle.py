@@ -151,31 +151,17 @@ class Epistle:
 		window.connect('destroy', self.destroy)
 		window.set_border_width(0)
 
-		self.html = webkit.WebView()
-		self.gtkbuffer = gtk.TextBuffer()
-		self.view = gtk.TextView()
-		self.view.set_cursor_visible(False)
-		self.view.set_editable(False)
-
-		self.scrollmsg = gtk.ScrolledWindow(None, None)
-		self.scrollmsg.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-		self.scrollmsg.set_size_request(400,415)
-
-		scroll_window = gtk.ScrolledWindow(None, None)
-		scroll_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
-		scroll_window.set_size_request(400,415)
-		scroll_window.add(self.html)
-		
 		vbox = gtk.VBox()
-		hpane = gtk.HPaned()
-		hpane.pack1(self.scrollmsg)
-		hpane.pack2(scroll_window)
-
 		notebook = gtk.Notebook()
 		notebook.set_tab_pos(gtk.POS_TOP)
-		#notebook.append_page(child, 'Compose')
+		notebook.set_show_tabs(True)
+
+		composebox = gtk.VBox()
+		composelabel = gtk.Label('Compose')
+		gtk.Widget.show(composelabel)
+		notebook.append_page(composebox, composelabel)
 		
-		if self.Auth[1][0] != int:
+		if self.Auth[1][0] != None:
 			self.logingmail()
 			self.getmail()
 			gmaillabel = gtk.Label('Gmail')
@@ -185,26 +171,56 @@ class Epistle:
 			gmailevent.connect_after('button-press-event', self.listmail)
 			gmailevent.add(gmaillabel)
 			gtk.Widget.show(gmaillabel)
+
+			self.viewmail = webkit.WebView()
+
+			self.scrollmsg = gtk.ScrolledWindow(None, None)
+			self.scrollmsg.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+			self.scrollmsg.set_size_request(400,415)
+	
+			scroll_window = gtk.ScrolledWindow(None, None)
+			scroll_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+			scroll_window.set_size_request(400,415)
+			scroll_window.add(self.viewmail)
+		
+			hpane = gtk.HPaned()
+			hpane.pack1(self.scrollmsg)
+			hpane.pack2(scroll_window)
+
 			notebook.append_page(hpane, gmailevent)
-			notebook.set_show_tabs(True)
 
+		if self.Auth[3][0] != None:
+			self.logintwitter()
+			self.updatetwitter()
+			twlabel = gtk.Label('Twitter')
+			twevent = gtk.EventBox()
+			twevent.set_visible_window(True)
+			twevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+			#twevent.connect_after('button-press-event', self.listmail)
+			twevent.add(twlabel)
+			gtk.Widget.show(twlabel)
 
-		#if self.Auth[3][0] != int:
-		#	self.logintwitter()
-		#	self.updatetwitter()
-		#	tweet_tab = gtk.Button('Twitter')
-		#	tweet_tab.connect('clicked', self.showtwitter)
-		#	toolbar.add(tweet_tab)
+			self.viewtw = webkit.WebView()
+			scrolltw = gtk.ScrolledWindow(None, None)
+			scrolltw.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+			scrolltw.set_size_request(800,415)
+			scrolltw.add(self.viewtw)
+			twbox = gtk.VBox()
+			twbox.add(scrolltw)
+			tweets = ''
+			for x in xrange(0, 17):
+				tweets = tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
+				self.viewtw.load_html_string(tweets, 'file:///')
 
-#		if self.Auth[5][0] != int:
-			#self.loginfb()
+			notebook.append_page(twbox, twevent)
+
+#		if self.Auth[5][0] != None:
+#			self.loginfb()
 #			fb_tab = gtk.Button('Facebook')
 #			fb_tab.connect('clicked', self.showfb)
 #			toolbar.add(fb_tab)
 
-		#vbox.pack_start(hpane, True, True)
 		vbox.add(notebook)
-		#vbox.add(hpane)
 		window.add(vbox)
 		window.show_all()
 		
@@ -288,6 +304,10 @@ class Epistle:
 	def refresh(self, widget):
 		self.getmail()
 		self.updatetwitter()	
+		tweets = ''
+		for x in xrange(0, 17):
+			tweets = tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
+			self.viewtw.load_html_string(tweets, 'file:///')
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
@@ -323,14 +343,11 @@ class Epistle:
 		y = self.save + x - 20
 		#self.gtkbuffer.set_text(self.Mail[y][4])
 		#self.view.set_buffer(self.gtkbuffer)
-		self.html.load_html_string(self.Mail[y][4], 'file:///')
+		self.viewmail.load_html_string(self.Mail[y][4], 'file:///')
 
 	def showtwitter(self, widget):
 		''' This function displays the user's Twitter home timeline. '''
-		tweets = ''
-		for x in xrange(0, 17):
-			tweets = tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
-			self.html.load_html_string(tweets, 'file:///')
+
 		
 	def showcompose(self, widget):
 		pass
