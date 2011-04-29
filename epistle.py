@@ -325,9 +325,10 @@ class Epistle:
 		x = model[path][0]
 		last = len(x)
 		x = list(x)
-		if x[last-2] == int:
-			x = int(x[last-2 + last-1])
+		if x[last-2].isdigit():
+			x = int(x[last-2] + x[last-1])
 		else: x = int(x[last-1])
+		print x
 		y = self.save + x - 20
 		#self.gtkbuffer.set_text(self.Mail[y][4])
 		#self.view.set_buffer(self.gtkbuffer)
