@@ -307,12 +307,13 @@ class Epistle:
 
 		for x in xrange(0,19):
 			y = self.save + x - 20
-			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' ' + str(x)
+			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + '                                                                             ' + str(x)
 			self.iterator = self.model.prepend()
 			self.model.set(self.iterator, 0, msg)
 
 		cell = gtk.CellRendererText()
 		column = gtk.TreeViewColumn(None, cell, text=0)
+		column.set_max_width(388)
 		self.treeview.append_column(column)
 
 	def showmail(self, widget):
