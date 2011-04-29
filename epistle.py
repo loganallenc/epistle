@@ -323,11 +323,13 @@ class Epistle:
 		selection = self.treeview.get_selection()
 		selection.set_mode(gtk.SELECTION_SINGLE)
 		model, path = selection.get_selected()
-		x = int(model[path][0])
-		print x
-		x.split('> ',1)
-		''.join(x)
-		print x[0]
+		x = model[path][0]
+		last = len(x)
+		x = list(x)
+		if x[last-2] is int:
+			x = x[last-2 + last-1]
+		else: x = x[last-1]
+		x = int(x)
 		y = self.save + x - 20
 		#self.gtkbuffer.set_text(self.Mail[y][4])
 		#self.view.set_buffer(self.gtkbuffer)
