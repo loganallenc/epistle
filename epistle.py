@@ -151,42 +151,6 @@ class Epistle:
 		window.connect('destroy', self.destroy)
 		window.set_border_width(0)
 
-		toolbar = gtk.Toolbar()
-		compose = gtk.Button('Compose')
-		compose.connect('clicked', self.showcompose)
-		toolbar.add(compose)
-		
-		if self.Auth[1][0] != int:
-			self.logingmail()
-			gmail_tab = gtk.Button('Gmail')
-			gmail_tab.connect('clicked', self.showmail)
-			toolbar.add(gmail_tab)
-
-		if self.Auth[3][0] != int:
-			self.logintwitter()
-			tweet_tab = gtk.Button('Twitter')
-			tweet_tab.connect('clicked', self.showtwitter)
-			toolbar.add(tweet_tab)
-
-#		if self.Auth[5][0] != int:
-			#self.loginfb()
-#			fb_tab = gtk.Button('Facebook')
-#			fb_tab.connect('clicked', self.showfb)
-#			toolbar.add(fb_tab)
-		
-		image = gtk.Image()
-		image.set_from_stock(gtk.STOCK_REFRESH,gtk.ICON_SIZE_BUTTON)
-		refresh_button = gtk.Button()
-		refresh_button.set_image(image)
-		refresh_button.set_label('')
-		refresh_button.connect('clicked', self.refresh)
-		toolbar.add(refresh_button)
-
-		#toolbar.insert_space(200)
-		#self.search = gtk.Entry()
-		#self.search.connect("activate", self.searchdb)
-		toolbar.set_size_request(700,35)
-
 		self.html = webkit.WebView()
 		self.gtkbuffer = gtk.TextBuffer()
 		self.view = gtk.TextView()
@@ -206,14 +170,43 @@ class Epistle:
 		hpane = gtk.HPaned()
 		hpane.pack1(self.scrollmsg)
 		hpane.pack2(scroll_window)
+
+		notebook = gtk.Notebook()
+		notebook.set_tab_pos(gtk.POS_TOP)
+		#notebook.append_page(child, 'Compose')
+		
+		if self.Auth[1][0] != int:
+			self.logingmail()
+			self.getmail()
+			gmaillabel = gtk.Label('Gmail')
+			gmailevent = gtk.EventBox()
+			gmailevent.set_visible_window(True)
+			gmailevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+			gmailevent.connect_after('button-press-event', self.listmail)
+			gmailevent.add(gmaillabel)
+			gtk.Widget.show(gmaillabel)
+			notebook.append_page(hpane, gmailevent)
+			notebook.set_show_tabs(True)
+
+
+		#if self.Auth[3][0] != int:
+		#	self.logintwitter()
+		#	self.updatetwitter()
+		#	tweet_tab = gtk.Button('Twitter')
+		#	tweet_tab.connect('clicked', self.showtwitter)
+		#	toolbar.add(tweet_tab)
+
+#		if self.Auth[5][0] != int:
+			#self.loginfb()
+#			fb_tab = gtk.Button('Facebook')
+#			fb_tab.connect('clicked', self.showfb)
+#			toolbar.add(fb_tab)
+
 		#vbox.pack_start(hpane, True, True)
-		vbox.add(toolbar)
-		vbox.add(hpane)
+		vbox.add(notebook)
+		#vbox.add(hpane)
 		window.add(vbox)
 		window.show_all()
-		self.getmail()
-		self.updatetwitter()
-		self.listmail()
 		
 	def delete_event(self, widget, data=None):
 		self.imap.logout()
@@ -296,7 +289,7 @@ class Epistle:
 		self.getmail()
 		self.updatetwitter()	
 
-	def listmail(self):
+	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
 		self.model = gtk.ListStore(gobject.TYPE_STRING)
 		self.treeview = gtk.TreeView(self.model)
@@ -307,7 +300,7 @@ class Epistle:
 
 		for x in xrange(0,19):
 			y = self.save + x - 20
-			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + '                                                                             ' + str(x)
+			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*40 + str(x)
 			self.iterator = self.model.prepend()
 			self.model.set(self.iterator, 0, msg)
 
