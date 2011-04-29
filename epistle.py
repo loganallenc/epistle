@@ -27,6 +27,7 @@ class Database:
 		self.checkdb = os.path.exists(self.path)
 		self.db = sqlite3.connect(self.path)
 		self.database = self.db.cursor()
+		self.db.text_factory = str
 		return self.db, self.database
 	
 	def check(self):
@@ -85,7 +86,7 @@ class Account:
 		window.set_border_width(0)
 
 		self.html = webkit.WebView()
-		self.html.connect('load_committed', self.facebook)
+		#self.html.connect('load_committed', self.facebook)
 
 		scroll_window = gtk.ScrolledWindow(None, None)
 		scroll_window.add(self.html)
@@ -95,7 +96,7 @@ class Account:
 
 		window.add(vbox)
 		window.show_all()
-		self.openfb()
+		#self.openfb()
 		gtk.main()
 
 	def delete_event(self, widget, data=None):
@@ -116,6 +117,7 @@ class Account:
 		auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 		auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 		auth_url = auth.get_authorization_url()
+		print auth_url
 		self.html.open(auth_url)
 		pin = raw_input('PIN: ')
 		auth.get_access_token(pin)
@@ -123,6 +125,7 @@ class Account:
 
 	def openfb(self):
 		self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/')
+		
 	def facebook(self,widget,data=None):
 		'''Collect data for Facebook.'''
 		url = widget.get_main_frame().get_uri()
@@ -222,6 +225,7 @@ class Epistle:
 
 	def getmail(self):
 		''' This function reads unread messages from Gmail. '''
+		self.Mail = Database().mailread()
 		label,inbox = self.imap.select()
 		inbox = int(inbox[0])
 		unread = len(self.imap.search('Inbox', '(UNSEEN)')[1][0].split())
@@ -241,8 +245,12 @@ class Epistle:
 			for mailpart in mailitem.walk():
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
-				message = mailpart.get_payload()
+				message = str(mailpart.get_payload())
+				print message
 			self.database.execute('update auth set main = ? where id = 1', [self.save])
+
+			if header['Subject'] == None: header['Subject'] = '(No Subject)'
+
 			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ self.save, header['From'], header['Subject'], header['To'], message ])
 			self.db.commit()
 
@@ -286,54 +294,40 @@ class Epistle:
 
 	def refresh(self, widget):
 		self.getmail()
-		self.updatetwitter()
-
-	def readmail(self):
-		self.Mail = Database().mailread()
+		self.updatetwitter()	
 
 	def listmail(self):
-		self.readmail()
-		#self.mainmodel = gtk.ListStore(gobject.TYPE_STRING)
-		#self.maintreeview = gtk.TreeView(self.mainmodel)
-		#self.scrollmsg.add_with_viewport(self.maintreeview)
-		#self.maintreeview.set_headers_visible(False)
-		#self.maintreeview.connect('cursor-changed', self.showmail)
-		#self.maintreeview.show()
-
-		self.idmodel = gtk.ListStore(gobject.TYPE_STRING)
-		self.idtreeview = gtk.TreeView(self.idmodel)
-		self.scrollmsg.add_with_viewport(self.idtreeview)
-		self.idtreeview.set_headers_visible(False)
-		self.idtreeview.set_visible(False)
-		self.idtreeview.connect('cursor-changed', self.showmail)
-		self.idtreeview.show()
+		''' Shows list of mail. '''
+		self.model = gtk.ListStore(gobject.TYPE_STRING)
+		self.treeview = gtk.TreeView(self.model)
+		self.scrollmsg.add_with_viewport(self.treeview)
+		self.treeview.set_headers_visible(False)
+		self.treeview.connect('cursor-changed', self.showmail)
+		self.treeview.show()
 
 		for x in xrange(0,19):
 			y = self.save + x - 20
 			print y
 			print 'Listed Email: ' + str(x)
-			if self.Mail[y][2] == None: msg = '(No Subject) - ' + self.Mail[y][1]
-			else: msg = self.Mail[y][2] + ' - ' + self.Mail[y][1]
+			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' ' + str(x)
 			print msg
-		#	self.mainiterator = self.mainmodel.prepend()
-		#	self.mainmodel.set(self.mainiterator, 0, msg)
-			self.iditerator = self.idmodel.prepend()
-			self.idmodel.set(self.iditerator, 0, x)
+			self.iterator = self.model.prepend()
+			self.model.set(self.iterator, 0, msg)
 
-		#maincell = gtk.CellRendererText()
-		#maincolumn = gtk.TreeViewColumn(None, maincell, text=0)
-		#self.maintreeview.append_column(maincolumn)
-
-		idcell = gtk.CellRendererText()
-		idcolumn = gtk.TreeViewColumn(None, idcell, text=0)
-		self.idtreeview.append_column(idcolumn)
+		cell = gtk.CellRendererText()
+		column = gtk.TreeViewColumn(None, cell, text=0)
+		self.treeview.append_column(column)
 
 	def showmail(self, widget):
 		''' This function displays email messages. '''
-		selection = self.idtreeview.get_selection()
+		selection = self.treeview.get_selection()
 		selection.set_mode(gtk.SELECTION_SINGLE)
 		model, path = selection.get_selected()
 		x = int(model[path][0])
+		print x
+		x.split('> ',1)
+		''.join(x)
+		print x[0]
 		y = self.save + x - 20
 		#self.gtkbuffer.set_text(self.Mail[y][4])
 		#self.view.set_buffer(self.gtkbuffer)
