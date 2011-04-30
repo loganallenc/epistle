@@ -166,7 +166,7 @@ class Epistle:
 			self.getmail()
 			gmaillabel = gtk.Label('Gmail')
 			gmailevent = gtk.EventBox()
-			gmailevent.set_visible_window(True)
+			#gmailevent.set_visible_window(True)
 			gmailevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
 			gmailevent.connect_after('button-press-event', self.listmail)
 			gmailevent.add(gmaillabel)
@@ -194,7 +194,7 @@ class Epistle:
 			self.updatetwitter()
 			twlabel = gtk.Label('Twitter')
 			twevent = gtk.EventBox()
-			twevent.set_visible_window(True)
+			#twevent.set_visible_window(True)
 			twevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
 			twevent.add(twlabel)
 			gtk.Widget.show(twlabel)
@@ -209,7 +209,7 @@ class Epistle:
 
 			tweets = ''
 			for x in xrange(0, 17):
-				tweets = tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
+				tweets = tweets + '<img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr />'
 				self.viewtw.load_html_string(tweets, 'file:///')
 			notebook.append_page(twbox, twevent)
 
