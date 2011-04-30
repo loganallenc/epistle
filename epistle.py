@@ -159,19 +159,20 @@ class Epistle:
 		composelabel = gtk.Label('Compose')
 		gtk.Widget.show(composelabel)
 
-		fromhbox = gtk.HBox(False, 0)
-		composevbox.pack_start(fromhbox, False, False, 7)
-		fromlabel = gtk.Label('From: ')
-		self.fromentry = gtk.Entry()
-		fromhbox.pack_start(fromlabel, False, True, 15)
-		fromhbox.pack_start(self.fromentry, True, True, 7)
+		if self.Auth[1][0] != None:
+			fromhbox = gtk.HBox(False, 0)
+			composevbox.pack_start(fromhbox, False, False, 7)
+			fromlabel = gtk.Label('From: ')
+			self.fromentry = gtk.Entry()
+			fromhbox.pack_start(fromlabel, False, True, 15)
+			fromhbox.pack_start(self.fromentry, True, True, 7)
 
-		subjecthbox = gtk.HBox(False, 0)
-		composevbox.pack_start(subjecthbox, False, False, 7)
-		subjectlabel = gtk.Label('Subject: ')
-		self.subjectentry = gtk.Entry()
-		subjecthbox.pack_start(subjectlabel, False, True, 7)
-		subjecthbox.pack_start(self.subjectentry, True, True, 7)
+			subjecthbox = gtk.HBox(False, 0)
+			composevbox.pack_start(subjecthbox, False, False, 7)
+			subjectlabel = gtk.Label('Subject: ')
+			self.subjectentry = gtk.Entry()
+			subjecthbox.pack_start(subjectlabel, False, True, 7)
+			subjecthbox.pack_start(self.subjectentry, True, True, 7)
 
 		bodyhbox = gtk.HBox(False, 0)
 		self.view = gtk.TextView()
@@ -179,17 +180,38 @@ class Epistle:
 		self.view.set_buffer(self.buffer)
 		self.view.set_wrap_mode(True)
 		bodyhbox.pack_start(self.view, True, True, 15)
-		composevbox.pack_start(bodyhbox, True, True, 15)
+		composevbox.pack_start(bodyhbox, True, True, 10)
 
 		actionhbox = gtk.HBox(False, 0)
 		send = gtk.Button()
 		send.connect('clicked', self.send)
-		send.set_label('Send')
+		send.set_label(' Send ')
 		discard = gtk.Button()
 		discard.connect('clicked', self.discard)
-		discard.set_label('Discard')
-		actionhbox.pack_start(send, False, True, 0)
-		actionhbox.pack_start(discard, False, True, 0)
+		discard.set_label(' Discard ')
+		actionhbox.pack_start(send, False, True, 5)
+		actionhbox.pack_start(discard, False, True, 5)
+		if self.Auth[3][0] != None:
+			twimage = gtk.Image()
+			twpixbuf = gtk.gdk.pixbuf_new_from_file('Twitter.png')
+			twpixbuf = twpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
+			twimage.set_from_pixbuf(twpixbuf)
+			showhidetw = gtk.Button()
+			showhidetw.connect('clicked', self.showhidetw)
+			showhidetw.set_image(twimage)
+			showhidetw.set_label('')
+			actionhbox.pack_end(showhidetw, False, True, 5)
+		if self.Auth[1][0] != None:
+			mailimage = gtk.Image()
+			mailpixbuf = gtk.gdk.pixbuf_new_from_file('Gmail.png')
+			mailpixbuf = mailpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
+			mailimage.set_from_pixbuf(mailpixbuf)
+			showhidemail = gtk.Button()
+			showhidemail.connect('clicked', self.showhidemail)
+			showhidemail.set_image(mailimage)
+			showhidemail.set_label('')
+			actionhbox.pack_end(showhidemail, False, True, 5)
+
 		composevbox.pack_start(actionhbox, False, False, 10)
 
 		notebook.append_page(composevbox, composelabel)
@@ -333,6 +355,11 @@ class Epistle:
 		pass
 
 	def discard(self, widget):
+		pass
+
+	def showhidemail(self, widget):
+		pass
+	def showhidetw(self, widget):
 		pass
 
 	def updatetwitter(self):
