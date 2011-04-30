@@ -228,6 +228,20 @@ class Epistle:
 #			fb_tab.connect('clicked', self.showfb)
 #			toolbar.add(fb_tab)
 
+		refreshlabel = gtk.Label('Refresh')
+		refreshevent = gtk.EventBox()
+		refreshevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+		refreshevent.connect_after('button-press-event', self.refresh)
+		refreshevent.add(refreshlabel)
+		gtk.Widget.show(refreshlabel)
+
+		refreshbox = gtk.VBox()
+		image = gtk.Image()
+                image.set_from_stock(gtk.STOCK_REFRESH,gtk.ICON_SIZE_LARGE_TOOLBAR)
+		refreshbox.add(image)
+		refreshbox.add(gtk.Label('Updated all of your data. ;)'))
+		notebook.append_page(refreshbox, refreshevent)
+
 		vbox.add(notebook)
 		window.add(vbox)
 		window.show_all()
@@ -308,15 +322,16 @@ class Epistle:
 		fbstatus = raw_input('Set your Facebook status: ')
 		self.Facebook['Facebook'].put_object('me', 'feed', message=fbstatus)
 
-	def refresh(self, widget):
+	def refresh(self, widget, widget2):
 		''' Refreshes data. '''
-		self.getmail()
-		self.updatetwitter()	
-		tweets = ''
-		for x in xrange(0, 17):
-			tweets = tweets + '<div><span style="float: left; width: 10%;"><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span>'
-			tweets = tweets + '<span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr /></span></div>'
-			self.viewtw.load_html_string(tweets, 'file:///')
+		if self.Auth[1][0] != None: self.getmail()
+		if self.Auth[3][0] != None:
+			self.updatetwitter()
+			tweets = ''
+			for x in xrange(0, 19):
+				tweets = tweets + '<div><span style="float: left; width: 10%;"><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span>'
+				tweets = tweets + '<span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr /></span></div>'
+				self.viewtw.load_html_string(tweets, 'file:///')
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
@@ -339,7 +354,7 @@ class Epistle:
 		else: x = int(x[last-1])
 		y = self.save + x - 20
 		self.viewmail.load_html_string(self.Mail[y][4], 'file:///')
-		
+
 	def logingmail(self):
 		''' Logs in to Gmail. '''
 		self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
