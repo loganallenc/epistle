@@ -165,7 +165,6 @@ class Epistle:
 			self.getmail()
 			gmaillabel = gtk.Label('Gmail')
 			gmailevent = gtk.EventBox()
-			#gmailevent.set_visible_window(True)
 			gmailevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
 			gmailevent.connect_after('button-press-event', self.listmail)
 			gmailevent.add(gmaillabel)
@@ -193,7 +192,6 @@ class Epistle:
 			self.updatetwitter()
 			twlabel = gtk.Label('Twitter')
 			twevent = gtk.EventBox()
-			#twevent.set_visible_window(True)
 			twevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
 			twevent.add(twlabel)
 			gtk.Widget.show(twlabel)
@@ -340,8 +338,6 @@ class Epistle:
 			x = int(x[last-2] + x[last-1])
 		else: x = int(x[last-1])
 		y = self.save + x - 20
-		#self.gtkbuffer.set_text(self.Mail[y][4])
-		#self.view.set_buffer(self.gtkbuffer)
 		self.viewmail.load_html_string(self.Mail[y][4], 'file:///')
 		
 	def logingmail(self):
