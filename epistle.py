@@ -54,11 +54,11 @@ class Database:
 
 	def setup(self):
 		try: self.Gmail['gmailuser']
-		except NameError: self.Gmail['gmailuser'] = 0
+		except NameError: self.Gmail['gmailuser'] = None
 		try: self.Gmail['password']
-		except NameError: self.Gmail['password'] = 0
+		except NameError: self.Gmail['password'] = None
 		try: self.Twitter.access_token
-		except NameError: self.Twitter.access_token.key,self.Twitter.access_token.secret = 0,0
+		except NameError: self.Twitter.access_token.key,self.Twitter.access_token.secret = None,None
 		self.database.execute('''create table auth (id integer primary key, main)''')
 		self.database.execute('insert into auth (id, main) values (1,1)')
 		self.database.execute('insert into auth (id, main) values (2,?)', [self.Gmail['gmailuser']])
@@ -213,7 +213,6 @@ class Epistle:
 			actionhbox.pack_end(showhidemail, False, True, 5)
 
 		composevbox.pack_start(actionhbox, False, False, 10)
-
 		notebook.append_page(composevbox, composelabel)
 		
 		if self.Auth[1][0] != None:
