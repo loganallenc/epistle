@@ -256,7 +256,6 @@ class Epistle:
 
 	def getmail(self):
 		''' This function reads unread messages from Gmail. '''
-		self.Mail = Database().mailread()
 		label,inbox = self.imap.select()
 		inbox = int(inbox[0])
 		unread = len(self.imap.search('Inbox', '(UNSEEN)')[1][0].split())
@@ -284,6 +283,7 @@ class Epistle:
 
 			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ self.save, header['From'], header['Subject'], header['To'], message ])
 			self.db.commit()
+		self.Mail = Database().mailread()
 
 	def sendmail(self):
 		''' This function sends an email using Gmail. '''
