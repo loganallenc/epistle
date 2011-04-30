@@ -155,10 +155,44 @@ class Epistle:
 		notebook.set_tab_pos(gtk.POS_TOP)
 		notebook.set_show_tabs(True)
 
-		composebox = gtk.VBox()
+		composevbox = gtk.VBox(False, 0)
 		composelabel = gtk.Label('Compose')
 		gtk.Widget.show(composelabel)
-		notebook.append_page(composebox, composelabel)
+
+		fromhbox = gtk.HBox(False, 0)
+		composevbox.pack_start(fromhbox, False, False, 7)
+		fromlabel = gtk.Label('From: ')
+		self.fromentry = gtk.Entry()
+		fromhbox.pack_start(fromlabel, False, True, 15)
+		fromhbox.pack_start(self.fromentry, True, True, 7)
+
+		subjecthbox = gtk.HBox(False, 0)
+		composevbox.pack_start(subjecthbox, False, False, 7)
+		subjectlabel = gtk.Label('Subject: ')
+		self.subjectentry = gtk.Entry()
+		subjecthbox.pack_start(subjectlabel, False, True, 7)
+		subjecthbox.pack_start(self.subjectentry, True, True, 7)
+
+		bodyhbox = gtk.HBox(False, 0)
+		self.view = gtk.TextView()
+		self.buffer = gtk.TextBuffer()
+		self.view.set_buffer(self.buffer)
+		self.view.set_wrap_mode(True)
+		bodyhbox.pack_start(self.view, True, True, 15)
+		composevbox.pack_start(bodyhbox, True, True, 15)
+
+		actionhbox = gtk.HBox(False, 0)
+		send = gtk.Button()
+		send.connect('clicked', self.send)
+		send.set_label('Send')
+		discard = gtk.Button()
+		discard.connect('clicked', self.discard)
+		discard.set_label('Discard')
+		actionhbox.pack_start(send, False, True, 0)
+		actionhbox.pack_start(discard, False, True, 0)
+		composevbox.pack_start(actionhbox, False, False, 10)
+
+		notebook.append_page(composevbox, composelabel)
 		
 		if self.Auth[1][0] != None:
 			self.logingmail()
@@ -294,6 +328,12 @@ class Epistle:
 		mailmessage = raw_input('Message: ')
 		self.smtp.sendmail(self.Gmail[0], to, 'Subject: ' + subject + '\n' +mailmessage)
 		self.smtp.quit()
+
+	def send(self, widget):
+		pass
+
+	def discard(self, widget):
+		pass
 
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
