@@ -185,6 +185,17 @@ class Epistle:
 			hpane.pack1(self.scrollmsg)
 			hpane.pack2(scroll_window)
 
+			self.model = gtk.ListStore(gobject.TYPE_STRING)
+			self.treeview = gtk.TreeView(self.model)
+			self.scrollmsg.add_with_viewport(self.treeview)
+			self.treeview.set_headers_visible(False)
+			self.treeview.connect('cursor-changed', self.showmail)
+			self.treeview.show()
+			cell = gtk.CellRendererText()
+			column = gtk.TreeViewColumn(None, cell, text=0)
+			column.set_max_width(388)
+			self.treeview.append_column(column)
+
 			notebook.append_page(hpane, gmailevent)
 
 		if self.Auth[3][0] != None:
@@ -303,28 +314,17 @@ class Epistle:
 		self.updatetwitter()	
 		tweets = ''
 		for x in xrange(0, 17):
-			tweets = tweets + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img><b>' + self.twitterupdate[x].user.screen_name + '</b>: ' + self.twitterupdate[x].text + '</p><hr />'
+			tweets = tweets + '<div><span style="float: left; width: 10%;"><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span>'
+			tweets = tweets + '<span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr /></span></div>'
 			self.viewtw.load_html_string(tweets, 'file:///')
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
-		self.model = gtk.ListStore(gobject.TYPE_STRING)
-		self.treeview = gtk.TreeView(self.model)
-		self.scrollmsg.add_with_viewport(self.treeview)
-		self.treeview.set_headers_visible(False)
-		self.treeview.connect('cursor-changed', self.showmail)
-		self.treeview.show()
-
 		for x in xrange(0,19):
 			y = self.save + x - 20
 			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*40 + str(x)
 			self.iterator = self.model.prepend()
 			self.model.set(self.iterator, 0, msg)
-
-		cell = gtk.CellRendererText()
-		column = gtk.TreeViewColumn(None, cell, text=0)
-		column.set_max_width(388)
-		self.treeview.append_column(column)
 
 	def showmail(self, widget):
 		''' This function displays email messages. '''
