@@ -29,7 +29,7 @@ class Database:
 		self.database = self.db.cursor()
 		self.db.text_factory = str
 		return self.db, self.database
-	
+
 	def check(self):
 		self.connect()
 		if self.checkdb == False:
@@ -69,7 +69,6 @@ class Database:
 		
 		self.database.execute('''create table mail (id primary key,fromaddress,subject,toaddress,body)''')
 		self.db.commit()
-
 
 class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
@@ -291,7 +290,6 @@ class Epistle:
 		self.Facebook['Facebook'] = facebooksdk.GraphAPI(self.Facebook['auth'])
 		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
 		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
-		pass
 
 	def postfb(self):
 		''' This function posts to Facebook. '''
@@ -302,6 +300,7 @@ class Epistle:
 		self.Facebook['Facebook'].put_object('me', 'feed', message=fbstatus)
 
 	def refresh(self, widget):
+		''' Refreshes data. '''
 		self.getmail()
 		self.updatetwitter()	
 		tweets = ''
@@ -344,19 +343,14 @@ class Epistle:
 		#self.gtkbuffer.set_text(self.Mail[y][4])
 		#self.view.set_buffer(self.gtkbuffer)
 		self.viewmail.load_html_string(self.Mail[y][4], 'file:///')
-
-	def showtwitter(self, widget):
-		''' This function displays the user's Twitter home timeline. '''
-
-		
-	def showcompose(self, widget):
-		pass
 		
 	def logingmail(self):
+		''' Logs in to Gmail. '''
 		self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
 		self.imap.login(self.Auth[1][1], self.Auth[2][1])
 
 	def logintwitter(self):
+		''' Logs into Twitter. '''
 		self.auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 		self.auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 		self.auth.set_access_token(self.Auth[3][1], self.Auth[4][1])
@@ -365,6 +359,7 @@ class Epistle:
 	def main(self):
 		''' This function will include the interface of Epistle, and all the function calls. '''
 		gtk.main()
+
 if __name__ == '__main__':
 	app = Epistle()
 	app.main()
