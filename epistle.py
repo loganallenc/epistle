@@ -350,7 +350,8 @@ class Epistle:
 			self.smtp.sendmail(self.Auth[2][1], to, 'Subject: ' + subject + '\n' + body)
 			self.smtp.quit()
 		if self.sendtweet == True:
-			pass
+			body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
+			self.Twitter.update_status(body)
 
 	def discard(self, widget):
 		pass
@@ -358,10 +359,14 @@ class Epistle:
 	def showhidemail(self, widget):
 		if self.sendmail == True:
 			self.sendmail = False
+		elif self.sendmail == False:
+			self.sendmail = True
 
 	def showhidetw(self, widget):
 		if self.sendtweet == True:
 			self.sendtweet = False
+		elif self.sendtweet == False:
+			self.sendtweet = True
 
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
