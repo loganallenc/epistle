@@ -1,10 +1,12 @@
 from email.parser import HeaderParser
 import facebooksdk
+import threading
 import sqlite3
 import gobject
 import getpass
 import imaplib
 import smtplib
+import thread
 import tweepy
 import webkit
 import email
@@ -139,8 +141,7 @@ class Epistle:
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
 		self.path,self.Auth = Database().check()
-		
-		gobject.threads_init()
+		gtk.gdk.threads_init()
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.set_resizable(False)
 		self.window.set_title('Epistle')
