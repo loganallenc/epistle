@@ -352,9 +352,12 @@ class Epistle:
 		if self.sendtweet == True:
 			body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
 			self.Twitter.update_status(body)
+		self.discard(1)
 
 	def discard(self, widget):
-		pass
+		self.toentry.set_text('')
+		self.subjectentry.set_text('')
+		self.buffer.set_text('')
 
 	def showhidemail(self, widget):
 		if self.sendmail == True:
