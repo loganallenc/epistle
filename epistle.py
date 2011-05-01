@@ -48,7 +48,7 @@ class Database:
 
 	def mailread(self):
 		self.connect()
-		self.database.execute('select * from mail where id in (select max(id))')
+		self.database.execute('select * from mail order by id')
 		self.Mail = self.database.fetchall()
 		return self.Mail
 
@@ -160,12 +160,12 @@ class Epistle:
 		gtk.Widget.show(composelabel)
 
 		if self.Auth[1][0] != None:
-			fromhbox = gtk.HBox(False, 0)
-			composevbox.pack_start(fromhbox, False, False, 7)
-			fromlabel = gtk.Label('From: ')
-			self.fromentry = gtk.Entry()
-			fromhbox.pack_start(fromlabel, False, True, 15)
-			fromhbox.pack_start(self.fromentry, True, True, 7)
+			tohbox = gtk.HBox(False, 0)
+			composevbox.pack_start(tohbox, False, False, 7)
+			tolabel = gtk.Label('To: ')
+			self.toentry = gtk.Entry()
+			tohbox.pack_start(tolabel, False, True, 15)
+			tohbox.pack_start(self.toentry, True, True, 7)
 
 			subjecthbox = gtk.HBox(False, 0)
 			composevbox.pack_start(subjecthbox, False, False, 7)
@@ -250,6 +250,7 @@ class Epistle:
 			column = gtk.TreeViewColumn(None, cell, text=0)
 			column.set_max_width(388)
 			self.treeview.append_column(column)
+			self.sendmail = True
 
 			notebook.append_page(hpane, gmailevent)
 
@@ -275,6 +276,7 @@ class Epistle:
 				tweets = tweets + '<div><span style="float: left; width: 10%;"><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span>'
 				tweets = tweets + '<span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr /></span></div>'
 				self.viewtw.load_html_string(tweets, 'file:///')
+			self.sendtweet = False
 			notebook.append_page(twbox, twevent)
 
 #		if self.Auth[5][0] != None:
@@ -282,6 +284,7 @@ class Epistle:
 #			fb_tab = gtk.Button('Facebook')
 #			fb_tab.connect('clicked', self.showfb)
 #			toolbar.add(fb_tab)
+#			self.sendfb = False
 
 		refreshlabel = gtk.Label('Refresh')
 		refreshevent = gtk.EventBox()
@@ -291,9 +294,6 @@ class Epistle:
 		gtk.Widget.show(refreshlabel)
 
 		refreshbox = gtk.VBox()
-		image = gtk.Image()
-                image.set_from_stock(gtk.STOCK_REFRESH,gtk.ICON_SIZE_LARGE_TOOLBAR)
-		refreshbox.add(image)
 		refreshbox.add(gtk.Label('Updated all of your data. ;)'))
 		notebook.append_page(refreshbox, refreshevent)
 
@@ -340,26 +340,28 @@ class Epistle:
 			self.db.commit()
 		self.Mail = Database().mailread()
 
-	def sendmail(self):
-		''' This function sends an email using Gmail. '''
-		self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-		self.smtp.login(self.Auth[0][0], self.Auth[1][0])
-		to = raw_input('To: ')
-		subject = raw_input('Subject: ')
-		mailmessage = raw_input('Message: ')
-		self.smtp.sendmail(self.Gmail[0], to, 'Subject: ' + subject + '\n' +mailmessage)
-		self.smtp.quit()
-
 	def send(self, widget):
-		pass
+		if self.sendmail == True:
+			self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+			self.smtp.login(self.Auth[1][1], self.Auth[2][1])
+			to = self.toentry.get_text()
+			subject = self.subjectentry.get_text()
+			body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
+			self.smtp.sendmail(self.Auth[2][1], to, 'Subject: ' + subject + '\n' + body)
+			self.smtp.quit()
+		if self.sendtweet == True:
+			pass
 
 	def discard(self, widget):
 		pass
 
 	def showhidemail(self, widget):
-		pass
+		if self.sendmail == True:
+			self.sendmail = False
+
 	def showhidetw(self, widget):
-		pass
+		if self.sendtweet == True:
+			self.sendtweet = False
 
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
@@ -401,8 +403,8 @@ class Epistle:
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
-		for x in xrange(0,19):
-			y = self.save + x - 20
+		for x in xrange(0,49):
+			y = self.save + x - 50
 			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*40 + str(x)
 			self.iterator = self.model.prepend()
 			self.model.set(self.iterator, 0, msg)
@@ -418,7 +420,7 @@ class Epistle:
 		if x[last-2].isdigit():
 			x = int(x[last-2] + x[last-1])
 		else: x = int(x[last-1])
-		y = self.save + x - 20
+		y = self.save + x - 50
 		self.viewmail.load_html_string(self.Mail[y][4], 'file:///')
 
 	def logingmail(self):
