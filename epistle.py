@@ -143,20 +143,20 @@ class Epistle:
 		self.__dict__.update(kwargs)
 		self.path,self.Auth = Database().check()
 		gtk.gdk.threads_init()
-		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		self.window.set_resizable(False)
-		self.window.set_title('Epistle')
-		self.window.set_size_request(800, 450)
+		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		window.set_resizable(False)
+		window.set_title('Epistle')
+		window.set_size_request(800, 450)
 		gtk.window_set_default_icon_from_file('Epistle-Icon.png')
-		self.window.connect('delete_event', self.delete_event)
-		self.window.connect('destroy', self.destroy)
-		self.window.connect('key-press-event', self.charcount)
-		self.window.set_border_width(0)
+		window.connect('delete_event', self.delete_event)
+		window.connect('destroy', self.destroy)
+		window.connect('key-press-event', self.charcount)
+		window.set_border_width(0)
 
 		vbox = gtk.VBox()
-		notebook = gtk.Notebook()
-		notebook.set_tab_pos(gtk.POS_TOP)
-		notebook.set_show_tabs(True)
+		self.notebook = gtk.Notebook()
+		self.notebook.set_tab_pos(gtk.POS_TOP)
+		self.notebook.set_show_tabs(True)
 
 		self.composevbox = gtk.VBox(False, 0)
 		composelabel = gtk.Label('Compose')
@@ -219,7 +219,7 @@ class Epistle:
 			self.actionhbox.pack_end(self.mailimage, False, True, 0)
 
 		self.composevbox.pack_start(self.actionhbox, False, False, 10)
-		notebook.append_page(self.composevbox, composelabel)
+		self.notebook.append_page(self.composevbox, composelabel)
 		
 		if self.Auth[1][0] != None:
 			self.logingmail()
@@ -227,6 +227,7 @@ class Epistle:
 			gmaillabel = gtk.Label('Gmail')
 			gmailevent = gtk.EventBox()
 			gmailevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+			gmailevent.set_visible_window(False)
 			gmailevent.connect_after('button-press-event', self.listmail)
 			gmailevent.add(gmaillabel)
 			gtk.Widget.show(gmaillabel)
@@ -257,7 +258,7 @@ class Epistle:
 			column.set_max_width(388)
 			self.treeview.append_column(column)
 
-			notebook.append_page(hpane, gmailevent)
+			self.notebook.append_page(hpane, gmailevent)
 
 		if self.Auth[3][0] != None:
 			self.logintwitter()
@@ -265,6 +266,7 @@ class Epistle:
 			twlabel = gtk.Label('Twitter')
 			twevent = gtk.EventBox()
 			twevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+			twevent.set_visible_window(False)
 			twevent.add(twlabel)
 			gtk.Widget.show(twlabel)
 
@@ -281,7 +283,7 @@ class Epistle:
 				tweets = tweets + '<div><span style="float: left; width: 10%;"><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span>'
 				tweets = tweets + '<span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr /></span></div>'
 				self.viewtw.load_html_string(tweets, 'file:///')
-			notebook.append_page(twbox, twevent)
+			self.notebook.append_page(twbox, twevent)
 
 #		if self.Auth[5][0] != None:
 #			self.loginfb()
@@ -290,20 +292,20 @@ class Epistle:
 #			toolbar.add(fb_tab)
 #			self.sendfb = False
 
-		refreshlabel = gtk.Label('Refresh')
+		refreshimage = gtk.Image()
+		refreshimage.set_from_stock(gtk.STOCK_REFRESH,gtk.ICON_SIZE_SMALL_TOOLBAR)
 		refreshevent = gtk.EventBox()
 		refreshevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+		refreshevent.set_visible_window(False)
 		refreshevent.connect_after('button-press-event', self.refresh)
-		refreshevent.add(refreshlabel)
-		gtk.Widget.show(refreshlabel)
-
+		refreshevent.add(refreshimage)
+		gtk.Widget.show(refreshimage)
 		refreshbox = gtk.VBox()
-		refreshbox.add(gtk.Label('Updated all of your data. ;)'))
-		notebook.append_page(refreshbox, refreshevent)
+		self.notebook.append_page(refreshbox, refreshevent)
 
-		vbox.add(notebook)
-		self.window.add(vbox)
-		self.window.show_all()
+		vbox.add(self.notebook)
+		window.add(vbox)
+		window.show_all()
 		
 	def delete_event(self, widget, data=None):
 		self.imap.logout()
@@ -327,7 +329,7 @@ class Epistle:
 			resp, data = self.imap.fetch(self.save, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
 			header = HeaderParser().parsestr(data[0][1])
-
+			
 			for mailpart in mailitem.walk():
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
@@ -352,7 +354,7 @@ class Epistle:
 		if self.twcheck.get_active() == True:
 			body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
 			self.Twitter.update_status(body)
-		self.discard(1)
+		self.discard(0)
 
 	def discard(self, widget):
 		self.toentry.set_text('')
@@ -381,6 +383,7 @@ class Epistle:
 
 	def charcount(self, widget, callback):
 		num = self.buffer.get_char_count()
+		if num != 0: num = num + 1
 		self.count.set_text(str(num))
 			
 	def updatetwitter(self):
@@ -407,10 +410,11 @@ class Epistle:
 		if self.Auth[3][0] != None:
 			self.updatetwitter()
 			tweets = ''
-			for x in xrange(0, 19):
+			for x in xrange(0, 17):
 				tweets = tweets + '<div><span style="float: left; width: 10%;"><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span>'
 				tweets = tweets + '<span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr /></span></div>'
 				self.viewtw.load_html_string(tweets, 'file:///')
+		self.notebook.set_current_page(1)
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
