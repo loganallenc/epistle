@@ -359,6 +359,7 @@ class Epistle:
 		self.toentry.set_text('')
 		self.subjectentry.set_text('')
 		self.buffer.set_text('')
+		self.charcount(1,1)
 
 	def showhidemail(self, widget):
 		if self.mailcheck.get_active() == True:
