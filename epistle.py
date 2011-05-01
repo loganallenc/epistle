@@ -175,13 +175,13 @@ class Epistle:
 			self.subjecthbox.pack_start(subjectlabel, False, True, 7)
 			self.subjecthbox.pack_start(self.subjectentry, True, True, 7)
 
-		bodyhbox = gtk.HBox(False, 0)
+		self.bodyhbox = gtk.HBox(False, 0)
 		self.view = gtk.TextView()
 		self.buffer = gtk.TextBuffer()
 		self.view.set_buffer(self.buffer)
 		self.view.set_wrap_mode(True)
-		bodyhbox.pack_start(self.view, True, True, 15)
-		self.composevbox.pack_start(bodyhbox, True, True, 10)
+		self.bodyhbox.pack_start(self.view, True, True, 15)
+		self.composevbox.pack_start(self.bodyhbox, True, True, 10)
 
 		self.actionhbox = gtk.HBox(False, 0)
 		send = gtk.Button()
@@ -363,8 +363,12 @@ class Epistle:
 
 	def showhidemail(self, widget):
 		if self.mailcheck.get_active() == True:
-			self.composevbox.show(self.tohbox)
-			self.composevbox.show(self.subjecthbox)
+			self.composevbox.remove(self.bodyhbox)
+			self.composevbox.remove(self.actionhbox)
+			self.composevbox.pack_start(self.tohbox, False, False, 7)
+			self.composevbox.pack_start(self.subjecthbox, False, False, 7)
+			self.composevbox.pack_start(self.bodyhbox, True, True, 10)
+			self.composevbox.pack_start(self.actionhbox, False, False, 10)
 		elif self.mailcheck.get_active() == False:
 			self.composevbox.remove(self.tohbox)
 			self.composevbox.remove(self.subjecthbox)
