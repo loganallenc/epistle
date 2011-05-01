@@ -378,9 +378,7 @@ class Epistle:
 	def charcount(self, widget, callback):
 		num = self.buffer.get_char_count()
 		self.count.set_text(str(num))
-		#self.calldisconnect = callback
 			
-
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
 		self.twitterupdate = self.Twitter.home_timeline()
@@ -423,7 +421,7 @@ class Epistle:
 		''' Shows list of mail. '''
 		for x in xrange(0,49):
 			y = self.save + x - 50
-			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*40 + str(x)
+			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*60 + str(x)
 			self.iterator = self.model.prepend()
 			self.model.set(self.iterator, 0, msg)
 
