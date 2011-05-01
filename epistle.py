@@ -322,7 +322,6 @@ class Epistle:
 			self.save = row[0]
 		while self.save < inbox:
 			self.save = self.save + 1
-			print self.save
 			resp, data = self.imap.fetch(self.save, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
 			header = HeaderParser().parsestr(data[0][1])
@@ -340,7 +339,7 @@ class Epistle:
 		self.Mail = Database().mailread()
 
 	def send(self, widget):
-		if self.checkmail.get_active() == True:
+		if self.mailcheck.get_active() == True:
 			self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 			self.smtp.login(self.Auth[1][1], self.Auth[2][1])
 			to = self.toentry.get_text()
@@ -348,11 +347,9 @@ class Epistle:
 			body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
 			self.smtp.sendmail(self.Auth[2][1], to, 'Subject: ' + subject + '\n' + body)
 			self.smtp.quit()
-			print 'Gmail Success'
 		if self.twcheck.get_active() == True:
 			body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
 			self.Twitter.update_status(body)
-			print 'Twitter Success'
 		self.discard(1)
 
 	def discard(self, widget):
@@ -387,15 +384,6 @@ class Epistle:
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
 		self.twitterupdate = self.Twitter.home_timeline()
-
-	def posttwitter(self):
-		''' This function posts a Tweet. '''
-		tweet = raw_input('Update Twitter: ')
-		if len(tweet) >= 140:
-			while (len(tweet) >= 140):
-				print('The character limit of 140 was exceeded.')
-				tweet = raw_input('Update Twitter: ')
-		self.Twitter.update_status(tweet)
 
 	def updatefb(self):
 		''' This function updates the Facebook stream. '''
