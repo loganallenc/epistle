@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 from email.parser import HeaderParser
 import facebooksdk
 import threading
