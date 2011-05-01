@@ -141,38 +141,39 @@ class Epistle:
 		self.path,self.Auth = Database().check()
 		
 		gobject.threads_init()
-		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		window.set_resizable(False)
-		window.set_title('Epistle')
-		window.set_size_request(800, 450)
+		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		self.window.set_resizable(False)
+		self.window.set_title('Epistle')
+		self.window.set_size_request(800, 450)
 		gtk.window_set_default_icon_from_file('Epistle-Icon.png')
-		window.connect('delete_event', self.delete_event)
-		window.connect('destroy', self.destroy)
-		window.set_border_width(0)
+		self.window.connect('delete_event', self.delete_event)
+		self.window.connect('destroy', self.destroy)
+		self.window.connect('key-press-event', self.charcount)
+		self.window.set_border_width(0)
 
 		vbox = gtk.VBox()
 		notebook = gtk.Notebook()
 		notebook.set_tab_pos(gtk.POS_TOP)
 		notebook.set_show_tabs(True)
 
-		composevbox = gtk.VBox(False, 0)
+		self.composevbox = gtk.VBox(False, 0)
 		composelabel = gtk.Label('Compose')
 		gtk.Widget.show(composelabel)
 
 		if self.Auth[1][0] != None:
-			tohbox = gtk.HBox(False, 0)
-			composevbox.pack_start(tohbox, False, False, 7)
+			self.tohbox = gtk.HBox(False, 0)
+			self.composevbox.pack_start(self.tohbox, False, False, 7)
 			tolabel = gtk.Label('To: ')
 			self.toentry = gtk.Entry()
-			tohbox.pack_start(tolabel, False, True, 15)
-			tohbox.pack_start(self.toentry, True, True, 7)
+			self.tohbox.pack_start(tolabel, False, True, 15)
+			self.tohbox.pack_start(self.toentry, True, True, 7)
 
-			subjecthbox = gtk.HBox(False, 0)
-			composevbox.pack_start(subjecthbox, False, False, 7)
+			self.subjecthbox = gtk.HBox(False, 0)
+			self.composevbox.pack_start(self.subjecthbox, False, False, 7)
 			subjectlabel = gtk.Label('Subject: ')
 			self.subjectentry = gtk.Entry()
-			subjecthbox.pack_start(subjectlabel, False, True, 7)
-			subjecthbox.pack_start(self.subjectentry, True, True, 7)
+			self.subjecthbox.pack_start(subjectlabel, False, True, 7)
+			self.subjecthbox.pack_start(self.subjectentry, True, True, 7)
 
 		bodyhbox = gtk.HBox(False, 0)
 		self.view = gtk.TextView()
@@ -180,40 +181,43 @@ class Epistle:
 		self.view.set_buffer(self.buffer)
 		self.view.set_wrap_mode(True)
 		bodyhbox.pack_start(self.view, True, True, 15)
-		composevbox.pack_start(bodyhbox, True, True, 10)
+		self.composevbox.pack_start(bodyhbox, True, True, 10)
 
-		actionhbox = gtk.HBox(False, 0)
+		self.actionhbox = gtk.HBox(False, 0)
 		send = gtk.Button()
 		send.connect('clicked', self.send)
 		send.set_label(' Send ')
 		discard = gtk.Button()
 		discard.connect('clicked', self.discard)
 		discard.set_label(' Discard ')
-		actionhbox.pack_start(send, False, True, 5)
-		actionhbox.pack_start(discard, False, True, 5)
+		self.actionhbox.pack_start(send, False, True, 5)
+		self.actionhbox.pack_start(discard, False, True, 5)
 		if self.Auth[3][0] != None:
-			twimage = gtk.Image()
+			self.twimage = gtk.Image()
 			twpixbuf = gtk.gdk.pixbuf_new_from_file('Twitter.png')
 			twpixbuf = twpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
-			twimage.set_from_pixbuf(twpixbuf)
-			showhidetw = gtk.Button()
-			showhidetw.connect('clicked', self.showhidetw)
-			showhidetw.set_image(twimage)
-			showhidetw.set_label('')
-			actionhbox.pack_end(showhidetw, False, True, 5)
+			self.twimage.set_from_pixbuf(twpixbuf)
+			self.twcheck = gtk.CheckButton(None)
+			self.twcheck.set_active(False)
+			self.count = gtk.Label()
+			self.count.set_text('0')
+			self.twcheck.connect('toggled', self.showhidetw)
+
+			self.actionhbox.pack_end(self.twcheck, False, True, 5)
+			self.actionhbox.pack_end(self.twimage, False, True, 0)
 		if self.Auth[1][0] != None:
-			mailimage = gtk.Image()
+			self.mailimage = gtk.Image()
 			mailpixbuf = gtk.gdk.pixbuf_new_from_file('Gmail.png')
 			mailpixbuf = mailpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
-			mailimage.set_from_pixbuf(mailpixbuf)
-			showhidemail = gtk.Button()
-			showhidemail.connect('clicked', self.showhidemail)
-			showhidemail.set_image(mailimage)
-			showhidemail.set_label('')
-			actionhbox.pack_end(showhidemail, False, True, 5)
+			self.mailimage.set_from_pixbuf(mailpixbuf)
+			self.mailcheck = gtk.CheckButton(None)
+			self.mailcheck.set_active(True)
+			self.mailcheck.connect('toggled', self.showhidemail)
+			self.actionhbox.pack_end(self.mailcheck, False, True, 5)
+			self.actionhbox.pack_end(self.mailimage, False, True, 0)
 
-		composevbox.pack_start(actionhbox, False, False, 10)
-		notebook.append_page(composevbox, composelabel)
+		self.composevbox.pack_start(self.actionhbox, False, False, 10)
+		notebook.append_page(self.composevbox, composelabel)
 		
 		if self.Auth[1][0] != None:
 			self.logingmail()
@@ -250,7 +254,6 @@ class Epistle:
 			column = gtk.TreeViewColumn(None, cell, text=0)
 			column.set_max_width(388)
 			self.treeview.append_column(column)
-			self.sendmail = True
 
 			notebook.append_page(hpane, gmailevent)
 
@@ -276,7 +279,6 @@ class Epistle:
 				tweets = tweets + '<div><span style="float: left; width: 10%;"><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span>'
 				tweets = tweets + '<span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr /></span></div>'
 				self.viewtw.load_html_string(tweets, 'file:///')
-			self.sendtweet = False
 			notebook.append_page(twbox, twevent)
 
 #		if self.Auth[5][0] != None:
@@ -298,8 +300,8 @@ class Epistle:
 		notebook.append_page(refreshbox, refreshevent)
 
 		vbox.add(notebook)
-		window.add(vbox)
-		window.show_all()
+		self.window.add(vbox)
+		self.window.show_all()
 		
 	def delete_event(self, widget, data=None):
 		self.imap.logout()
@@ -318,8 +320,6 @@ class Epistle:
 		self.database.execute('select main from auth where id=1')
 		for row in self.database:
 			self.save = row[0]
-			print 'Num in DB: ' + str(self.save)
-			print 'Inbox: ' + str(inbox)
 		while self.save < inbox:
 			self.save = self.save + 1
 			print self.save
@@ -331,7 +331,6 @@ class Epistle:
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
 				message = str(mailpart.get_payload())
-				print message
 			self.database.execute('update auth set main = ? where id = 1', [self.save])
 
 			if header['Subject'] == None: header['Subject'] = '(No Subject)'
@@ -341,7 +340,7 @@ class Epistle:
 		self.Mail = Database().mailread()
 
 	def send(self, widget):
-		if self.sendmail == True:
+		if self.checkmail.get_active() == True:
 			self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 			self.smtp.login(self.Auth[1][1], self.Auth[2][1])
 			to = self.toentry.get_text()
@@ -349,9 +348,11 @@ class Epistle:
 			body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
 			self.smtp.sendmail(self.Auth[2][1], to, 'Subject: ' + subject + '\n' + body)
 			self.smtp.quit()
-		if self.sendtweet == True:
+			print 'Gmail Success'
+		if self.twcheck.get_active() == True:
 			body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
 			self.Twitter.update_status(body)
+			print 'Twitter Success'
 		self.discard(1)
 
 	def discard(self, widget):
@@ -360,16 +361,25 @@ class Epistle:
 		self.buffer.set_text('')
 
 	def showhidemail(self, widget):
-		if self.sendmail == True:
-			self.sendmail = False
-		elif self.sendmail == False:
-			self.sendmail = True
+		if self.mailcheck.get_active() == True:
+			self.composevbox.show(self.tohbox)
+			self.composevbox.show(self.subjecthbox)
+		elif self.mailcheck.get_active() == False:
+			self.composevbox.remove(self.tohbox)
+			self.composevbox.remove(self.subjecthbox)
 
 	def showhidetw(self, widget):
-		if self.sendtweet == True:
-			self.sendtweet = False
-		elif self.sendtweet == False:
-			self.sendtweet = True
+		if self.twcheck.get_active() == True:
+			self.actionhbox.pack_end(self.count, True, True, 0)
+			gtk.Widget.show(self.count)
+		elif self.twcheck.get_active() == False:
+			self.actionhbox.remove(self.count)
+
+	def charcount(self, widget, callback):
+		num = self.buffer.get_char_count()
+		self.count.set_text(str(num))
+		#self.calldisconnect = callback
+			
 
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
