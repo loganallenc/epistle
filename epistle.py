@@ -414,7 +414,6 @@ class Epistle:
 				tweets = tweets + '<div><span style="float: left; width: 10%;"><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span>'
 				tweets = tweets + '<span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr /></span></div>'
 				self.viewtw.load_html_string(tweets, 'file:///')
-		self.notebook.set_current_page(1)
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
