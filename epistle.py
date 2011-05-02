@@ -11,6 +11,7 @@ import thread
 import tweepy
 import webkit
 import email
+import glib
 import gtk
 import sys
 import os
@@ -77,7 +78,7 @@ class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		gobject.threads_init()
+		glib.threads_init()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		window.set_resizable(False)
 		window.set_title('Epistle')
@@ -142,7 +143,7 @@ class Epistle:
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
 		self.path,self.Auth = Database().check()
-		gtk.gdk.threads_init()
+		glib.threads_init()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		window.set_resizable(False)
 		window.set_title('Epistle')
