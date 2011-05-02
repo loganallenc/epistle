@@ -385,6 +385,7 @@ class Epistle:
 	def charcount(self, widget, callback):
 		num = self.buffer.get_char_count()
 		if num != 0: num = num + 1
+		num = 140 - num
 		self.count.set_text(str(num))
 			
 	def updatetwitter(self):
