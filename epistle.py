@@ -280,15 +280,8 @@ class Epistle:
 			twbox.add(scrolltw)
 
 			tweets = ''
-			#tweetleft = '<div style="position: relative; float: left; clear: none; overflow: auto; width: 10%;">'
-			#tweetright = '<div style="position: relative; float: right; clear: none; overflow: hidden; width: 90%;">'
-			#for x in xrange(0, 17):
-			#	tweetleft = tweetleft + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></p><p></p><hr />'
-			#	tweetright = tweetright + '<p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr />'
 			for x in xrange(0, 17):
 				tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p></span><hr style="width: 100%;" /></div>'
-			#tweetleft = tweetleft + '</div>'
-			#tweetright = tweetright + '</div>'
 			self.viewtw.load_html_string(tweets, 'file:///')
 			self.notebook.append_page(twbox, twevent)
 
@@ -341,6 +334,7 @@ class Epistle:
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
 				message = str(mailpart.get_payload())
+				message = unicode(message, 'utf-8')
 			self.database.execute('update auth set main = ? where id = 1', [self.save])
 
 			if header['Subject'] == None: header['Subject'] = '(No Subject)'
@@ -417,11 +411,10 @@ class Epistle:
 		if self.Auth[1][0] != None: self.getmail()
 		if self.Auth[3][0] != None:
 			self.updatetwitter()
-			tweets = ''
-			for x in xrange(0, 17):
-				tweets = tweets + '<div><span style="float: left; width: 10%;"><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span>'
-				tweets = tweets + '<span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr /></span></div>'
-				self.viewtw.load_html_string(tweets, 'file:///')
+		tweets = ''
+		for x in xrange(0, 17):
+			tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p></span><hr style="width: 100%;" /></div>'
+		self.viewtw.load_html_string(tweets, 'file:///')
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
