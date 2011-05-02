@@ -333,11 +333,13 @@ class Epistle:
 			for mailpart in mailitem.walk():
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
-				message = str(mailpart.get_payload())
-				message = unicode(message, 'utf-8')
+				message = str(mailpart.get_payload(decode=True))
+				#message = unicode(message, 'utf-8')
 			self.database.execute('update auth set main = ? where id = 1', [self.save])
 
 			if header['Subject'] == None: header['Subject'] = '(No Subject)'
+			header['Subject'] = unicode(header['Subject'], 'utf-8')
+			print self.save
 
 			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ self.save, header['From'], header['Subject'], header['To'], message ])
 			self.db.commit()
