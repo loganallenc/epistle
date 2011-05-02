@@ -1,13 +1,11 @@
 #!/usr/bin/env python2
 from email.parser import HeaderParser
 import facebooksdk
-import threading
 import sqlite3
 import gobject
 import getpass
 import imaplib
 import smtplib
-import thread
 import tweepy
 import webkit
 import email
@@ -148,6 +146,8 @@ class Epistle:
 		window.set_resizable(False)
 		window.set_title('Epistle')
 		window.set_size_request(800, 450)
+		screen = window.get_screen()
+		print "Width: " + str(screen.get_width()) + ", Height: " + str(screen.get_height())
 		gtk.window_set_default_icon_from_file('Epistle-Icon.png')
 		window.connect('delete_event', self.delete_event)
 		window.connect('destroy', self.destroy)
@@ -280,10 +280,16 @@ class Epistle:
 			twbox.add(scrolltw)
 
 			tweets = ''
+			#tweetleft = '<div style="position: relative; float: left; clear: none; overflow: auto; width: 10%;">'
+			#tweetright = '<div style="position: relative; float: right; clear: none; overflow: hidden; width: 90%;">'
+			#for x in xrange(0, 17):
+			#	tweetleft = tweetleft + '<p><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></p><p></p><hr />'
+			#	tweetright = tweetright + '<p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr />'
 			for x in xrange(0, 17):
-				tweets = tweets + '<div><span style="float: left; width: 10%;"><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span>'
-				tweets = tweets + '<span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p><hr /></span></div>'
-				self.viewtw.load_html_string(tweets, 'file:///')
+				tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p></span><hr style="width: 100%;" /></div>'
+			#tweetleft = tweetleft + '</div>'
+			#tweetright = tweetright + '</div>'
+			self.viewtw.load_html_string(tweets, 'file:///')
 			self.notebook.append_page(twbox, twevent)
 
 #		if self.Auth[5][0] != None:
