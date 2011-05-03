@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=Epistle
+GenericName=Social Mail Client
+Comment=Access Mail and Social Networks
+Exec=epistle
+Terminal=false
+Icon=/usr/share/epistle/Icon.png
+Type=Application
+Categories=GTK;Network;Email;Internet;
