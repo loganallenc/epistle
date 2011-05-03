@@ -146,7 +146,7 @@ class Epistle:
 		self.window.set_resizable(True)
 		self.window.set_title('Epistle')
 		self.window.set_size_request(800, 450)
-		gtk.window_set_default_icon_from_file('/usr/lib/epistle/Icon.png')
+		gtk.window_set_default_icon_from_file('/usr/share/epistle/Icon.png')
 		self.window.connect('delete_event', self.delete_event)
 		self.window.connect('destroy', self.destroy)
 		self.window.connect('key-press-event', self.charcount)
@@ -195,7 +195,7 @@ class Epistle:
 		self.actionhbox.pack_start(discard, False, True, 5)
 		if self.Auth[3][0] != None:
 			self.twimage = gtk.Image()
-			twpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/lib/epistle/Twitter.png')
+			twpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Twitter.png')
 			twpixbuf = twpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
 			self.twimage.set_from_pixbuf(twpixbuf)
 			self.twcheck = gtk.CheckButton(None)
@@ -208,7 +208,7 @@ class Epistle:
 			self.actionhbox.pack_end(self.twimage, False, True, 0)
 		if self.Auth[1][0] != None:
 			self.mailimage = gtk.Image()
-			mailpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/lib/epistle/Gmail.png')
+			mailpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Gmail.png')
 			mailpixbuf = mailpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
 			self.mailimage.set_from_pixbuf(mailpixbuf)
 			self.mailcheck = gtk.CheckButton(None)
