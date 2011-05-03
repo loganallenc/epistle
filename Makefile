@@ -1,8 +1,6 @@
 APPDIR = $(DESTDIR)/usr/share/applications
 LIBDIR = $(DESTDIR)/usr/share/epistle
 BINDIR = $(DESTDIR)/usr/bin
-clean:
-	rm -f *.py[co] */*.py[co]
 install:
 	mkdir -p $(APPDIR)
 	mkdir -p $(LIBDIR)
