@@ -455,6 +455,6 @@ class Epistle:
 		gtk.main()
 
 if __name__ == '__main__':
-	#app = Epistle()
-	#app.main()
-	Account().openfb()
+	app = Epistle()
+	app.main()
+	#Account().openfb()
