@@ -142,17 +142,16 @@ class Epistle:
 		self.__dict__.update(kwargs)
 		self.path,self.Auth = Database().check()
 		glib.threads_init()
-		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		window.set_resizable(False)
-		window.set_title('Epistle')
-		window.set_size_request(800, 450)
-		screen = window.get_screen()
-		print "Width: " + str(screen.get_width()) + ", Height: " + str(screen.get_height())
+		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		self.window.set_resizable(True)
+		self.window.set_title('Epistle')
+		self.window.set_size_request(800, 450)
 		gtk.window_set_default_icon_from_file('Epistle-Icon.png')
-		window.connect('delete_event', self.delete_event)
-		window.connect('destroy', self.destroy)
-		window.connect('key-press-event', self.charcount)
-		window.set_border_width(0)
+		self.window.connect('delete_event', self.delete_event)
+		self.window.connect('destroy', self.destroy)
+		self.window.connect('key-press-event', self.charcount)
+		self.window.connect('check-resize', self.resize)
+		self.window.set_border_width(0)
 
 		vbox = gtk.VBox()
 		self.notebook = gtk.Notebook()
@@ -304,8 +303,8 @@ class Epistle:
 		self.notebook.append_page(refreshbox, refreshevent)
 
 		vbox.add(self.notebook)
-		window.add(vbox)
-		window.show_all()
+		self.window.add(vbox)
+		self.window.show_all()
 		
 	def delete_event(self, widget, data=None):
 		self.imap.logout()
@@ -334,7 +333,6 @@ class Epistle:
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
 				message = str(mailpart.get_payload(decode=True))
-				#message = unicode(message, 'utf-8')
 			self.database.execute('update auth set main = ? where id = 1', [self.save])
 
 			if header['Subject'] == None: header['Subject'] = '(No Subject)'
@@ -389,6 +387,12 @@ class Epistle:
 		if num != 0: num = num + 1
 		num = 140 - num
 		self.count.set_text(str(num))
+
+	def resize(self, widget):
+		size = self.window.get_size()
+		print size
+		screen = self.window.get_screen()
+		print "Width: " + str(screen.get_width()) + ", Height: " + str(screen.get_height())
 			
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
@@ -422,7 +426,7 @@ class Epistle:
 		''' Shows list of mail. '''
 		for x in xrange(0,49):
 			y = self.save + x - 50
-			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*60 + str(x)
+			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*300 + str(x)
 			self.iterator = self.model.prepend()
 			self.model.set(self.iterator, 0, msg)
 
