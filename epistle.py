@@ -81,13 +81,13 @@ class Account:
 		window.set_resizable(False)
 		window.set_title('Epistle')
 		window.set_size_request(800, 450)
-		gtk.window_set_default_icon_from_file('Epistle-Icon.png')
+		gtk.window_set_default_icon_from_file('/usr/share/epistle/Icon.png')
 		window.connect('delete_event', self.delete_event)
 		window.connect('destroy', self.destroy)
 		window.set_border_width(0)
 
 		self.html = webkit.WebView()
-		#self.html.connect('load_committed', self.facebook)
+		self.html.connect('load_committed', self.facebook)
 
 		scroll_window = gtk.ScrolledWindow(None, None)
 		scroll_window.add(self.html)
@@ -129,11 +129,10 @@ class Account:
 		
 	def facebook(self,widget,data=None):
 		'''Collect data for Facebook.'''
+		import urlparse
 		url = widget.get_main_frame().get_uri()
-		url = url.replace ('http://www.loganfynne.com/?code=','')
-		url = url.split('.', 1)
-		url = url.pop()
-		url = ''.join(url)
+		url = url.replace ('http://www.loganfynne.com/?','')
+		urlparse.parse_qs(url)
 		print url
 
 class Epistle:
@@ -456,5 +455,6 @@ class Epistle:
 		gtk.main()
 
 if __name__ == '__main__':
-	app = Epistle()
-	app.main()
+	#app = Epistle()
+	#app.main()
+	Account().openfb()
