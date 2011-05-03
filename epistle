@@ -1,2 +1,2 @@
 #!/bin/sh
-./usr/lib/epistle/epistle.py
+/usr/share/epistle/epistle.py
