@@ -150,7 +150,6 @@ class Epistle:
 		self.window.connect('delete_event', self.delete_event)
 		self.window.connect('destroy', self.destroy)
 		self.window.connect('key-press-event', self.charcount)
-		self.window.connect('check-resize', self.resize)
 		self.window.set_border_width(0)
 
 		vbox = gtk.VBox()
@@ -387,12 +386,6 @@ class Epistle:
 		if num != 0: num = num + 1
 		num = 140 - num
 		self.count.set_text(str(num))
-
-	def resize(self, widget):
-		size = self.window.get_size()
-		print size
-		screen = self.window.get_screen()
-		print "Width: " + str(screen.get_width()) + ", Height: " + str(screen.get_height())
 			
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
@@ -442,7 +435,9 @@ class Epistle:
 			x = int(x[last-2] + x[last-1])
 		else: x = int(x[last-1])
 		y = self.save + x - 50
-		self.viewmail.load_html_string(self.Mail[y][4], 'file:///')
+		to = self.Mail[y][1].replace('<', '&lt;')
+		to = to.replace('>', '&gt;')
+		self.viewmail.load_html_string('<p>To: ' + to + '</p><p>Subject: ' + self.Mail[y][2] + '</p><hr />' +self.Mail[y][4], 'file:///')
 
 	def logingmail(self):
 		''' Logs in to Gmail. '''
