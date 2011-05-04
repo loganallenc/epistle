@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 from email.parser import HeaderParser
 import facebooksdk
 import sqlite3
