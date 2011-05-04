@@ -35,8 +35,9 @@ class Database:
 	def check(self):
 		self.connect()
 		if self.checkdb == False:
-			self.Gmail = Account().gmail()
-			self.Twitter = Account().twitter()
+			self.Gmail,self.Twitter,self.Facebook = Account()
+			#self.Gmail = Account().gmail()
+			#self.Twitter = Account().twitter()
 			#self.Facebook = Account().facebook()
 			self.setup()
 		self.Auth = self.authread()
@@ -55,19 +56,13 @@ class Database:
 		return self.Mail
 
 	def setup(self):
-		try: self.Gmail['gmailuser']
-		except NameError: self.Gmail['gmailuser'] = None
-		try: self.Gmail['password']
-		except NameError: self.Gmail['password'] = None
-		try: self.Twitter.access_token
-		except NameError: self.Twitter.access_token.key,self.Twitter.access_token.secret = None,None
 		self.database.execute('''create table auth (id integer primary key, main)''')
 		self.database.execute('insert into auth (id, main) values (1,1)')
 		self.database.execute('insert into auth (id, main) values (2,?)', [self.Gmail['gmailuser']])
 		self.database.execute('insert into auth (id, main) values (3,?)', [self.Gmail['password']])
 		self.database.execute('insert into auth (id, main) values (4,?)', [self.Twitter.access_token.key])
 		self.database.execute('insert into auth (id, main) values (5,?)', [self.Twitter.access_token.secret])
-		#self.database.execute('insert into auth (main) values (6,?)', [self.Facebook])
+		self.database.execute('insert into auth (main) values (6,?)', [self.Facebook])
 		
 		self.database.execute('''create table mail (id primary key,fromaddress,subject,toaddress,body)''')
 		self.db.commit()
@@ -87,18 +82,25 @@ class Account:
 		window.set_border_width(0)
 
 		self.html = webkit.WebView()
-		self.html.connect('load_committed', self.facebook)
 
 		scroll_window = gtk.ScrolledWindow(None, None)
 		scroll_window.add(self.html)
 
 		vbox = gtk.VBox(False, 0)
-		vbox.pack_start(scroll_window, True, True)
+		#vbox.pack_start(scroll_window, True, True)
+		
+		gmailpage = gtk.VBox(False, 0)
+		twitterpage = gtk.VBox(False, 0)
+		fbpage = gtk.VBox(False, 0)
+
+		hpane = gtk.HPaned()
+		hpane.pack1(twitterpage)
+		hpane.pack2(scroll_window)
 
 		window.add(vbox)
 		window.show_all()
-		#self.openfb()
 		gtk.main()
+		return self.Gmail,self.Twitter,self.Facebook
 
 	def delete_event(self, widget, data=None):
 		return False
@@ -134,6 +136,7 @@ class Account:
 		url = url.replace ('http://www.loganfynne.com/?','')
 		urlparse.parse_qs(url)
 		print url
+		return url
 
 class Epistle:
 	''' This is the main application class. '''
@@ -457,4 +460,3 @@ class Epistle:
 if __name__ == '__main__':
 	app = Epistle()
 	app.main()
-	#Account().openfb()
