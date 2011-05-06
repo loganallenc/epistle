@@ -124,9 +124,12 @@ class Account:
 		selecthboxfb.pack_start(self.fbimage, False, True, 10)
 		self.vbox.pack_start(selecthboxfb, False, False, 15)
 		
+		placebutton_one = gtk.HBox(False, 0)
 		forward_one = gtk.Button('Continue')
 		forward_one.connect('clicked', self.forward)
 		self.pagenum = 0
+		placebutton_one.pack_end(forward_one, False, True, 10)
+		self.vbox.pack_end(placebutton_one, False, False, 10)
 
 		self.gmailwindow = gtk.VBox(False, 0)
 		self.gmailpage = gtk.VBox(False, 0)
@@ -140,10 +143,15 @@ class Account:
 		forwardtwo.connect('clicked', self.forward)
 
 		self.twwindow = gtk.VBox(False, 0)
-		self.twitterpage = gtk.VBox(False, 0)
+		twhpane = gtk.HPaned()
 		twhbox = gtk.HBox(False, 0)
-		self.twitterpage.pack_start(twhbox, False, True, 15)
-		self.twitterpage.add(scroll_window)
+		twitterlabel = gtk.Label('Twitter PIN: ')
+		self.twentry = gtk.Entry()
+		twhbox.pack_start(twitterlabel, False, True, 15)
+		twhbox.pack_start(self.twentry, True, True, 15)
+		twhpane.pack1(twhbox)
+		twhpane.pack2(scroll_window)
+		self.twwindow.add(twhpane)
 		
 		forwardthree = gtk.Button('Continue')
 		forwardthree.connect('clicked', self.forward)
@@ -153,10 +161,15 @@ class Account:
 		
 		forwardfour = gtk.Button('Continue')
 		forwardfour.connect('clicked', self.forward)
-
+		
+		self.finishwindow = gtk.VBox(False, 0)
 		finish = gtk.Button('Finish')
 		finish.connect_after('clicked', self.finish)
-
+		finishlabel = gtk.Label('Thank you for setting up your accounts.')
+		self.finishwindow.add(finishlabel)
+		self.finishwindow.add(finish)
+		
+		self.wait = False
 		self.window.add(self.vbox)
 		self.window.show_all()
 		gtk.main()
@@ -176,17 +189,17 @@ class Account:
 
 	def twitter(self):
 		''' Collect data for Twitter.'''
-		auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-		auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-		auth_url = auth.get_authorization_url()
-		print auth_url
-		self.html.open(auth_url)
-		pin = raw_input('PIN: ')
-		auth.get_access_token(pin)
-		return auth
+		pin = self.twentry.get_text()
+		self.twoauth.get_access_token(pin)
 
 	def openfb(self):
 		self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/')
+		
+	def opentw(self):
+		self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+		self.twoauth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+		auth_url = self.twoauth.get_authorization_url()
+		self.html.open(auth_url)
 		
 	def facebook(self,widget,data=None):
 		''' Collect data for Facebook. '''
@@ -197,31 +210,65 @@ class Account:
 		print url
 		return url
 
-	def forward(self):
+	def forward(self, widget):
 		''' Go to the next page. '''
-		if self.pagenum == 0:
-			if self.mailcheck.get_active() == True:
+		if self.wait == True: 
+			self.wait = False
+		if self.wait == False:
+			if self.pagenum == 0:
 				self.window.remove(self.vbox)
-				self.window.add(self.gmailwindow)
-			self.pagenum = 1
-		elif self.pagenum == 1:
-			if self.twcheck.get_active() == True:
 				if self.mailcheck.get_active() == True:
-					self.window.remove(self.gmailwindow)
-					self.gmailusername = self.userentry.get_text()
-					self.gmailpassword = self.passsentry.get_text()
-				else:
-					self.window.remove(self.vbox)
-				self.window.add(self.twwindow)
-			self.pagenum = 2
-		if self.pagenum == 2:
-			if self.fbcheck.get_active() == True:
-				if self.twcheck.get_active() == True: self.window.remove(self.twwindow)
-				if self.twcheck.get_active() == False:
-					if self.mailcheck.get_active() == True: self.window.remove(self.gmailwindow)
-					elif self.mailcheck.get_active() == False: self.window.remove(self.vbox)
-				self.window.add(self.fbwindow)
-			self.pagenum = 3
+					self.window.add(self.gmailwindow)
+					self.wait = True
+				self.pagenum = 1
+		if self.wait == False:
+			if self.pagenum == 1:
+				if self.twcheck.get_active() == True:
+					if self.mailcheck.get_active() == True:
+						self.window.remove(self.gmailwindow)
+						self.gmailusername = self.userentry.get_text()
+						self.gmailpassword = self.passsentry.get_text()
+					else:
+						self.gmailusername = None
+						self.gmailpassword = None
+					self.window.add(self.twwindow)
+					self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+					self.twoauth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+					auth_url = self.twoauth.get_authorization_url()
+					self.html.open(auth_url)
+					self.wait = True
+					self.pagenum = 2
+		if self.wait == False:	
+			if self.pagenum == 2:
+				if self.fbcheck.get_active() == True:
+					if self.twcheck.get_active() == True:
+						self.window.remove(self.twwindow)
+						self.twitter()
+					if self.twcheck.get_active() == False:
+						if self.mailcheck.get_active() == True:
+							self.window.remove(self.gmailwindow)
+						elif self.mailcheck.get_active() == False:
+							self.window.remove(self.vbox)
+					self.openfb()
+					self.window.add(self.fbwindow)
+				self.pagenum = 3
+		if self.wait == False:
+			if self.pagenum == 3:
+				if self.fbcheck.get_active() == True:
+					self.window.remove(self.fbwindow)
+				elif self.fbcheck.get_active() == False:
+					if self.twcheck.get_active() == True:
+						self.window.remove(self.twwindow)
+					elif self.twcheck.get_active() == False:
+						if self.mailcheck.get_active() == True:
+							self.window.remove(self.gmailwindow)
+						if self.mailcheck.get_active() == False:
+							self.pagenum = 0
+				self.window.add(self.finishwindow)
+				if self.pagenum == 0:
+					self.window.remove(self.finishwindow)
+					self.window.add(self.vbox)
+		self.window.show_all()
 	def finish(self):
 		gtk.main_quit()
 		return self.gmailusername,self.gmailpassword,self.twoauth,self.fboauth
