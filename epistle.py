@@ -35,7 +35,6 @@ class Database:
 	def check(self):
 		self.connect()
 		if self.checkdb == False:
-			#Run Account().finish(0) in a seperate thread.
 			self.gmailusername,self.gmailpassword,self.twoauth,self.fboauth = Account().finish(0)
 			self.setup()
 		self.Auth = self.authread()
@@ -89,6 +88,14 @@ class Account:
 
 		self.vbox = gtk.VBox(False, 0)
 
+		firstcontainer = gtk.HBox(False, 0)
+		label = gtk.Label('Epistle Account Setup')
+		separator = gtk.HSeparator()
+		firstcontainer.pack_start(label, False, False, 10)
+		self.vbox.pack_start(firstcontainer, False, False, 10)
+		self.vbox.pack_start(separator, False, False, 20)
+
+		containermail = gtk.HBox(False, 0)
 		selecthboxmail = gtk.HBox(False, 0)
 		self.mailimage = gtk.Image()
 		mailpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Gmail.png')
@@ -100,8 +107,10 @@ class Account:
 		selecthboxmail.pack_start(maillabel, False, True, 19)
 		selecthboxmail.pack_start(self.mailcheck, False, True, 15)
 		selecthboxmail.pack_start(self.mailimage, False, True, 4)
-		self.vbox.pack_start(selecthboxmail, False, False, 15)
+		containermail.pack_start(selecthboxmail, True, False, 100)
+		self.vbox.pack_start(containermail, False, False, 20)
 
+		containertw = gtk.HBox(False, 0)
 		selecthboxtw = gtk.HBox(False, 0)
 		self.twimage = gtk.Image()
 		twpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Twitter.png')
@@ -113,8 +122,10 @@ class Account:
 		selecthboxtw.pack_start(twlabel, False, True, 18)
 		selecthboxtw.pack_start(self.twcheck, False, True, 14)
 		selecthboxtw.pack_start(self.twimage, False, True, 8)
-		self.vbox.pack_start(selecthboxtw, False, False, 15)
+		containertw.pack_start(selecthboxtw, True, False, 100)
+		self.vbox.pack_start(containertw, False, False, 20)
 		
+		containerfb = gtk.HBox(False, 0)
 		selecthboxfb = gtk.HBox(False, 0)
 		self.fbimage = gtk.Image()
 		fbpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Facebook.png')
@@ -126,7 +137,8 @@ class Account:
 		selecthboxfb.pack_start(fblabel, False, True, 10)
 		selecthboxfb.pack_start(self.fbcheck, False, True, 10)
 		selecthboxfb.pack_start(self.fbimage, False, True, 10)
-		self.vbox.pack_start(selecthboxfb, False, False, 15)
+		containerfb.pack_start(selecthboxfb, True, False, 100)
+		self.vbox.pack_start(containerfb, False, False, 20)
 		
 		placebutton_one = gtk.HBox(False, 0)
 		forward_one = gtk.Button('Continue')
