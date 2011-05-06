@@ -6,7 +6,9 @@ install:
 	mkdir -p $(LIBDIR)
 	mkdir -p $(BINDIR)
 	cp -r * $(LIBDIR)/
+	chmod +x $(LIBDIR)/epistle.py
 	cp epistle $(BINDIR)/
+	chmod +x $(BINDIR)/epistle
 	cp epistle.desktop $(APPDIR)/
 uninstall:
 	rm -rf $(LIBDIR)
