@@ -72,33 +72,69 @@ class Account:
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
 		glib.threads_init()
-		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-		window.set_resizable(False)
-		window.set_title('Epistle')
-		window.set_size_request(800, 450)
+		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+		self.window.set_resizable(False)
+		self.window.set_title('Epistle')
+		self.window.set_size_request(800, 450)
 		gtk.window_set_default_icon_from_file('/usr/share/epistle/Icon.png')
-		window.connect('delete_event', self.delete_event)
-		window.connect('destroy', self.destroy)
-		window.set_border_width(0)
+		self.window.connect('delete_event', self.delete_event)
+		self.window.connect('destroy', self.destroy)
+		self.window.set_border_width(0)
 
 		self.html = webkit.WebView()
 
 		scroll_window = gtk.ScrolledWindow(None, None)
 		scroll_window.add(self.html)
 
-		vbox = gtk.VBox(False, 0)
-		#vbox.pack_start(scroll_window, True, True)
-		
-		gmailpage = gtk.VBox(False, 0)
-		twitterpage = gtk.VBox(False, 0)
-		fbpage = gtk.VBox(False, 0)
+		self.vbox = gtk.VBox(False, 0)
+		#self.vbox.pack_start(scroll_window, True, True)
 
-		hpane = gtk.HPaned()
-		hpane.pack1(twitterpage)
-		hpane.pack2(scroll_window)
+		self.gmailwindow = gtk.VBox(False, 0)
+		self.gmailpage = gtk.VBox(False, 0)
+		self.userhbox = gtk.HBox(False, 0)
+		userlabel = gtk.Label(' Username: ')
+		self.userentry = gtk.Entry()
+		self.userhbox.pack_start(userlabel, False, True, 15)
+		self.userhbox.pack_start(self.userentry, True, True, 7)
 
-		window.add(vbox)
-		window.show_all()
+		self.mailimage = gtk.Image()
+		mailpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Gmail.png')
+		mailpixbuf = mailpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
+		self.mailimage.set_from_pixbuf(mailpixbuf)
+		self.mailcheck = gtk.CheckButton(None)
+		self.mailcheck.set_active(True)
+
+		self.twwindow = gtk.VBox(False, 0)
+		self.twitterpage = gtk.VBox(False, 0)
+		twhbox = gtk.Hbox(False, 0)
+		self.twitterpage.add(twhbox, False, True, 15)
+		self.twitterpage.add(scroll_window)
+
+
+		self.twimage = gtk.Image()
+		twpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Twitter.png')
+		twpixbuf = twpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
+		self.twimage.set_from_pixbuf(twpixbuf)
+		self.twcheck = gtk.CheckButton(None)
+		self.twcheck.set_active(True)
+
+		self.fbwindow = gtk.VBox(False, 0)
+		self.fbpage = gtk.VBox(False, 0)
+
+
+		self.fbimage = gtk.Image()
+		fbpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Facebook.png')
+		fbpixbuf = fbpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
+		self.fbimage.set_from_pixbuf(fbpixbuf)
+		self.fbcheck = gtk.CheckButton(None)
+		self.fbcheck.set_active(True)
+
+		forward = gtk.Button('Continue')
+		forward.connect('clicked', self.forward)
+		self.pagenum = 1
+
+		self.window.add(self.vbox)
+		self.window.show_all()
 		gtk.main()
 		return self.Gmail,self.Twitter,self.Facebook
 
@@ -130,13 +166,35 @@ class Account:
 		self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/')
 		
 	def facebook(self,widget,data=None):
-		'''Collect data for Facebook.'''
+		''' Collect data for Facebook. '''
 		import urlparse
 		url = widget.get_main_frame().get_uri()
 		url = url.replace ('http://www.loganfynne.com/?','')
 		urlparse.parse_qs(url)
 		print url
 		return url
+
+	def forward(self):
+		''' Go to the next page. '''
+		if self.pagenum == 0:
+			if self.mailcheck.get_active() == True:
+				self.window.remove(self.vbox)
+				self.window.add(self.gmailwindow)
+			self.pagenum = 1
+		elif self.pagenum == 1:
+			if self.twcheck.get_active() == True:
+				if self.mailcheck.get_active() == True: self.window.remove(self.gmailwindow)
+				else: self.window.remove(self.vbox)
+				self.window.add(self.twwindow)
+			self.pagenum = 2
+		if self.pagenum == 2:
+			if self.fbcheck.get_active() == True:
+				if self.twcheck.get_active() == True: self.window.remove(self.twwindow)
+				if self.twcheck.get_active() == False:
+					if self.mailcheck.get_active() == True: self.window.remove(self.gmailwindow)
+					elif self.mailcheck.get_active() == False: self.window.remove(self.vbox)
+				self.window.add(self.fbwindow)
+			self.pagenum = 3
 
 class Epistle:
 	''' This is the main application class. '''
@@ -285,12 +343,24 @@ class Epistle:
 			self.viewtw.load_html_string(tweets, 'file:///')
 			self.notebook.append_page(twbox, twevent)
 
-#		if self.Auth[5][0] != None:
-#			self.loginfb()
-#			fb_tab = gtk.Button('Facebook')
-#			fb_tab.connect('clicked', self.showfb)
-#			toolbar.add(fb_tab)
-#			self.sendfb = False
+		if self.Auth[5][0] != None:
+			self.loginfb()
+			fblabel = gtk.Label('Facebook')
+			fbevent = gtk.EventBox()
+			fbevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+			fbevent.set_visible_window(False)
+			fbevent.add(fblabel)
+			gtk.Widget.show(fblabel)
+			
+			self.viewfb = webkit.WebView()
+			scrollfb = gtk.ScrolledWindow(None, None)
+			scrollfb.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
+			scrollfb.set_size_request(800,415)
+			scrollfb.add(self.viewfb)
+			fbbox = gtk.VBox()
+			fbbox.add(scrollfb)
+			self.notebook.append_page(fbbox, fbevent)
+
 
 		refreshimage = gtk.Image()
 		refreshimage.set_from_stock(gtk.STOCK_REFRESH,gtk.ICON_SIZE_SMALL_TOOLBAR)
@@ -395,13 +465,11 @@ class Epistle:
 
 	def updatefb(self):
 		''' This function updates the Facebook stream. '''
-		self.Facebook['Facebook'] = facebooksdk.GraphAPI(self.Facebook['auth'])
 		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
 		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
 
 	def postfb(self):
 		''' This function posts to Facebook. '''
-		self.Facebook['Facebook'] = facebooksdk.GraphAPI(self.Facebook['auth'])
 		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
 		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
 		fbstatus = raw_input('Set your Facebook status: ')
@@ -452,6 +520,10 @@ class Epistle:
 		self.auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 		self.auth.set_access_token(self.Auth[3][1], self.Auth[4][1])
 		self.Twitter = tweepy.API(self.auth)
+
+	def loginfb(self):
+		''' Logs into Facebook. '''	
+		self.Facebook['Facebook'] = facebooksdk.GraphAPI(self.Auth[5][1])
 
 	def main(self):
 		''' This function will include the interface of Epistle, and all the function calls. '''
