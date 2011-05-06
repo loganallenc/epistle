@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 from email.parser import HeaderParser
 import facebooksdk
 import sqlite3
@@ -87,7 +87,45 @@ class Account:
 		scroll_window.add(self.html)
 
 		self.vbox = gtk.VBox(False, 0)
-		#self.vbox.pack_start(scroll_window, True, True)
+
+		selecthboxmail = gtk.HBox(False, 0)
+		self.mailimage = gtk.Image()
+		mailpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Gmail.png')
+		mailpixbuf = mailpixbuf.scale_simple(48, 48, gtk.gdk.INTERP_BILINEAR)
+		self.mailimage.set_from_pixbuf(mailpixbuf)
+		self.mailcheck = gtk.CheckButton(None)
+		self.mailcheck.set_active(True)
+		maillabel = gtk.Label('Gmail')
+		selecthboxmail.pack_start(maillabel, False, True, 19)
+		selecthboxmail.pack_start(self.mailcheck, False, True, 15)
+		selecthboxmail.pack_start(self.mailimage, False, True, 4)
+		self.vbox.pack_start(selecthboxmail, False, False, 15)
+
+		selecthboxtw = gtk.HBox(False, 0)
+		self.twimage = gtk.Image()
+		twpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Twitter.png')
+		twpixbuf = twpixbuf.scale_simple(40, 40, gtk.gdk.INTERP_BILINEAR)
+		self.twimage.set_from_pixbuf(twpixbuf)
+		self.twcheck = gtk.CheckButton(None)
+		self.twcheck.set_active(True)
+		twlabel = gtk.Label('Twitter')
+		selecthboxtw.pack_start(twlabel, False, True, 18)
+		selecthboxtw.pack_start(self.twcheck, False, True, 14)
+		selecthboxtw.pack_start(self.twimage, False, True, 8)
+		self.vbox.pack_start(selecthboxtw, False, False, 15)
+		
+		selecthboxfb = gtk.HBox(False, 0)
+		self.fbimage = gtk.Image()
+		fbpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Facebook.png')
+		fbpixbuf = fbpixbuf.scale_simple(36, 36, gtk.gdk.INTERP_BILINEAR)
+		self.fbimage.set_from_pixbuf(fbpixbuf)
+		self.fbcheck = gtk.CheckButton(None)
+		self.fbcheck.set_active(True)
+		fblabel = gtk.Label('Facebook')
+		selecthboxfb.pack_start(fblabel, False, True, 10)
+		selecthboxfb.pack_start(self.fbcheck, False, True, 10)
+		selecthboxfb.pack_start(self.fbimage, False, True, 10)
+		self.vbox.pack_start(selecthboxfb, False, False, 15)
 
 		self.gmailwindow = gtk.VBox(False, 0)
 		self.gmailpage = gtk.VBox(False, 0)
@@ -97,37 +135,14 @@ class Account:
 		self.userhbox.pack_start(userlabel, False, True, 15)
 		self.userhbox.pack_start(self.userentry, True, True, 7)
 
-		self.mailimage = gtk.Image()
-		mailpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Gmail.png')
-		mailpixbuf = mailpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
-		self.mailimage.set_from_pixbuf(mailpixbuf)
-		self.mailcheck = gtk.CheckButton(None)
-		self.mailcheck.set_active(True)
-
 		self.twwindow = gtk.VBox(False, 0)
 		self.twitterpage = gtk.VBox(False, 0)
-		twhbox = gtk.Hbox(False, 0)
-		self.twitterpage.add(twhbox, False, True, 15)
+		twhbox = gtk.HBox(False, 0)
+		self.twitterpage.pack_start(twhbox, False, True, 15)
 		self.twitterpage.add(scroll_window)
-
-
-		self.twimage = gtk.Image()
-		twpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Twitter.png')
-		twpixbuf = twpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
-		self.twimage.set_from_pixbuf(twpixbuf)
-		self.twcheck = gtk.CheckButton(None)
-		self.twcheck.set_active(True)
 
 		self.fbwindow = gtk.VBox(False, 0)
 		self.fbpage = gtk.VBox(False, 0)
-
-
-		self.fbimage = gtk.Image()
-		fbpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Facebook.png')
-		fbpixbuf = fbpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
-		self.fbimage.set_from_pixbuf(fbpixbuf)
-		self.fbcheck = gtk.CheckButton(None)
-		self.fbcheck.set_active(True)
 
 		forward = gtk.Button('Continue')
 		forward.connect('clicked', self.forward)
