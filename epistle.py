@@ -35,7 +35,8 @@ class Database:
 	def check(self):
 		self.connect()
 		if self.checkdb == False:
-			self.gmailusername,self.gmailpassword,self.twoauth,self.fboauth = Account().finish()
+			#Run Account().finish(0) in a seperate thread.
+			self.gmailusername,self.gmailpassword,self.twoauth,self.fboauth = Account().finish(0)
 			self.setup()
 		self.Auth = self.authread()
 		return self.path,self.Auth
@@ -59,10 +60,12 @@ class Database:
 		self.database.execute('insert into auth (id, main) values (3,?)', [self.gmailpassword])
 		self.database.execute('insert into auth (id, main) values (4,?)', [self.twoauth.access_token.key])
 		self.database.execute('insert into auth (id, main) values (5,?)', [self.twoauth.access_token.secret])
-		self.database.execute('insert into auth (main) values (6,?)', [self.fboauth])
+		self.database.execute('insert into auth (id, main) values (6,?)', [self.fboauth])
 		
 		self.database.execute('''create table mail (id primary key,fromaddress,subject,toaddress,body)''')
 		self.db.commit()
+		gtk.main_quit()
+
 
 class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
@@ -132,15 +135,28 @@ class Account:
 		self.vbox.pack_end(placebutton_one, False, False, 10)
 
 		self.gmailwindow = gtk.VBox(False, 0)
-		self.gmailpage = gtk.VBox(False, 0)
 		self.userhbox = gtk.HBox(False, 0)
 		userlabel = gtk.Label(' Username: ')
 		self.userentry = gtk.Entry()
+		self.passhbox = gtk.HBox(False, 0)
+		passlabel = gtk.Label(' Password: ')
+		self.passentry = gtk.Entry()
+#		confirmlabel = gtk.Label(' Confirm Password: ')
+#		confirmentry = gtk.Entry()
 		self.userhbox.pack_start(userlabel, False, True, 15)
 		self.userhbox.pack_start(self.userentry, True, True, 7)
+		self.passhbox.pack_start(passlabel, False, True, 15)
+		self.passhbox.pack_start(self.passentry, True, True, 7)
+		self.gmailwindow.add(self.userhbox)
+		self.gmailwindow.add(self.passhbox)
 		
-		forwardtwo = gtk.Button('Continue')
-		forwardtwo.connect('clicked', self.forward)
+		placebutton_two = gtk.HBox(False, 0)
+		forward_two = gtk.Button('Continue')
+		forward_two.connect('clicked', self.forward)
+		placebutton_two.pack_end(forward_two, False, True, 10)
+		self.gmailwindow.pack_end(placebutton_two, False, False, 10)
+		
+
 
 		self.twwindow = gtk.VBox(False, 0)
 		twhpane = gtk.HPaned()
@@ -153,14 +169,20 @@ class Account:
 		twhpane.pack2(scroll_window)
 		self.twwindow.add(twhpane)
 		
-		forwardthree = gtk.Button('Continue')
-		forwardthree.connect('clicked', self.forward)
+		placebutton_three = gtk.HBox(False, 0)
+		forward_three = gtk.Button('Continue')
+		forward_three.connect('clicked', self.forward)
+		placebutton_three.pack_end(forward_three, False, True, 10)
+		self.twwindow.pack_end(placebutton_three, False, False, 10)
 
 		self.fbwindow = gtk.VBox(False, 0)
 		self.fbpage = gtk.VBox(False, 0)
 		
-		forwardfour = gtk.Button('Continue')
-		forwardfour.connect('clicked', self.forward)
+		placebutton_four = gtk.HBox(False, 0)
+		forward_four = gtk.Button('Continue')
+		forward_four.connect('clicked', self.forward)
+		placebutton_four.pack_end(forward_four, False, True, 10)
+		self.fbwindow.pack_end(placebutton_four, False, False, 10)
 		
 		self.finishwindow = gtk.VBox(False, 0)
 		finish = gtk.Button('Finish')
@@ -223,32 +245,33 @@ class Account:
 				self.pagenum = 1
 		if self.wait == False:
 			if self.pagenum == 1:
+				if self.mailcheck.get_active() == True:
+					self.window.remove(self.gmailwindow)
+					self.gmailusername = self.userentry.get_text()
+					self.gmailpassword = self.passentry.get_text()
+				else:
+					self.gmailusername = None
+					self.gmailpassword = None
+				
 				if self.twcheck.get_active() == True:
-					if self.mailcheck.get_active() == True:
-						self.window.remove(self.gmailwindow)
-						self.gmailusername = self.userentry.get_text()
-						self.gmailpassword = self.passsentry.get_text()
-					else:
-						self.gmailusername = None
-						self.gmailpassword = None
-					self.window.add(self.twwindow)
 					self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-					self.twoauth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+					#self.twoauth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 					auth_url = self.twoauth.get_authorization_url()
 					self.html.open(auth_url)
+					self.window.add(self.twwindow)
 					self.wait = True
-					self.pagenum = 2
+				self.pagenum = 2
 		if self.wait == False:	
 			if self.pagenum == 2:
+				if self.twcheck.get_active() == True:
+					self.window.remove(self.twwindow)
+					self.twitter()
+					
+				if self.twcheck.get_active() == False:
+					self.twoauth = False
+					
 				if self.fbcheck.get_active() == True:
-					if self.twcheck.get_active() == True:
-						self.window.remove(self.twwindow)
-						self.twitter()
-					if self.twcheck.get_active() == False:
-						if self.mailcheck.get_active() == True:
-							self.window.remove(self.gmailwindow)
-						elif self.mailcheck.get_active() == False:
-							self.window.remove(self.vbox)
+					self.wait = True
 					self.openfb()
 					self.window.add(self.fbwindow)
 				self.pagenum = 3
@@ -257,21 +280,18 @@ class Account:
 				if self.fbcheck.get_active() == True:
 					self.window.remove(self.fbwindow)
 				elif self.fbcheck.get_active() == False:
-					if self.twcheck.get_active() == True:
-						self.window.remove(self.twwindow)
-					elif self.twcheck.get_active() == False:
-						if self.mailcheck.get_active() == True:
-							self.window.remove(self.gmailwindow)
+					if self.twcheck.get_active() == False:
 						if self.mailcheck.get_active() == False:
 							self.pagenum = 0
+					self.fboauth = False
 				self.window.add(self.finishwindow)
 				if self.pagenum == 0:
 					self.window.remove(self.finishwindow)
 					self.window.add(self.vbox)
 		self.window.show_all()
-	def finish(self):
-		gtk.main_quit()
+	def finish(self, widget):		
 		return self.gmailusername,self.gmailpassword,self.twoauth,self.fboauth
+
 
 class Epistle:
 	''' This is the main application class. '''
