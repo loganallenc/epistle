@@ -35,10 +35,7 @@ class Database:
 	def check(self):
 		self.connect()
 		if self.checkdb == False:
-			self.Gmail,self.Twitter,self.Facebook = Account()
-			#self.Gmail = Account().gmail()
-			#self.Twitter = Account().twitter()
-			#self.Facebook = Account().facebook()
+			self.gmailusername,self.gmailpassword,self.twoauth,self.fboauth = Account().finish()
 			self.setup()
 		self.Auth = self.authread()
 		return self.path,self.Auth
@@ -58,11 +55,11 @@ class Database:
 	def setup(self):
 		self.database.execute('''create table auth (id integer primary key, main)''')
 		self.database.execute('insert into auth (id, main) values (1,1)')
-		self.database.execute('insert into auth (id, main) values (2,?)', [self.Gmail['gmailuser']])
-		self.database.execute('insert into auth (id, main) values (3,?)', [self.Gmail['password']])
-		self.database.execute('insert into auth (id, main) values (4,?)', [self.Twitter.access_token.key])
-		self.database.execute('insert into auth (id, main) values (5,?)', [self.Twitter.access_token.secret])
-		self.database.execute('insert into auth (main) values (6,?)', [self.Facebook])
+		self.database.execute('insert into auth (id, main) values (2,?)', [self.gmailusername])
+		self.database.execute('insert into auth (id, main) values (3,?)', [self.gmailpassword])
+		self.database.execute('insert into auth (id, main) values (4,?)', [self.twoauth.access_token.key])
+		self.database.execute('insert into auth (id, main) values (5,?)', [self.twoauth.access_token.secret])
+		self.database.execute('insert into auth (main) values (6,?)', [self.fboauth])
 		
 		self.database.execute('''create table mail (id primary key,fromaddress,subject,toaddress,body)''')
 		self.db.commit()
@@ -126,6 +123,10 @@ class Account:
 		selecthboxfb.pack_start(self.fbcheck, False, True, 10)
 		selecthboxfb.pack_start(self.fbimage, False, True, 10)
 		self.vbox.pack_start(selecthboxfb, False, False, 15)
+		
+		forward_one = gtk.Button('Continue')
+		forward_one.connect('clicked', self.forward)
+		self.pagenum = 0
 
 		self.gmailwindow = gtk.VBox(False, 0)
 		self.gmailpage = gtk.VBox(False, 0)
@@ -134,24 +135,31 @@ class Account:
 		self.userentry = gtk.Entry()
 		self.userhbox.pack_start(userlabel, False, True, 15)
 		self.userhbox.pack_start(self.userentry, True, True, 7)
+		
+		forwardtwo = gtk.Button('Continue')
+		forwardtwo.connect('clicked', self.forward)
 
 		self.twwindow = gtk.VBox(False, 0)
 		self.twitterpage = gtk.VBox(False, 0)
 		twhbox = gtk.HBox(False, 0)
 		self.twitterpage.pack_start(twhbox, False, True, 15)
 		self.twitterpage.add(scroll_window)
+		
+		forwardthree = gtk.Button('Continue')
+		forwardthree.connect('clicked', self.forward)
 
 		self.fbwindow = gtk.VBox(False, 0)
 		self.fbpage = gtk.VBox(False, 0)
+		
+		forwardfour = gtk.Button('Continue')
+		forwardfour.connect('clicked', self.forward)
 
-		forward = gtk.Button('Continue')
-		forward.connect('clicked', self.forward)
-		self.pagenum = 1
+		finish = gtk.Button('Finish')
+		finish.connect_after('clicked', self.finish)
 
 		self.window.add(self.vbox)
 		self.window.show_all()
 		gtk.main()
-		return self.Gmail,self.Twitter,self.Facebook
 
 	def delete_event(self, widget, data=None):
 		return False
@@ -198,8 +206,12 @@ class Account:
 			self.pagenum = 1
 		elif self.pagenum == 1:
 			if self.twcheck.get_active() == True:
-				if self.mailcheck.get_active() == True: self.window.remove(self.gmailwindow)
-				else: self.window.remove(self.vbox)
+				if self.mailcheck.get_active() == True:
+					self.window.remove(self.gmailwindow)
+					self.gmailusername = self.userentry.get_text()
+					self.gmailpassword = self.passsentry.get_text()
+				else:
+					self.window.remove(self.vbox)
 				self.window.add(self.twwindow)
 			self.pagenum = 2
 		if self.pagenum == 2:
@@ -210,6 +222,9 @@ class Account:
 					elif self.mailcheck.get_active() == False: self.window.remove(self.vbox)
 				self.window.add(self.fbwindow)
 			self.pagenum = 3
+	def finish(self):
+		gtk.main_quit()
+		return self.gmailusername,self.gmailpassword,self.twoauth,self.fboauth
 
 class Epistle:
 	''' This is the main application class. '''
