@@ -82,9 +82,10 @@ class Account:
 		self.window.set_border_width(0)
 
 		self.html = webkit.WebView()
+		self.html.connect('load_committed', self.facebook)
 
-		scroll_window = gtk.ScrolledWindow(None, None)
-		scroll_window.add(self.html)
+		self.scroll_window = gtk.ScrolledWindow(None, None)
+		self.scroll_window.add(self.html)
 
 		self.vbox = gtk.VBox(False, 0)
 
@@ -141,12 +142,15 @@ class Account:
 		self.passhbox = gtk.HBox(False, 0)
 		passlabel = gtk.Label(' Password: ')
 		self.passentry = gtk.Entry()
-#		confirmlabel = gtk.Label(' Confirm Password: ')
-#		confirmentry = gtk.Entry()
+		self.confhbox = gtk.HBox(False, 0)
+		confirmlabel = gtk.Label(' Confirm Password: ')
+		self.confirmentry = gtk.Entry()
 		self.userhbox.pack_start(userlabel, False, True, 15)
 		self.userhbox.pack_start(self.userentry, True, True, 7)
 		self.passhbox.pack_start(passlabel, False, True, 15)
 		self.passhbox.pack_start(self.passentry, True, True, 7)
+		self.confhbox.pack_start(confirmlabel, False, True, 15)
+		self.confhbox.pack_start(self.confirmentry, True, True, 7)
 		self.gmailwindow.add(self.userhbox)
 		self.gmailwindow.add(self.passhbox)
 		
@@ -155,19 +159,17 @@ class Account:
 		forward_two.connect('clicked', self.forward)
 		placebutton_two.pack_end(forward_two, False, True, 10)
 		self.gmailwindow.pack_end(placebutton_two, False, False, 10)
-		
-
 
 		self.twwindow = gtk.VBox(False, 0)
-		twhpane = gtk.HPaned()
+		self.twhpane = gtk.HPaned()
 		twhbox = gtk.HBox(False, 0)
 		twitterlabel = gtk.Label('Twitter PIN: ')
 		self.twentry = gtk.Entry()
 		twhbox.pack_start(twitterlabel, False, True, 15)
 		twhbox.pack_start(self.twentry, True, True, 15)
-		twhpane.pack1(twhbox)
-		twhpane.pack2(scroll_window)
-		self.twwindow.add(twhpane)
+		self.twhpane.pack1(twhbox)
+		self.twhpane.pack2(self.scroll_window)
+		self.twwindow.add(self.twhpane)
 		
 		placebutton_three = gtk.HBox(False, 0)
 		forward_three = gtk.Button('Continue')
@@ -211,11 +213,11 @@ class Account:
 
 	def twitter(self):
 		''' Collect data for Twitter.'''
-		pin = self.twentry.get_text()
-		self.twoauth.get_access_token(pin)
-
-	def openfb(self):
-		self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/')
+		try:
+			pin = self.twentry.get_text()
+			self.twoauth.get_access_token(pin)
+		except tweepy.error.TweepError:
+			self.twoauth.set_access_token(None,None)
 		
 	def opentw(self):
 		self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
@@ -225,13 +227,12 @@ class Account:
 		
 	def facebook(self,widget,data=None):
 		''' Collect data for Facebook. '''
-		import urlparse
-		url = widget.get_main_frame().get_uri()
-		url = url.replace ('http://www.loganfynne.com/?','')
-		urlparse.parse_qs(url)
-		print url
-		return url
-
+		if 'http://www.loganfynne.com/' in widget.get_main_frame().get_uri():
+			import urlparse
+			self.fboauth = widget.get_main_frame().get_uri()
+			self.fboauth = self.fboauth.replace ('http://www.loganfynne.com/?','')
+			self.fboauth = urlparse.parse_qs(self.fboauth)
+		
 	def forward(self, widget):
 		''' Go to the next page. '''
 		if self.wait == True: 
@@ -252,11 +253,10 @@ class Account:
 				else:
 					self.gmailusername = None
 					self.gmailpassword = None
+				self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+				auth_url = self.twoauth.get_authorization_url()
 				
 				if self.twcheck.get_active() == True:
-					self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-					#self.twoauth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-					auth_url = self.twoauth.get_authorization_url()
 					self.html.open(auth_url)
 					self.window.add(self.twwindow)
 					self.wait = True
@@ -266,13 +266,14 @@ class Account:
 				if self.twcheck.get_active() == True:
 					self.window.remove(self.twwindow)
 					self.twitter()
-					
 				if self.twcheck.get_active() == False:
 					self.twoauth = False
-					
 				if self.fbcheck.get_active() == True:
 					self.wait = True
-					self.openfb()
+					self.twhpane.remove(self.scroll_window)
+					self.fbwindow.add(self.scroll_window)
+					self.html.connect_after('load_committed', self.facebook)
+					self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/')
 					self.window.add(self.fbwindow)
 				self.pagenum = 3
 		if self.wait == False:
@@ -289,6 +290,7 @@ class Account:
 					self.window.remove(self.finishwindow)
 					self.window.add(self.vbox)
 		self.window.show_all()
+		
 	def finish(self, widget):		
 		return self.gmailusername,self.gmailpassword,self.twoauth,self.fboauth
 
