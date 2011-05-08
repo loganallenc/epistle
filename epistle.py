@@ -63,7 +63,6 @@ class Database:
 		
 		self.database.execute('''create table mail (id primary key,fromaddress,subject,toaddress,body)''')
 		self.db.commit()
-		gtk.main_quit()
 
 
 class Account:
@@ -165,12 +164,14 @@ class Account:
 		self.confhbox.pack_start(self.confirmentry, True, True, 7)
 		self.gmailwindow.add(self.userhbox)
 		self.gmailwindow.add(self.passhbox)
+		self.gmailwindow.add(self.confhbox)
 		
-		placebutton_two = gtk.HBox(False, 0)
+		self.placebutton_two = gtk.HBox(False, 0)
 		forward_two = gtk.Button('Continue')
 		forward_two.connect('clicked', self.forward)
-		placebutton_two.pack_end(forward_two, False, True, 10)
-		self.gmailwindow.pack_end(placebutton_two, False, False, 10)
+		self.placebutton_two.pack_end(forward_two, False, True, 10)
+		self.passchecklabel = gtk.Label('Passwords do not match')
+		self.gmailwindow.pack_end(self.placebutton_two, False, False, 10)
 
 		self.twwindow = gtk.VBox(False, 0)
 		self.twhpane = gtk.HPaned()
@@ -242,9 +243,10 @@ class Account:
 		if 'http://www.loganfynne.com/' in widget.get_main_frame().get_uri():
 			import urlparse
 			self.fboauth = widget.get_main_frame().get_uri()
-			self.fboauth = self.fboauth.replace ('http://www.loganfynne.com/?','')
-			self.fboauth = urlparse.parse_qs(self.fboauth)
-		
+			self.fboauth = self.fboauth.replace('http://www.loganfynne.com/?','')
+			self.fboauth = self.fboauth.replace('code=','')
+			print self.fboauth
+
 	def forward(self, widget):
 		''' Go to the next page. '''
 		if self.wait == True: 
@@ -259,21 +261,26 @@ class Account:
 		if self.wait == False:
 			if self.pagenum == 1:
 				if self.mailcheck.get_active() == True:
-					self.window.remove(self.gmailwindow)
-					self.gmailusername = self.userentry.get_text()
-					self.gmailpassword = self.passentry.get_text()
+					if self.passentry.get_text() == self.confirmentry.get_text():
+						self.window.remove(self.gmailwindow)
+						self.gmailusername = self.userentry.get_text()
+						self.gmailpassword = self.passentry.get_text()
+						self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+						auth_url = self.twoauth.get_authorization_url()
+				
+						if self.twcheck.get_active() == True:
+							self.html.open(auth_url)
+							self.window.add(self.twwindow)
+							self.wait = True
+						self.pagenum = 2
+					else:
+						self.gmailwindow.remove(self.placebutton_two)
+						self.gmailwindow.pack_end(self.passchecklabel, False, False, 10)
+						self.gmailwindow.pack_end(self.placebutton_two, False, False, 10)
 				else:
 					self.gmailusername = None
 					self.gmailpassword = None
-				self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-				auth_url = self.twoauth.get_authorization_url()
-				
-				if self.twcheck.get_active() == True:
-					self.html.open(auth_url)
-					self.window.add(self.twwindow)
-					self.wait = True
-				self.pagenum = 2
-		if self.wait == False:	
+		if self.wait == False:
 			if self.pagenum == 2:
 				if self.twcheck.get_active() == True:
 					self.window.remove(self.twwindow)
@@ -303,7 +310,7 @@ class Account:
 					self.window.add(self.vbox)
 		self.window.show_all()
 		
-	def finish(self, widget):		
+	def finish(self, widget):
 		return self.gmailusername,self.gmailpassword,self.twoauth,self.fboauth
 
 
@@ -634,7 +641,7 @@ class Epistle:
 
 	def loginfb(self):
 		''' Logs into Facebook. '''	
-		self.Facebook['Facebook'] = facebooksdk.GraphAPI(self.Auth[5][1])
+		self.Facebook = facebooksdk.GraphAPI(self.Auth[5][1])
 
 	def main(self):
 		''' This function will include the interface of Epistle, and all the function calls. '''
