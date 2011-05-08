@@ -242,7 +242,9 @@ class Account:
 		if 'http://www.loganfynne.com/' in widget.get_main_frame().get_uri():
 			import urlparse
 			self.fboauth = widget.get_main_frame().get_uri()
-			self.fboauth = self.fboauth.replace('http://www.loganfynne.com/?code=','')
+			self.fboauth = self.fboauth.replace('http://www.loganfynne.com/#access_token=','')
+			self.fboauth = self.fboauth.replace('&expires_in=0','')
+			print self.fboauth
 
 	def forward(self, widget):
 		''' Go to the next page. '''
@@ -289,7 +291,8 @@ class Account:
 					self.twhpane.remove(self.scroll_window)
 					self.fbwindow.add(self.scroll_window)
 					self.html.connect_after('load_committed', self.facebook)
-					self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/&scope=read_stream,publish_stream,offline_access')
+					#self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/&scope=read_stream,publish_stream,offline_access')
+					self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&redirect_uri=http://www.loganfynne.com/&scope=read_stream,publish_stream,offline_access')
 					self.window.add(self.fbwindow)
 				self.pagenum = 3
 		if self.wait == False:
@@ -370,7 +373,7 @@ class Epistle:
 		self.actionhbox.pack_start(discard, False, True, 5)
 		
 		self.mailcheck = gtk.CheckButton(None)
-		self.mailcheck.set_active(False)
+		self.mailcheck.set_active(True)
 		self.twcheck = gtk.CheckButton(None)
 		self.twcheck.set_active(False)
 		self.fbcheck = gtk.CheckButton(None)
@@ -551,7 +554,7 @@ class Epistle:
 		if self.fbcheck.get_active() == True:
 			#profile = self.Facebook.get_object('me')
 			#friends = self.Facebook.get_connections(profile['id'], 'friends')
-			#self.Facebook.put_object('me', 'feed', message='Hello world!')
+			#self.Facebook.put_object('me', 'feed', message=body)
 			self.Facebook.put_wall_post(message=body,attachment={})			
 		self.discard(0)
 
