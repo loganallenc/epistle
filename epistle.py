@@ -505,6 +505,7 @@ class Epistle:
 			scrollfb.add(self.viewfb)
 			fbbox = gtk.VBox()
 			fbbox.add(scrollfb)
+			#This is the section I want you to look at Parker.
 			fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
 			fbfeed = fbposts.read()
 			fbposts.close()
