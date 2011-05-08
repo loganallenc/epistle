@@ -7,6 +7,7 @@ import getpass
 import imaplib
 import smtplib
 import tweepy
+
 import webkit
 import email
 import glib
@@ -35,7 +36,7 @@ class Database:
 	def check(self):
 		self.connect()
 		if self.checkdb == False:
-			self.gmailusername,self.gmailpassword,self.twoauth,self.fboauth = Account().finish(0)
+			self.gmailusername,self.gmailpassword,self.twoauth,self.twcheck,self.fboauth = Account().finish(0)
 			self.setup()
 		self.Auth = self.authread()
 		return self.path,self.Auth
@@ -57,8 +58,12 @@ class Database:
 		self.database.execute('insert into auth (id, main) values (1,1)')
 		self.database.execute('insert into auth (id, main) values (2,?)', [self.gmailusername])
 		self.database.execute('insert into auth (id, main) values (3,?)', [self.gmailpassword])
-		self.database.execute('insert into auth (id, main) values (4,?)', [self.twoauth.access_token.key])
-		self.database.execute('insert into auth (id, main) values (5,?)', [self.twoauth.access_token.secret])
+		if self.twcheck.get_active() == False:
+			self.database.execute('insert into auth (id, main) values (4,?)', [None])
+			self.database.execute('insert into auth (id, main) values (5,?)', [None])
+		elif self.twcheck.get_active() == True:
+			self.database.execute('insert into auth (id, main) values (4,?)', [self.twoauth.access_token.key])
+			self.database.execute('insert into auth (id, main) values (5,?)', [self.twoauth.access_token.secret])
 		self.database.execute('insert into auth (id, main) values (6,?)', [self.fboauth])
 		self.database.execute('''create table mail (id primary key,fromaddress,subject,toaddress,body)''')
 		self.db.commit()
@@ -249,7 +254,7 @@ class Account:
 				self.window.remove(self.vbox)
 				if self.mailcheck.get_active() == True:
 					self.window.add(self.gmailwindow)
-					self.wait = True
+					self.wait = True	
 				self.pagenum = 1
 		if self.wait == False:
 			if self.pagenum == 1:
@@ -269,7 +274,14 @@ class Account:
 						self.gmailwindow.remove(self.placebutton_two)
 						self.gmailwindow.pack_end(self.passchecklabel, False, False, 10)
 						self.gmailwindow.pack_end(self.placebutton_two, False, False, 10)
-				else:
+				elif self.mailcheck.get_active() == False:
+					self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+					auth_url = self.twoauth.get_authorization_url()
+					if self.twcheck.get_active() == True:
+						self.html.open(auth_url)
+						self.window.add(self.twwindow)
+						self.wait = True
+					self.pagenum = 2
 					self.gmailusername = None
 					self.gmailpassword = None
 		if self.wait == False:
@@ -282,16 +294,24 @@ class Account:
 					else:
 						self.window.remove(self.twwindow)
 						self.twitter()
-						if self.fbcheck.get_active() == True:
+						self.pagenum = 3
+					if self.fbcheck.get_active() == True:
+						self.wait = True
+						self.twhpane.remove(self.scroll_window)
+						self.fbwindow.add(self.scroll_window)
+						self.html.connect_after('load_committed', self.facebook)
+						self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&redirect_uri=http://www.loganfynne.com/&scope=read_stream,publish_stream,offline_access')
+						self.window.add(self.fbwindow)
+						self.pagenum = 3
+				elif self.twcheck.get_active() == False:
+					if self.fbcheck.get_active() == True:
 							self.wait = True
 							self.twhpane.remove(self.scroll_window)
 							self.fbwindow.add(self.scroll_window)
 							self.html.connect_after('load_committed', self.facebook)
 							self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&redirect_uri=http://www.loganfynne.com/&scope=read_stream,publish_stream,offline_access')
 							self.window.add(self.fbwindow)
-							self.pagenum = 3
-				if self.twcheck.get_active() == False:
-					self.twoauth = False
+					self.twoauth = None
 					self.pagenum = 3
 		if self.wait == False:
 			if self.pagenum == 3:
@@ -301,15 +321,15 @@ class Account:
 					if self.twcheck.get_active() == False:
 						if self.mailcheck.get_active() == False:
 							self.pagenum = 0
-					self.fboauth = False
-				self.window.add(self.finishwindow)
+					self.fboauth = None
 				if self.pagenum == 0:
 					self.window.remove(self.finishwindow)
 					self.window.add(self.vbox)
+				self.window.add(self.finishwindow)
 		self.window.show_all()
 		
 	def finish(self, widget):
-		return self.gmailusername,self.gmailpassword,self.twoauth,self.fboauth
+		return self.gmailusername,self.gmailpassword,self.twoauth,self.twcheck,self.fboauth
 
 
 class Epistle:
@@ -337,7 +357,7 @@ class Epistle:
 		composelabel = gtk.Label('Compose')
 		gtk.Widget.show(composelabel)
 
-		if self.Auth[1][0] != None:
+		if self.Auth[1][1] != None:
 			self.tohbox = gtk.HBox(False, 0)
 			self.composevbox.pack_start(self.tohbox, False, False, 7)
 			tolabel = gtk.Label('To: ')
@@ -371,19 +391,19 @@ class Epistle:
 		self.actionhbox.pack_start(discard, False, True, 5)
 		
 		self.mailcheck = gtk.CheckButton(None)
-		self.mailcheck.set_active(True)
+
 		self.twcheck = gtk.CheckButton(None)
 		self.twcheck.set_active(False)
 		self.fbcheck = gtk.CheckButton(None)
 		self.fbcheck.set_active(False)
-		if self.Auth[5][0] != None:
+		if self.Auth[5][1] != None:
 			self.fbimage = gtk.Image()
 			fbpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Facebook.png')
 			fbpixbuf = fbpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
 			self.fbimage.set_from_pixbuf(fbpixbuf)
 			self.actionhbox.pack_end(self.fbcheck, False, True, 5)
 			self.actionhbox.pack_end(self.fbimage, False, True, 0)
-		if self.Auth[3][0] != None:
+		if self.Auth[3][1] != None:
 			self.twimage = gtk.Image()
 			twpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Twitter.png')
 			twpixbuf = twpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
@@ -393,19 +413,21 @@ class Epistle:
 			self.twcheck.connect('toggled', self.showhidetw)
 			self.actionhbox.pack_end(self.twcheck, False, True, 5)
 			self.actionhbox.pack_end(self.twimage, False, True, 0)
-		if self.Auth[1][0] != None:
+		if self.Auth[1][1] != None:
 			self.mailimage = gtk.Image()
 			mailpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Gmail.png')
 			mailpixbuf = mailpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
 			self.mailimage.set_from_pixbuf(mailpixbuf)
 			self.mailcheck.connect('toggled', self.showhidemail)
+			self.mailcheck.set_active(True)
 			self.actionhbox.pack_end(self.mailcheck, False, True, 5)
 			self.actionhbox.pack_end(self.mailimage, False, True, 0)
+		else: self.mailcheck.set_active(False)
 
 		self.composevbox.pack_start(self.actionhbox, False, False, 10)
 		self.notebook.append_page(self.composevbox, composelabel)
 		
-		if self.Auth[1][0] != None:
+		if self.Auth[1][1] != None:
 			self.logingmail()
 			self.getmail()
 			gmaillabel = gtk.Label('Gmail')
@@ -440,10 +462,9 @@ class Epistle:
 			column = gtk.TreeViewColumn(None, cell, text=0)
 			column.set_max_width(388)
 			self.treeview.append_column(column)
-
 			self.notebook.append_page(hpane, gmailevent)
 
-		if self.Auth[3][0] != None:
+		if self.Auth[3][1] != None:
 			self.logintwitter()
 			self.updatetwitter()
 			twlabel = gtk.Label('Twitter')
@@ -467,7 +488,8 @@ class Epistle:
 			self.viewtw.load_html_string(tweets, 'file:///')
 			self.notebook.append_page(twbox, twevent)
 
-		if self.Auth[5][0] != None:
+		if self.Auth[5][1] != None:
+			import urllib
 			self.loginfb()
 			fblabel = gtk.Label('Facebook')
 			fbevent = gtk.EventBox()
@@ -483,6 +505,9 @@ class Epistle:
 			scrollfb.add(self.viewfb)
 			fbbox = gtk.VBox()
 			fbbox.add(scrollfb)
+			fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
+			fbfeed = fbposts.read()
+			fbposts.close()
 			self.notebook.append_page(fbbox, fbevent)
 
 		refreshimage = gtk.Image()
@@ -501,8 +526,9 @@ class Epistle:
 		window.show_all()
 		
 	def delete_event(self, widget, data=None):
-		self.imap.logout()
-		self.db.close()
+		if self.Auth[1][1] != None:
+			self.imap.logout()
+			self.db.close()
 		return False
 	
 	def destroy(self, widget, data=None):
@@ -550,9 +576,6 @@ class Epistle:
 		if self.twcheck.get_active() == True:
 			self.Twitter.update_status(body)
 		if self.fbcheck.get_active() == True:
-			#profile = self.Facebook.get_object('me')
-			#friends = self.Facebook.get_connections(profile['id'], 'friends')
-			#self.Facebook.put_object('me', 'feed', message=body)
 			self.Facebook.put_wall_post(message=body,attachment={})			
 		self.discard(0)
 
@@ -593,8 +616,8 @@ class Epistle:
 
 	def refresh(self, widget, widget2):
 		''' Refreshes data. '''
-		if self.Auth[1][0] != None: self.getmail()
-		if self.Auth[3][0] != None:
+		if self.Auth[1][1] != None: self.getmail()
+		if self.Auth[3][1] != None:
 			self.updatetwitter()
 		tweets = ''
 		for x in xrange(0, 17):
