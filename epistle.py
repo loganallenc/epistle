@@ -60,7 +60,6 @@ class Database:
 		self.database.execute('insert into auth (id, main) values (4,?)', [self.twoauth.access_token.key])
 		self.database.execute('insert into auth (id, main) values (5,?)', [self.twoauth.access_token.secret])
 		self.database.execute('insert into auth (id, main) values (6,?)', [self.fboauth])
-		
 		self.database.execute('''create table mail (id primary key,fromaddress,subject,toaddress,body)''')
 		self.db.commit()
 
@@ -243,9 +242,7 @@ class Account:
 		if 'http://www.loganfynne.com/' in widget.get_main_frame().get_uri():
 			import urlparse
 			self.fboauth = widget.get_main_frame().get_uri()
-			self.fboauth = self.fboauth.replace('http://www.loganfynne.com/?','')
-			self.fboauth = self.fboauth.replace('code=','')
-			print self.fboauth
+			self.fboauth = self.fboauth.replace('http://www.loganfynne.com/?code=','')
 
 	def forward(self, widget):
 		''' Go to the next page. '''
@@ -372,14 +369,17 @@ class Epistle:
 		self.actionhbox.pack_start(send, False, True, 5)
 		self.actionhbox.pack_start(discard, False, True, 5)
 		
+		self.mailcheck = gtk.CheckButton(None)
+		self.mailcheck.set_active(False)
+		self.twcheck = gtk.CheckButton(None)
+		self.twcheck.set_active(False)
+		self.fbcheck = gtk.CheckButton(None)
+		self.fbcheck.set_active(False)
 		if self.Auth[5][0] != None:
 			self.fbimage = gtk.Image()
 			fbpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Facebook.png')
 			fbpixbuf = fbpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
 			self.fbimage.set_from_pixbuf(fbpixbuf)
-			self.fbcheck = gtk.CheckButton(None)
-			self.fbcheck.set_active(False)
-			
 			self.actionhbox.pack_end(self.fbcheck, False, True, 5)
 			self.actionhbox.pack_end(self.fbimage, False, True, 0)
 		if self.Auth[3][0] != None:
@@ -387,12 +387,9 @@ class Epistle:
 			twpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Twitter.png')
 			twpixbuf = twpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
 			self.twimage.set_from_pixbuf(twpixbuf)
-			self.twcheck = gtk.CheckButton(None)
-			self.twcheck.set_active(False)
 			self.count = gtk.Label()
 			self.count.set_text('0')
 			self.twcheck.connect('toggled', self.showhidetw)
-
 			self.actionhbox.pack_end(self.twcheck, False, True, 5)
 			self.actionhbox.pack_end(self.twimage, False, True, 0)
 		if self.Auth[1][0] != None:
@@ -400,8 +397,6 @@ class Epistle:
 			mailpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Gmail.png')
 			mailpixbuf = mailpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
 			self.mailimage.set_from_pixbuf(mailpixbuf)
-			self.mailcheck = gtk.CheckButton(None)
-			self.mailcheck.set_active(True)
 			self.mailcheck.connect('toggled', self.showhidemail)
 			self.actionhbox.pack_end(self.mailcheck, False, True, 5)
 			self.actionhbox.pack_end(self.mailimage, False, True, 0)
@@ -421,11 +416,10 @@ class Epistle:
 			gtk.Widget.show(gmaillabel)
 
 			self.viewmail = webkit.WebView()
-
 			self.scrollmsg = gtk.ScrolledWindow(None, None)
 			self.scrollmsg.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 			self.scrollmsg.set_size_request(400,415)
-	
+			
 			scroll_window = gtk.ScrolledWindow(None, None)
 			scroll_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 			scroll_window.set_size_request(400,415)
@@ -555,9 +549,10 @@ class Epistle:
 		if self.twcheck.get_active() == True:
 			self.Twitter.update_status(body)
 		if self.fbcheck.get_active() == True:
-			user = self.Facebook.get_object("me")
-			print user
-			self.Facebook.put_object(user[id], "post", message="Hello World.")
+			#profile = self.Facebook.get_object('me')
+			#friends = self.Facebook.get_connections(profile['id'], 'friends')
+			#self.Facebook.put_object('me', 'feed', message='Hello world!')
+			self.Facebook.put_wall_post(message=body,attachment={})			
 		self.discard(0)
 
 	def discard(self, widget):
@@ -594,14 +589,6 @@ class Epistle:
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
 		self.twitterupdate = self.Twitter.home_timeline()
-
-	def updatefb(self):
-		''' This function updates the Facebook stream. '''
-		self.fbread = self.Facebook.get_connections('me', 'friends')
-
-	def postfb(self):
-		''' This function posts to Facebook. '''
-		self.fbprofile = self.Facebook.get_object('me')		
 
 	def refresh(self, widget, widget2):
 		''' Refreshes data. '''
@@ -650,8 +637,7 @@ class Epistle:
 		self.Twitter = tweepy.API(self.auth)
 
 	def loginfb(self):
-		''' Logs into Facebook. '''	
-		print self.Auth[5][1]
+		''' Logs into Facebook. '''
 		self.Facebook = facebooksdk.GraphAPI(self.Auth[5][1])
 
 	def main(self):

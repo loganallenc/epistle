@@ -47,8 +47,10 @@ except ImportError:
         import simplejson
         _parse_json = lambda s: simplejson.loads(s)
     except ImportError:
-        from django import simplejson
+        # For Google AppEngine
+        from django.utils import simplejson
         _parse_json = lambda s: simplejson.loads(s)
+
 
 class GraphAPI(object):
     """A client for the Facebook Graph API.
