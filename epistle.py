@@ -292,7 +292,7 @@ class Account:
 					self.twhpane.remove(self.scroll_window)
 					self.fbwindow.add(self.scroll_window)
 					self.html.connect_after('load_committed', self.facebook)
-					self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/')
+					self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/&scope=read_stream,publish_stream,offline_access')
 					self.window.add(self.fbwindow)
 				self.pagenum = 3
 		if self.wait == False:
@@ -371,6 +371,17 @@ class Epistle:
 		discard.set_label(' Discard ')
 		self.actionhbox.pack_start(send, False, True, 5)
 		self.actionhbox.pack_start(discard, False, True, 5)
+		
+		if self.Auth[5][0] != None:
+			self.fbimage = gtk.Image()
+			fbpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Facebook.png')
+			fbpixbuf = fbpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
+			self.fbimage.set_from_pixbuf(fbpixbuf)
+			self.fbcheck = gtk.CheckButton(None)
+			self.fbcheck.set_active(False)
+			
+			self.actionhbox.pack_end(self.fbcheck, False, True, 5)
+			self.actionhbox.pack_end(self.fbimage, False, True, 0)
 		if self.Auth[3][0] != None:
 			self.twimage = gtk.Image()
 			twpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Twitter.png')
@@ -479,7 +490,6 @@ class Epistle:
 			fbbox.add(scrollfb)
 			self.notebook.append_page(fbbox, fbevent)
 
-
 		refreshimage = gtk.Image()
 		refreshimage.set_from_stock(gtk.STOCK_REFRESH,gtk.ICON_SIZE_SMALL_TOOLBAR)
 		refreshevent = gtk.EventBox()
@@ -533,17 +543,21 @@ class Epistle:
 		self.Mail = Database().mailread()
 
 	def send(self, widget):
+		body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
+		print body
 		if self.mailcheck.get_active() == True:
 			self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 			self.smtp.login(self.Auth[1][1], self.Auth[2][1])
 			to = self.toentry.get_text()
 			subject = self.subjectentry.get_text()
-			body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
 			self.smtp.sendmail(self.Auth[2][1], to, 'Subject: ' + subject + '\n' + body)
 			self.smtp.quit()
 		if self.twcheck.get_active() == True:
-			body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
 			self.Twitter.update_status(body)
+		if self.fbcheck.get_active() == True:
+			user = self.Facebook.get_object("me")
+			print user
+			self.Facebook.put_object(user[id], "post", message="Hello World.")
 		self.discard(0)
 
 	def discard(self, widget):
@@ -583,15 +597,11 @@ class Epistle:
 
 	def updatefb(self):
 		''' This function updates the Facebook stream. '''
-		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
-		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
+		self.fbread = self.Facebook.get_connections('me', 'friends')
 
 	def postfb(self):
 		''' This function posts to Facebook. '''
-		self.Facebook['profile'] = self.Facebook['Facebook'].get_object('me')
-		self.Facebook['friends'] = self.Facebook['Facebook'].get_connections('me', 'friends')
-		fbstatus = raw_input('Set your Facebook status: ')
-		self.Facebook['Facebook'].put_object('me', 'feed', message=fbstatus)
+		self.fbprofile = self.Facebook.get_object('me')		
 
 	def refresh(self, widget, widget2):
 		''' Refreshes data. '''
@@ -641,6 +651,7 @@ class Epistle:
 
 	def loginfb(self):
 		''' Logs into Facebook. '''	
+		print self.Auth[5][1]
 		self.Facebook = facebooksdk.GraphAPI(self.Auth[5][1])
 
 	def main(self):
