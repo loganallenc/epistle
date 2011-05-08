@@ -72,7 +72,7 @@ class Account:
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.set_resizable(False)
 		self.window.set_title('Epistle')
-		self.window.set_size_request(800, 450)
+		self.window.set_size_request(800, 500)
 		gtk.window_set_default_icon_from_file('/usr/share/epistle/Icon.png')
 		self.window.connect('delete_event', self.delete_event)
 		self.window.connect('destroy', self.destroy)
@@ -152,15 +152,17 @@ class Account:
 		self.passhbox = gtk.HBox(False, 0)
 		passlabel = gtk.Label(' Password: ')
 		self.passentry = gtk.Entry()
+		self.passentry.set_visibility(gtk.FALSE)
 		self.confhbox = gtk.HBox(False, 0)
-		confirmlabel = gtk.Label(' Confirm Password: ')
-		self.confirmentry = gtk.Entry()
+		conflabel = gtk.Label(' Confirm: ')
+		self.confentry = gtk.Entry()
+		self.confentry.set_visibility(gtk.FALSE)
 		self.userhbox.pack_start(userlabel, False, True, 15)
 		self.userhbox.pack_start(self.userentry, True, True, 7)
 		self.passhbox.pack_start(passlabel, False, True, 15)
 		self.passhbox.pack_start(self.passentry, True, True, 7)
-		self.confhbox.pack_start(confirmlabel, False, True, 15)
-		self.confhbox.pack_start(self.confirmentry, True, True, 7)
+		self.confhbox.pack_start(conflabel, False, True, 15)
+		self.confhbox.pack_start(self.confentry, True, True, 7)
 		self.gmailwindow.add(self.userhbox)
 		self.gmailwindow.add(self.passhbox)
 		self.gmailwindow.add(self.confhbox)
@@ -182,12 +184,13 @@ class Account:
 		self.twhpane.pack1(twhbox)
 		self.twhpane.pack2(self.scroll_window)
 		self.twwindow.add(self.twhpane)
+		self.twchecklabel = gtk.Label('You have to enter in the PIN.')
 		
-		placebutton_three = gtk.HBox(False, 0)
+		self.placebutton_three = gtk.HBox(False, 0)
 		forward_three = gtk.Button('Continue')
 		forward_three.connect('clicked', self.forward)
-		placebutton_three.pack_end(forward_three, False, True, 10)
-		self.twwindow.pack_end(placebutton_three, False, False, 10)
+		self.placebutton_three.pack_end(forward_three, False, True, 10)
+		self.twwindow.pack_end(self.placebutton_three, False, False, 10)
 
 		self.fbwindow = gtk.VBox(False, 0)
 		self.fbpage = gtk.VBox(False, 0)
@@ -199,11 +202,8 @@ class Account:
 		self.fbwindow.pack_end(placebutton_four, False, False, 10)
 		
 		self.finishwindow = gtk.VBox(False, 0)
-		finish = gtk.Button('Finish')
-		finish.connect_after('clicked', self.finish)
-		finishlabel = gtk.Label('Thank you for setting up your accounts.')
+		finishlabel = gtk.Label('Thank you for setting up your accounts.\nYou may now close this window.')
 		self.finishwindow.add(finishlabel)
-		self.finishwindow.add(finish)
 		
 		self.wait = False
 		self.window.add(self.vbox)
@@ -231,12 +231,6 @@ class Account:
 		except tweepy.error.TweepError:
 			self.twoauth.set_access_token(None,None)
 		
-	def opentw(self):
-		self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-		self.twoauth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-		auth_url = self.twoauth.get_authorization_url()
-		self.html.open(auth_url)
-		
 	def facebook(self,widget,data=None):
 		''' Collect data for Facebook. '''
 		if 'http://www.loganfynne.com/' in widget.get_main_frame().get_uri():
@@ -260,13 +254,12 @@ class Account:
 		if self.wait == False:
 			if self.pagenum == 1:
 				if self.mailcheck.get_active() == True:
-					if self.passentry.get_text() == self.confirmentry.get_text():
+					if self.passentry.get_text() == self.confentry.get_text():
 						self.window.remove(self.gmailwindow)
 						self.gmailusername = self.userentry.get_text()
 						self.gmailpassword = self.passentry.get_text()
 						self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 						auth_url = self.twoauth.get_authorization_url()
-				
 						if self.twcheck.get_active() == True:
 							self.html.open(auth_url)
 							self.window.add(self.twwindow)
@@ -282,19 +275,24 @@ class Account:
 		if self.wait == False:
 			if self.pagenum == 2:
 				if self.twcheck.get_active() == True:
-					self.window.remove(self.twwindow)
-					self.twitter()
+					if self.twentry.get_text() == '':
+						self.twwindow.remove(self.placebutton_three)
+						self.twwindow.pack_end(self.twchecklabel, False, False, 10)
+						self.twwindow.pack_end(self.placebutton_three, False, False, 10)
+					else:
+						self.window.remove(self.twwindow)
+						self.twitter()
+						if self.fbcheck.get_active() == True:
+							self.wait = True
+							self.twhpane.remove(self.scroll_window)
+							self.fbwindow.add(self.scroll_window)
+							self.html.connect_after('load_committed', self.facebook)
+							self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&redirect_uri=http://www.loganfynne.com/&scope=read_stream,publish_stream,offline_access')
+							self.window.add(self.fbwindow)
+							self.pagenum = 3
 				if self.twcheck.get_active() == False:
 					self.twoauth = False
-				if self.fbcheck.get_active() == True:
-					self.wait = True
-					self.twhpane.remove(self.scroll_window)
-					self.fbwindow.add(self.scroll_window)
-					self.html.connect_after('load_committed', self.facebook)
-					#self.html.open('https://www.facebook.com/dialog/oauth?client_id=198204650217009&redirect_uri=http://www.loganfynne.com/&scope=read_stream,publish_stream,offline_access')
-					self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&redirect_uri=http://www.loganfynne.com/&scope=read_stream,publish_stream,offline_access')
-					self.window.add(self.fbwindow)
-				self.pagenum = 3
+					self.pagenum = 3
 		if self.wait == False:
 			if self.pagenum == 3:
 				if self.fbcheck.get_active() == True:
