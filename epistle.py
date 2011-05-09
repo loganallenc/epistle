@@ -300,7 +300,7 @@ class Account:
 						self.twhpane.remove(self.scroll_window)
 						self.fbwindow.add(self.scroll_window)
 						self.html.connect_after('load_committed', self.facebook)
-						self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&redirect_uri=http://www.loganfynne.com/&scope=read_stream,publish_stream,offline_access')
+						self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&scope=read_stream,publish_stream,offline_access&redirect_uri=http://www.loganfynne.com/')
 						self.window.add(self.fbwindow)
 						self.pagenum = 3
 				elif self.twcheck.get_active() == False:
@@ -309,7 +309,7 @@ class Account:
 							self.twhpane.remove(self.scroll_window)
 							self.fbwindow.add(self.scroll_window)
 							self.html.connect_after('load_committed', self.facebook)
-							self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&redirect_uri=http://www.loganfynne.com/&scope=read_stream,publish_stream,offline_access')
+							self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&scope=read_stream,publish_stream,offline_access&redirect_uri=http://www.loganfynne.com/')
 							self.window.add(self.fbwindow)
 					self.twoauth = None
 					self.pagenum = 3
@@ -352,6 +352,9 @@ class Epistle:
 		self.notebook = gtk.Notebook()
 		self.notebook.set_tab_pos(gtk.POS_TOP)
 		self.notebook.set_show_tabs(True)
+
+		self.count = gtk.Label()
+		self.count.set_text('0')
 
 		self.composevbox = gtk.VBox(False, 0)
 		composelabel = gtk.Label('Compose')
@@ -408,8 +411,6 @@ class Epistle:
 			twpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/share/epistle/Twitter.png')
 			twpixbuf = twpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
 			self.twimage.set_from_pixbuf(twpixbuf)
-			self.count = gtk.Label()
-			self.count.set_text('0')
 			self.twcheck.connect('toggled', self.showhidetw)
 			self.actionhbox.pack_end(self.twcheck, False, True, 5)
 			self.actionhbox.pack_end(self.twimage, False, True, 0)
@@ -509,6 +510,17 @@ class Epistle:
 			fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
 			fbfeed = fbposts.read()
 			fbposts.close()
+			fbparsed = ''
+			quotes='"'
+			num=fbfeed.count(quotes)
+			fbfeed = fbfeed.split(quotes,num)
+			for x in xrange(0,(len(fbfeed))):
+				if fbfeed[x] == 'name':
+					if fbfeed[x-2] == 'from': 
+						fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
+				if fbfeed[x] == 'message':
+					fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
+			self.viewfb.load_html_string(fbparsed, 'file:///')
 			self.notebook.append_page(fbbox, fbevent)
 
 		refreshimage = gtk.Image()
@@ -566,14 +578,14 @@ class Epistle:
 
 	def send(self, widget):
 		body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
-		print body
-		if self.mailcheck.get_active() == True:
-			self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-			self.smtp.login(self.Auth[1][1], self.Auth[2][1])
-			to = self.toentry.get_text()
-			subject = self.subjectentry.get_text()
-			self.smtp.sendmail(self.Auth[2][1], to, 'Subject: ' + subject + '\n' + body)
-			self.smtp.quit()
+		if self.Auth[5][1] != None:
+			if self.mailcheck.get_active() == True:
+				self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+				self.smtp.login(self.Auth[1][1], self.Auth[2][1])
+				to = self.toentry.get_text()
+				subject = self.subjectentry.get_text()
+				self.smtp.sendmail(self.Auth[2][1], to, 'Subject: ' + subject + '\n' + body)
+				self.smtp.quit()
 		if self.twcheck.get_active() == True:
 			self.Twitter.update_status(body)
 		if self.fbcheck.get_active() == True:
@@ -581,10 +593,12 @@ class Epistle:
 		self.discard(0)
 
 	def discard(self, widget):
-		self.toentry.set_text('')
-		self.subjectentry.set_text('')
+		if self.Auth[5][1] != None:
+			if self.mailcheck.get_active() == True:
+				self.toentry.set_text('')
+				self.subjectentry.set_text('')
 		self.buffer.set_text('')
-		self.charcount(1,1)
+		self.charcount(0,0)
 
 	def showhidemail(self, widget):
 		if self.mailcheck.get_active() == True:
