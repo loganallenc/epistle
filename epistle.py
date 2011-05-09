@@ -7,7 +7,7 @@ import getpass
 import imaplib
 import smtplib
 import tweepy
-
+import urllib
 import webkit
 import email
 import glib
@@ -245,6 +245,14 @@ class Account:
 			self.fboauth = self.fboauth.replace('&expires_in=0','')
 			print self.fboauth
 
+	def back(self, widget):
+		''' Go the previous page. '''
+		if self.pagenum == 1:
+			self.pagenum = 0
+			self.window.remove(self.gmailwindow)
+			self.window.add(self.vbox)
+	#	elif self.pagenum == 2:
+	#	elif self.pagenum == 3:
 	def forward(self, widget):
 		''' Go to the next page. '''
 		if self.wait == True: 
@@ -295,14 +303,14 @@ class Account:
 						self.window.remove(self.twwindow)
 						self.twitter()
 						self.pagenum = 3
-					if self.fbcheck.get_active() == True:
-						self.wait = True
-						self.twhpane.remove(self.scroll_window)
-						self.fbwindow.add(self.scroll_window)
-						self.html.connect_after('load_committed', self.facebook)
-						self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&scope=read_stream,publish_stream,offline_access&redirect_uri=http://www.loganfynne.com/')
-						self.window.add(self.fbwindow)
-						self.pagenum = 3
+						if self.fbcheck.get_active() == True:
+							self.wait = True
+							self.twhpane.remove(self.scroll_window)
+							self.fbwindow.add(self.scroll_window)
+							self.html.connect_after('load_committed', self.facebook)
+							self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&scope=read_stream,publish_stream,offline_access&redirect_uri=http://www.loganfynne.com/')
+							self.window.add(self.fbwindow)
+							self.pagenum = 3
 				elif self.twcheck.get_active() == False:
 					if self.fbcheck.get_active() == True:
 							self.wait = True
@@ -490,7 +498,6 @@ class Epistle:
 			self.notebook.append_page(twbox, twevent)
 
 		if self.Auth[5][1] != None:
-			import urllib
 			self.loginfb()
 			fblabel = gtk.Label('Facebook')
 			fbevent = gtk.EventBox()
@@ -506,7 +513,6 @@ class Epistle:
 			scrollfb.add(self.viewfb)
 			fbbox = gtk.VBox()
 			fbbox.add(scrollfb)
-			#This is the section I want you to look at Parker.
 			fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
 			fbfeed = fbposts.read()
 			fbposts.close()
@@ -638,6 +644,20 @@ class Epistle:
 		for x in xrange(0, 17):
 			tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p></span><hr style="width: 100%;" /></div>'
 		self.viewtw.load_html_string(tweets, 'file:///')
+		fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
+		fbfeed = fbposts.read()
+		fbposts.close()
+		fbparsed = ''
+		quotes='"'
+		num=fbfeed.count(quotes)
+		fbfeed = fbfeed.split(quotes,num)
+		for x in xrange(0,(len(fbfeed))):
+			if fbfeed[x] == 'name':
+				if fbfeed[x-2] == 'from': 
+					fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
+			if fbfeed[x] == 'message':
+				fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
+		self.viewfb.load_html_string(fbparsed, 'file:///')
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
