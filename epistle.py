@@ -576,6 +576,14 @@ class Epistle:
 
 	def getmail(self):
 		''' This function reads unread messages from Gmail. '''
+		if sys.platform == 'linux2':
+			path = '/home/' + os.environ['USER'] + '/.local/share/epistle'
+		elif sys.platform == 'win32':
+			path = 'C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle'
+		elif sys.platform == 'darwin':
+			path = '/Users/' + os.getenv('USERNAME') + '/epistle'
+		if os.path.exists(path) == False:
+			os.makedirs(path)
 		label,inbox = self.imap.select()
 		inbox = int(inbox[0])
 		unread = len(self.imap.search('Inbox', '(UNSEEN)')[1][0].split())
@@ -592,6 +600,10 @@ class Epistle:
 			for mailpart in mailitem.walk():
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
+				if mailpart.get_filename() != None:
+					fp = open(path + '/' + mailpart.get_filename(), 'w')
+					fp.write(mailpart.get_payload(decode=True))
+					fp.close()
 				message = str(mailpart.get_payload(decode=True))
 			self.database.execute('update auth set main = ? where id = 1', [self.save])
 
