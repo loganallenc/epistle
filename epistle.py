@@ -175,6 +175,9 @@ class Account:
 		self.placebutton_two = gtk.HBox(False, 0)
 		forward_two = gtk.Button('Continue')
 		forward_two.connect('clicked', self.forward)
+		back_two = gtk.Button('Back')
+		back_two.connect('clicked', self.back)
+		self.placebutton_two.pack_start(back_two, False, True, 10)
 		self.placebutton_two.pack_end(forward_two, False, True, 10)
 		self.passchecklabel = gtk.Label('Passwords do not match')
 		self.gmailwindow.pack_end(self.placebutton_two, False, False, 10)
@@ -194,17 +197,23 @@ class Account:
 		self.placebutton_three = gtk.HBox(False, 0)
 		forward_three = gtk.Button('Continue')
 		forward_three.connect('clicked', self.forward)
+		back_three = gtk.Button('Back')
+		back_three.connect('clicked', self.back)
+		self.placebutton_three.pack_start(back_three, False, True, 10)
 		self.placebutton_three.pack_end(forward_three, False, True, 10)
 		self.twwindow.pack_end(self.placebutton_three, False, False, 10)
 
 		self.fbwindow = gtk.VBox(False, 0)
 		self.fbpage = gtk.VBox(False, 0)
 		
-		placebutton_four = gtk.HBox(False, 0)
+		self.placebutton_four = gtk.HBox(False, 0)
 		forward_four = gtk.Button('Continue')
 		forward_four.connect('clicked', self.forward)
-		placebutton_four.pack_end(forward_four, False, True, 10)
-		self.fbwindow.pack_end(placebutton_four, False, False, 10)
+		back_four = gtk.Button('Back')
+		back_four.connect('clicked', self.back)
+		self.placebutton_four.pack_start(back_four, False, True, 10)
+		self.placebutton_four.pack_end(forward_four, False, True, 10)
+		self.fbwindow.pack_end(self.placebutton_four, False, False, 10)
 		
 		self.finishwindow = gtk.VBox(False, 0)
 		finishlabel = gtk.Label('Thank you for setting up your accounts.\nYou may now close this window.')
@@ -251,8 +260,27 @@ class Account:
 			self.pagenum = 0
 			self.window.remove(self.gmailwindow)
 			self.window.add(self.vbox)
-	#	elif self.pagenum == 2:
-	#	elif self.pagenum == 3:
+		elif self.pagenum == 2:
+			self.pagenum = 1
+			self.window.remove(self.twwindow)
+			if self.mailcheck.get_active() == True:
+				self.window.add(self.gmailwindow)
+			else:
+				self.window.add(self.vbox)
+		elif self.pagenum == 3:
+			self.pagenum = 2
+			self.window.remove(self.fbwindow)
+			if self.twcheck.get_active() == True:
+				self.fbwindow.remove(self.scroll_window)
+				self.twhpane.pack2(self.scroll_window)
+				auth_url = self.twoauth.get_authorization_url()
+				self.html.open(auth_url)
+				self.window.add(self.twwindow)
+			else:
+				if self.mailcheck.get_active() == True:
+					self.window.add(self.mailwindow)
+				else:
+					self.window.add(self.vbox)
 	def forward(self, widget):
 		''' Go to the next page. '''
 		if self.wait == True: 
@@ -351,7 +379,6 @@ class Epistle:
 		window.set_title('Epistle')
 		window.set_size_request(800, 450)
 		gtk.window_set_default_icon_from_file('/usr/share/epistle/Icon.png')
-		window.connect('delete_event', self.delete_event)
 		window.connect('destroy', self.destroy)
 		window.connect('key-press-event', self.charcount)
 		window.set_border_width(0)
@@ -432,7 +459,6 @@ class Epistle:
 			self.actionhbox.pack_end(self.mailcheck, False, True, 5)
 			self.actionhbox.pack_end(self.mailimage, False, True, 0)
 		else: self.mailcheck.set_active(False)
-
 		self.composevbox.pack_start(self.actionhbox, False, False, 10)
 		self.notebook.append_page(self.composevbox, composelabel)
 		
@@ -517,9 +543,7 @@ class Epistle:
 			fbfeed = fbposts.read()
 			fbposts.close()
 			fbparsed = ''
-			quotes='"'
-			num=fbfeed.count(quotes)
-			fbfeed = fbfeed.split(quotes,num)
+			fbfeed = fbfeed.split('"',fbfeed.count('"'))
 			for x in xrange(0,(len(fbfeed))):
 				if fbfeed[x] == 'name':
 					if fbfeed[x-2] == 'from': 
@@ -543,14 +567,11 @@ class Epistle:
 		vbox.add(self.notebook)
 		window.add(vbox)
 		window.show_all()
-		
-	def delete_event(self, widget, data=None):
+
+	def destroy(self, widget, data=None):
 		if self.Auth[1][1] != None:
 			self.imap.logout()
 			self.db.close()
-		return False
-	
-	def destroy(self, widget, data=None):
 		gtk.main_quit()
 
 	def getmail(self):
@@ -648,9 +669,7 @@ class Epistle:
 		fbfeed = fbposts.read()
 		fbposts.close()
 		fbparsed = ''
-		quotes='"'
-		num=fbfeed.count(quotes)
-		fbfeed = fbfeed.split(quotes,num)
+		fbfeed = fbfeed.split('"',fbfeed.count('"'))
 		for x in xrange(0,(len(fbfeed))):
 			if fbfeed[x] == 'name':
 				if fbfeed[x-2] == 'from': 
