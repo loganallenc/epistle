@@ -1,8 +1,8 @@
 #!/usr/bin/env python2
 from email.parser import HeaderParser
+from threading import Thread
 import facebooksdk
 import sqlite3
-import gobject
 import getpass
 import imaplib
 import smtplib
@@ -10,7 +10,7 @@ import tweepy
 import urllib
 import webkit
 import email
-import glib
+import gobject
 import gtk
 import sys
 import os
@@ -25,6 +25,10 @@ class Database:
 			self.path = 'C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db'
 		elif sys.platform == 'darwin':
 			self.path = '/Users/' + os.getenv('USERNAME') + '/epistle.db'
+		self.folder = self.path
+		self.folder = self.folder.replace('.db','')
+		if os.path.exists(self.folder) == False:
+			os.makedirs(self.folder)
 
 	def connect(self):
 		self.checkdb = os.path.exists(self.path)
@@ -73,7 +77,7 @@ class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		glib.threads_init()
+		gtk.gdk.threads_init()
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.set_resizable(False)
 		self.window.set_title('Epistle')
@@ -285,7 +289,7 @@ class Account:
 		''' Go to the next page. '''
 		if self.wait == True: 
 			self.wait = False
-		if self.wait == False:
+		else:
 			if self.pagenum == 0:
 				self.window.remove(self.vbox)
 				if self.mailcheck.get_active() == True:
@@ -310,7 +314,7 @@ class Account:
 						self.gmailwindow.remove(self.placebutton_two)
 						self.gmailwindow.pack_end(self.passchecklabel, False, False, 10)
 						self.gmailwindow.pack_end(self.placebutton_two, False, False, 10)
-				elif self.mailcheck.get_active() == False:
+				else:
 					self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 					auth_url = self.twoauth.get_authorization_url()
 					if self.twcheck.get_active() == True:
@@ -335,15 +339,17 @@ class Account:
 							self.wait = True
 							self.twhpane.remove(self.scroll_window)
 							self.fbwindow.add(self.scroll_window)
+							self.html.close()
 							self.html.connect_after('load_committed', self.facebook)
 							self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&scope=read_stream,publish_stream,offline_access&redirect_uri=http://www.loganfynne.com/')
 							self.window.add(self.fbwindow)
 							self.pagenum = 3
-				elif self.twcheck.get_active() == False:
+				else:
 					if self.fbcheck.get_active() == True:
 							self.wait = True
 							self.twhpane.remove(self.scroll_window)
 							self.fbwindow.add(self.scroll_window)
+							self.html.close()
 							self.html.connect_after('load_committed', self.facebook)
 							self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&scope=read_stream,publish_stream,offline_access&redirect_uri=http://www.loganfynne.com/')
 							self.window.add(self.fbwindow)
@@ -353,7 +359,7 @@ class Account:
 			if self.pagenum == 3:
 				if self.fbcheck.get_active() == True:
 					self.window.remove(self.fbwindow)
-				elif self.fbcheck.get_active() == False:
+				else:
 					if self.twcheck.get_active() == False:
 						if self.mailcheck.get_active() == False:
 							self.pagenum = 0
@@ -373,7 +379,7 @@ class Epistle:
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
 		self.path,self.Auth = Database().check()
-		glib.threads_init()
+		gtk.gdk.threads_init()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		window.set_resizable(True)
 		window.set_title('Epistle')
@@ -576,14 +582,6 @@ class Epistle:
 
 	def getmail(self):
 		''' This function reads unread messages from Gmail. '''
-		if sys.platform == 'linux2':
-			path = '/home/' + os.environ['USER'] + '/.local/share/epistle'
-		elif sys.platform == 'win32':
-			path = 'C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle'
-		elif sys.platform == 'darwin':
-			path = '/Users/' + os.getenv('USERNAME') + '/epistle'
-		if os.path.exists(path) == False:
-			os.makedirs(path)
 		label,inbox = self.imap.select()
 		inbox = int(inbox[0])
 		unread = len(self.imap.search('Inbox', '(UNSEEN)')[1][0].split())
@@ -692,11 +690,18 @@ class Epistle:
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
-		for x in xrange(0,49):
-			y = self.save + x - 50
-			msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*300 + str(x)
-			self.iterator = self.model.prepend()
-			self.model.set(self.iterator, 0, msg)
+		if self.save < 50:
+			for x in xrange(0,(self.save-1)):
+				y = self.save - x
+				msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*500 + str(x)
+				self.iterator = self.model.prepend()
+				self.model.set(self.iterator, 0, msg)
+		else:
+			for x in xrange(0,49):
+				y = self.save + x - 50
+				msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*500 + str(x)
+				self.iterator = self.model.prepend()
+				self.model.set(self.iterator, 0, msg)
 
 	def showmail(self, widget):
 		''' This function displays email messages. '''
@@ -733,6 +738,7 @@ class Epistle:
 	def main(self):
 		''' This function will include the interface of Epistle, and all the function calls. '''
 		gtk.main()
+
 
 if __name__ == '__main__':
 	app = Epistle()
