@@ -9,8 +9,6 @@ import smtplib
 import tweepy
 import urllib
 import webkit
-import email
-import gobject
 import gtk
 import sys
 import os
