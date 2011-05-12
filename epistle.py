@@ -339,7 +339,6 @@ class Account:
 							self.wait = True
 							self.twhpane.remove(self.scroll_window)
 							self.fbwindow.add(self.scroll_window)
-							self.html.close()
 							self.html.connect_after('load_committed', self.facebook)
 							self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&scope=read_stream,publish_stream,offline_access&redirect_uri=http://www.loganfynne.com/')
 							self.window.add(self.fbwindow)
@@ -349,7 +348,6 @@ class Account:
 							self.wait = True
 							self.twhpane.remove(self.scroll_window)
 							self.fbwindow.add(self.scroll_window)
-							self.html.close()
 							self.html.connect_after('load_committed', self.facebook)
 							self.html.open('https://graph.facebook.com/oauth/authorize?type=user_agent&client_id=198204650217009&scope=read_stream,publish_stream,offline_access&redirect_uri=http://www.loganfynne.com/')
 							self.window.add(self.fbwindow)
