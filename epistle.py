@@ -5,6 +5,7 @@ import facebooksdk
 import sqlite3
 import imaplib
 import smtplib
+import gobject
 import tweepy
 import urllib
 import webkit
