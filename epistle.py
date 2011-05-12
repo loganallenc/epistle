@@ -1,9 +1,8 @@
 #!/usr/bin/env python2
 from email.parser import HeaderParser
-from threading import Thread
+#from threading import Thread
 import facebooksdk
 import sqlite3
-import getpass
 import imaplib
 import smtplib
 import tweepy
