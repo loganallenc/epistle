@@ -175,7 +175,6 @@ class Account:
 		self.gmailwindow.add(self.userhbox)
 		self.gmailwindow.add(self.passhbox)
 		self.gmailwindow.add(self.confhbox)
-		
 		self.placebutton_two = gtk.HBox(False, 0)
 		forward_two = gtk.Button('Continue')
 		forward_two.connect('clicked', self.forward)
@@ -196,8 +195,7 @@ class Account:
 		self.twhpane.pack1(twhbox)
 		self.twhpane.pack2(self.scroll_window)
 		self.twwindow.add(self.twhpane)
-		self.twchecklabel = gtk.Label('You have to enter in the PIN.')
-		
+		self.twchecklabel = gtk.Label('You have to enter in the PIN.')	
 		self.placebutton_three = gtk.HBox(False, 0)
 		forward_three = gtk.Button('Continue')
 		forward_three.connect('clicked', self.forward)
@@ -209,7 +207,6 @@ class Account:
 
 		self.fbwindow = gtk.VBox(False, 0)
 		self.fbpage = gtk.VBox(False, 0)
-		
 		self.placebutton_four = gtk.HBox(False, 0)
 		forward_four = gtk.Button('Continue')
 		forward_four.connect('clicked', self.forward)
@@ -218,7 +215,6 @@ class Account:
 		self.placebutton_four.pack_start(back_four, False, True, 10)
 		self.placebutton_four.pack_end(forward_four, False, True, 10)
 		self.fbwindow.pack_end(self.placebutton_four, False, False, 10)
-		
 		self.finishwindow = gtk.VBox(False, 0)
 		finishlabel = gtk.Label('Thank you for setting up your accounts.\nYou may now close this window.')
 		self.finishwindow.add(finishlabel)
@@ -613,7 +609,7 @@ class Epistle:
 
 	def send(self, widget):
 		body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
-		if self.Auth[5][1] != None:
+		if self.Auth[1][1] != None:
 			if self.mailcheck.get_active() == True:
 				self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 				self.smtp.login(self.Auth[1][1], self.Auth[2][1])
@@ -621,10 +617,12 @@ class Epistle:
 				subject = self.subjectentry.get_text()
 				self.smtp.sendmail(self.Auth[2][1], to, 'Subject: ' + subject + '\n' + body)
 				self.smtp.quit()
-		if self.twcheck.get_active() == True:
-			self.Twitter.update_status(body)
-		if self.fbcheck.get_active() == True:
-			self.Facebook.put_wall_post(message=body,attachment={})			
+		if self.Auth[3][1] != None:
+			if self.twcheck.get_active() == True:
+				self.Twitter.update_status(body)
+		if self.Auth[5][1] != None:
+			if self.fbcheck.get_active() == True:
+				self.Facebook.put_wall_post(message=body,attachment={})			
 		self.discard(0)
 
 	def discard(self, widget):
@@ -666,25 +664,27 @@ class Epistle:
 
 	def refresh(self, widget, widget2):
 		''' Refreshes data. '''
-		if self.Auth[1][1] != None: self.getmail()
+		if self.Auth[1][1] != None:
+			self.getmail()
 		if self.Auth[3][1] != None:
 			self.updatetwitter()
-		tweets = ''
-		for x in xrange(0, 17):
-			tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p></span><hr style="width: 100%;" /></div>'
-		self.viewtw.load_html_string(tweets, 'file:///')
-		fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
-		fbfeed = fbposts.read()
-		fbposts.close()
-		fbparsed = ''
-		fbfeed = fbfeed.split('"',fbfeed.count('"'))
-		for x in xrange(0,(len(fbfeed))):
-			if fbfeed[x] == 'name':
-				if fbfeed[x-2] == 'from': 
-					fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
-			if fbfeed[x] == 'message':
-				fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
-		self.viewfb.load_html_string(fbparsed, 'file:///')
+			tweets = ''
+			for x in xrange(0, 17):
+				tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p></span><hr style="width: 100%;" /></div>'
+			self.viewtw.load_html_string(tweets, 'file:///')
+		if self.Auth[5][1] != None:
+			fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
+			fbfeed = fbposts.read()
+			fbposts.close()
+			fbparsed = ''
+			fbfeed = fbfeed.split('"',fbfeed.count('"'))
+			for x in xrange(0,(len(fbfeed))):
+				if fbfeed[x] == 'name':
+					if fbfeed[x-2] == 'from': 
+						fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
+				if fbfeed[x] == 'message':
+					fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
+			self.viewfb.load_html_string(fbparsed, 'file:///')
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
