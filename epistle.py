@@ -596,10 +596,10 @@ class Epistle:
 			for mailpart in mailitem.walk():
 				if mailpart.get_content_maintype() == 'multipart':
 					continue
-				if mailpart.get_filename() != None:
-					fp = open(path + '/' + mailpart.get_filename(), 'w')
-					fp.write(mailpart.get_payload(decode=True))
-					fp.close()
+				#if mailpart.get_filename() != None:
+				#	fp = open(self.path + '/' + mailpart.get_filename(), 'w')
+				#	fp.write(mailpart.get_payload(decode=True))
+				#	fp.close()
 				message = str(mailpart.get_payload(decode=True))
 			self.database.execute('update auth set main = ? where id = 1', [self.save])
 
