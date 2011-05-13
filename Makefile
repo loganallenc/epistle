@@ -1,5 +1,5 @@
 APPDIR = $(DESTDIR)/usr/share/applications
-LIBDIR = $(DESTDIR)/usr/share/epistle
+LIBDIR = $(DESTDIR)/usr/lib/epistle
 BINDIR = $(DESTDIR)/usr/bin
 install:
 	mkdir -p $(APPDIR)
