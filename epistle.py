@@ -1,5 +1,4 @@
 #!/usr/bin/env python2
-from email.parser import HeaderParser
 #from threading import Thread
 import facebooksdk
 import sqlite3
@@ -9,6 +8,7 @@ import gobject
 import tweepy
 import urllib
 import webkit
+import email
 import gtk
 import sys
 import os
@@ -585,7 +585,7 @@ class Epistle:
 			self.save = self.save + 1
 			resp, data = self.imap.fetch(self.save, '(RFC822)')
 			mailitem = email.message_from_string(data[0][1])
-			header = HeaderParser().parsestr(data[0][1])
+			header = email.parser.HeaderParser().parsestr(data[0][1])
 			
 			for mailpart in mailitem.walk():
 				if mailpart.get_content_maintype() == 'multipart':
