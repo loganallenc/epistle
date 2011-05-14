@@ -6,6 +6,6 @@ GenericName=Social Mail Client
 Comment=Access Mail and Social Networks
 Exec=epistle
 Terminal=false
-Icon=/usr/share/epistle/Icon.png
+Icon=/usr/lib/epistle/Icon.png
 Type=Application
 Categories=GTK;Network;Email;Internet;
