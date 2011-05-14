@@ -82,7 +82,6 @@ class Account:
 		self.window.set_title('Epistle')
 		self.window.set_size_request(800, 500)
 		gtk.window_set_default_icon_from_file('/usr/lib/epistle/Icon.png')
-		self.window.connect('delete_event', self.delete_event)
 		self.window.connect('destroy', self.destroy)
 		self.window.set_border_width(0)
 
@@ -222,9 +221,6 @@ class Account:
 		self.window.add(self.vbox)
 		self.window.show_all()
 		gtk.main()
-
-	def delete_event(self, widget, data=None):
-		return False
 	
 	def destroy(self, widget, data=None):
 		gtk.main_quit()
@@ -379,7 +375,8 @@ class Epistle:
 		window.set_size_request(800, 450)
 		gtk.window_set_default_icon_from_file('/usr/lib/epistle/Icon.png')
 		window.connect('destroy', self.destroy)
-		window.connect('key-press-event', self.charcount)
+		if self.Auth[3][1] != None:
+			window.connect('key-press-event', self.charcount)
 		window.set_border_width(0)
 
 		vbox = gtk.VBox()
