@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
-#from threading import Thread
 import facebooksdk
+import threading
 import sqlite3
 import imaplib
 import smtplib
@@ -12,6 +12,7 @@ import email
 import gtk
 import sys
 import os
+
 
 class Database:
 	''' Checks for existing database and if one does not exist creates the database. '''
