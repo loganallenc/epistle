@@ -367,7 +367,10 @@ class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		threading.Thread(target=self.initialize())
+		p = threading.Thread(target=self.initialize())
+		p.daemon = True
+		p.start()
+		
 		
 	def initialize(self):
 		self.path,self.Auth = Database().check()
