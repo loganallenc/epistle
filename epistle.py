@@ -367,6 +367,9 @@ class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
+		threading.Thread(target=self.initialize())
+		
+	def initialize(self):
 		self.path,self.Auth = Database().check()
 		gtk.threads_init()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -464,7 +467,8 @@ class Epistle:
 			gmailevent = gtk.EventBox()
 			gmailevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
 			gmailevent.set_visible_window(False)
-			gmailevent.connect('button-press-event', self.listmail)
+			self.listed = False
+			gmailevent.connect_after('button-press-event', self.listmail)
 			gmailevent.add(gmaillabel)
 			gtk.Widget.show(gmaillabel)
 
@@ -660,6 +664,8 @@ class Epistle:
 	def refresh(self, widget, widget2):
 		''' Refreshes data. '''
 		if self.Auth[1][1] != None:
+			self.listed = False
+			self.model.clear()
 			self.getmail()
 		if self.Auth[3][1] != None:
 			self.updatetwitter()
@@ -683,18 +689,20 @@ class Epistle:
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
-		if self.save < 50:
-			for x in xrange(0,(self.save-1)):
-				y = self.save - x
-				msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*500 + str(x)
-				self.iterator = self.model.prepend()
-				self.model.set(self.iterator, 0, msg)
-		else:
-			for x in xrange(0,49):
-				y = self.save + x - 50
-				msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*500 + str(x)
-				self.iterator = self.model.prepend()
-				self.model.set(self.iterator, 0, msg)
+		if self.listed == False:
+			if self.save < 50:
+				for x in xrange(0,(self.save-1)):
+					y = self.save - x
+					msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*500 + str(x)
+					self.iterator = self.model.prepend()
+					self.model.set(self.iterator, 0, msg)
+			else:
+				for x in xrange(0,49):
+					y = self.save + x - 50
+					msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*500 + str(x)
+					self.iterator = self.model.prepend()
+					self.model.set(self.iterator, 0, msg)
+			self.listed = True
 
 	def showmail(self, widget):
 		''' This function displays email messages. '''
