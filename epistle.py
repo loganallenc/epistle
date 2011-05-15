@@ -371,7 +371,6 @@ class Epistle:
 		p.daemon = True
 		p.start()
 		
-		
 	def initialize(self):
 		self.path,self.Auth = Database().check()
 		gtk.threads_init()
@@ -617,7 +616,7 @@ class Epistle:
 				self.smtp.login(self.Auth[1][1], self.Auth[2][1])
 				to = self.toentry.get_text()
 				subject = self.subjectentry.get_text()
-				self.smtp.sendmail(self.Auth[2][1], to, 'Subject: ' + subject + '\n' + body)
+				self.smtp.sendmail(self.Auth[1][1], to, 'Subject: ' + subject + '\n' + body)
 				self.smtp.quit()
 		if self.Auth[3][1] != None:
 			if self.twcheck.get_active() == True:
