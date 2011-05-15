@@ -20,7 +20,7 @@ class Database:
 		self.__dict__.update(kwargs)
 		if sys.platform == 'linux2':
 			self.path = '/home/' + os.environ['USER'] + '/.local/share/epistle.db'
-		if sys.platform == 'win32':
+		elif sys.platform == 'win32':
 			self.path = 'C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db'
 		elif sys.platform == 'darwin':
 			self.path = '/Users/' + os.getenv('USERNAME') + '/epistle.db'
