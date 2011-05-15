@@ -81,7 +81,7 @@ class Account:
 		self.window.set_resizable(False)
 		self.window.set_title('Epistle')
 		self.window.set_size_request(800, 500)
-		gtk.window_set_default_icon_from_file('/usr/lib/epistle/Icon.png')
+		gtk.window_set_default_icon_from_file('Icon.png')
 		self.window.connect('destroy', self.destroy)
 		self.window.set_border_width(0)
 
@@ -103,7 +103,7 @@ class Account:
 		containermail = gtk.HBox(False, 0)
 		selecthboxmail = gtk.HBox(False, 0)
 		self.mailimage = gtk.Image()
-		mailpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/lib/epistle/Gmail.png')
+		mailpixbuf = gtk.gdk.pixbuf_new_from_file('Gmail.png')
 		mailpixbuf = mailpixbuf.scale_simple(48, 48, gtk.gdk.INTERP_BILINEAR)
 		self.mailimage.set_from_pixbuf(mailpixbuf)
 		self.mailcheck = gtk.CheckButton(None)
@@ -118,7 +118,7 @@ class Account:
 		containertw = gtk.HBox(False, 0)
 		selecthboxtw = gtk.HBox(False, 0)
 		self.twimage = gtk.Image()
-		twpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/lib/epistle/Twitter.png')
+		twpixbuf = gtk.gdk.pixbuf_new_from_file('Twitter.png')
 		twpixbuf = twpixbuf.scale_simple(40, 40, gtk.gdk.INTERP_BILINEAR)
 		self.twimage.set_from_pixbuf(twpixbuf)
 		self.twcheck = gtk.CheckButton(None)
@@ -133,7 +133,7 @@ class Account:
 		containerfb = gtk.HBox(False, 0)
 		selecthboxfb = gtk.HBox(False, 0)
 		self.fbimage = gtk.Image()
-		fbpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/lib/epistle/Facebook.png')
+		fbpixbuf = gtk.gdk.pixbuf_new_from_file('Facebook.png')
 		fbpixbuf = fbpixbuf.scale_simple(36, 36, gtk.gdk.INTERP_BILINEAR)
 		self.fbimage.set_from_pixbuf(fbpixbuf)
 		self.fbcheck = gtk.CheckButton(None)
@@ -224,13 +224,6 @@ class Account:
 	
 	def destroy(self, widget, data=None):
 		gtk.main_quit()
-
-	def gmail(self):
-		''' Collect data for Gmail.'''
-		gmailuser = raw_input('What is your email username? ')
-		password = getpass.getpass('What is your email password? ')
-		returned = {'gmailuser':gmailuser, 'password':password}
-		return returned
 
 	def twitter(self):
 		''' Collect data for Twitter.'''
@@ -378,7 +371,7 @@ class Epistle:
 		window.set_resizable(True)
 		window.set_title('Epistle')
 		window.set_size_request(900, 450)
-		gtk.window_set_default_icon_from_file('/usr/lib/epistle/Icon.png')
+		gtk.window_set_default_icon_from_file('Icon.png')
 		window.connect('destroy', self.destroy)
 		if self.Auth[3][1] != None:
 			window.connect('key-press-event', self.charcount)
@@ -436,14 +429,14 @@ class Epistle:
 		self.fbcheck.set_active(False)
 		if self.Auth[5][1] != None:
 			self.fbimage = gtk.Image()
-			fbpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/lib/epistle/Facebook.png')
+			fbpixbuf = gtk.gdk.pixbuf_new_from_file('Facebook.png')
 			fbpixbuf = fbpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
 			self.fbimage.set_from_pixbuf(fbpixbuf)
 			self.actionhbox.pack_end(self.fbcheck, False, True, 5)
 			self.actionhbox.pack_end(self.fbimage, False, True, 0)
 		if self.Auth[3][1] != None:
 			self.twimage = gtk.Image()
-			twpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/lib/epistle/Twitter.png')
+			twpixbuf = gtk.gdk.pixbuf_new_from_file('Twitter.png')
 			twpixbuf = twpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
 			self.twimage.set_from_pixbuf(twpixbuf)
 			self.twcheck.connect('toggled', self.showhidetw)
@@ -451,7 +444,7 @@ class Epistle:
 			self.actionhbox.pack_end(self.twimage, False, True, 0)
 		if self.Auth[1][1] != None:
 			self.mailimage = gtk.Image()
-			mailpixbuf = gtk.gdk.pixbuf_new_from_file('/usr/lib/epistle/Gmail.png')
+			mailpixbuf = gtk.gdk.pixbuf_new_from_file('Gmail.png')
 			mailpixbuf = mailpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
 			self.mailimage.set_from_pixbuf(mailpixbuf)
 			self.mailcheck.connect('toggled', self.showhidemail)
