@@ -20,7 +20,7 @@ class Database:
 		self.__dict__.update(kwargs)
 		if sys.platform == 'linux2':
 			self.path = '/home/' + os.environ['USER'] + '/.local/share/epistle.db'
-		elif sys.platform == 'win32':
+		if sys.platform == 'win32':
 			self.path = 'C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db'
 		elif sys.platform == 'darwin':
 			self.path = '/Users/' + os.getenv('USERNAME') + '/epistle.db'
@@ -81,7 +81,7 @@ class Account:
 		self.window.set_resizable(False)
 		self.window.set_title('Epistle')
 		self.window.set_size_request(800, 500)
-		gtk.window_set_default_icon_from_file('Icon.png')
+		gtk.window_set_default_icon_from_file('/usr/lib/epistle/Icon.png')
 		self.window.connect('destroy', self.destroy)
 		self.window.set_border_width(0)
 
@@ -360,13 +360,8 @@ class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
 		self.__dict__.update(kwargs)
-		p = threading.Thread(target=self.initialize())
-		p.daemon = True
-		p.start()
-		
-	def initialize(self):
 		self.path,self.Auth = Database().check()
-		gtk.threads_init()
+		gtk.gdk.threads_init()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		window.set_resizable(True)
 		window.set_title('Epistle')
@@ -512,9 +507,16 @@ class Epistle:
 			twbox.add(scrolltw)
 
 			tweets = ''
-			for x in xrange(0, 17):
-				tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p></span><hr style="width: 100%;" /></div>'
-			self.viewtw.load_html_string(tweets, 'file:///')
+			x = True
+			y = 1
+			while x == True:
+				try:
+					print y
+					tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[y].user.screen_name + '</b></p><p>' + self.twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
+					y = y + 1
+				except IndexError:
+					self.viewtw.load_html_string(tweets, 'file:///')
+					x = False
 			self.notebook.append_page(twbox, twevent)
 
 		if self.Auth[5][1] != None:
@@ -671,9 +673,16 @@ class Epistle:
 		if self.Auth[3][1] != None:
 			self.updatetwitter()
 			tweets = ''
-			for x in xrange(0, 17):
-				tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[x].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[x].user.screen_name + '</b></p><p>' + self.twitterupdate[x].text + '</p></span><hr style="width: 100%;" /></div>'
-			self.viewtw.load_html_string(tweets, 'file:///')
+			x = True
+			y = 1
+			while x == True:
+				try:
+					print y
+					tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[y].user.screen_name + '</b></p><p>' + self.twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
+					y = y + 1
+				except IndexError:
+					self.viewtw.load_html_string(tweets, 'file:///')
+					x = False
 		if self.Auth[5][1] != None:
 			fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
 			fbfeed = fbposts.read()
@@ -738,7 +747,7 @@ class Epistle:
 		self.Facebook = facebooksdk.GraphAPI(self.Auth[5][1])
 
 	def main(self):
-		''' This function will include the interface of Epistle, and all the function calls. '''
+		''' This function includes the interface of Epistle, and all the function calls. '''
 		gtk.main()
 
 
