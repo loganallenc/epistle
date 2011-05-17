@@ -511,7 +511,6 @@ class Epistle:
 			y = 1
 			while x == True:
 				try:
-					print y
 					tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[y].user.screen_name + '</b></p><p>' + self.twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
 					y = y + 1
 				except IndexError:
@@ -597,7 +596,6 @@ class Epistle:
 
 			if header['Subject'] == None: header['Subject'] = '(No Subject)'
 			header['Subject'] = unicode(header['Subject'], 'utf-8')
-			print self.save
 
 			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ self.save, header['From'], header['Subject'], header['To'], message ])
 			self.db.commit()
@@ -677,7 +675,6 @@ class Epistle:
 			y = 1
 			while x == True:
 				try:
-					print y
 					tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[y].user.screen_name + '</b></p><p>' + self.twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
 					y = y + 1
 				except IndexError:
