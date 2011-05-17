@@ -17,6 +17,7 @@ import os
 class Database:
 	''' Checks for existing database and if one does not exist creates the database. '''
 	def __init__(self, *args, **kwargs):
+		''' Initializes variables. '''
 		self.__dict__.update(kwargs)
 		if sys.platform == 'linux2':
 			self.path = '/home/' + os.environ['USER'] + '/.local/share/epistle.db'
@@ -30,6 +31,7 @@ class Database:
 			os.makedirs(self.folder)
 
 	def connect(self):
+		''' Connects to database. '''
 		self.checkdb = os.path.exists(self.path)
 		self.db = sqlite3.connect(self.path)
 		self.database = self.db.cursor()
@@ -37,6 +39,7 @@ class Database:
 		return self.db, self.database
 
 	def check(self):
+		''' Checks if database exists. '''
 		self.connect()
 		if self.checkdb == False:
 			self.gmailusername,self.gmailpassword,self.twoauth,self.twcheck,self.fboauth = Account().finish(0)
@@ -45,18 +48,21 @@ class Database:
 		return self.path,self.Auth
 
 	def authread(self):
+		''' Reads from auth. '''
 		self.connect()
 		self.database.execute('select * from auth')
 		self.Auth = self.database.fetchall()
 		return self.Auth
 
 	def mailread(self):
+		''' Reads from mail. '''
 		self.connect()
 		self.database.execute('select * from mail order by id')
 		self.Mail = self.database.fetchall()
 		return self.Mail
 
 	def setup(self):
+		''' Sets up database. '''
 		self.database.execute('''create table auth (id integer primary key, main)''')
 		self.database.execute('insert into auth (id, main) values (1,1)')
 		self.database.execute('insert into auth (id, main) values (2,?)', [self.gmailusername])
@@ -75,6 +81,7 @@ class Database:
 class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
 	def __init__(self, *args, **kwargs):
+		''' Initializes objects. '''
 		self.__dict__.update(kwargs)
 		gtk.gdk.threads_init()
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -287,9 +294,9 @@ class Account:
 						self.window.remove(self.gmailwindow)
 						self.gmailusername = self.userentry.get_text()
 						self.gmailpassword = self.passentry.get_text()
-						self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-						auth_url = self.twoauth.get_authorization_url()
 						if self.twcheck.get_active() == True:
+							self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+							auth_url = self.twoauth.get_authorization_url()
 							self.html.open(auth_url)
 							self.window.add(self.twwindow)
 							self.wait = True
@@ -299,9 +306,9 @@ class Account:
 						self.gmailwindow.pack_end(self.passchecklabel, False, False, 10)
 						self.gmailwindow.pack_end(self.placebutton_two, False, False, 10)
 				else:
-					self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-					auth_url = self.twoauth.get_authorization_url()
 					if self.twcheck.get_active() == True:
+						self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+						auth_url = self.twoauth.get_authorization_url()
 						self.html.open(auth_url)
 						self.window.add(self.twwindow)
 						self.wait = True
@@ -359,6 +366,7 @@ class Account:
 class Epistle:
 	''' This is the main application class. '''
 	def __init__(self, *args, **kwargs):
+		''' Initializes objects. '''
 		self.__dict__.update(kwargs)
 		self.path,self.Auth = Database().check()
 		gtk.gdk.threads_init()
@@ -452,7 +460,7 @@ class Epistle:
 		
 		if self.Auth[1][1] != None:
 			self.logingmail()
-			self.getmail()
+#			self.getmail()
 			gmaillabel = gtk.Label('Gmail')
 			gmailevent = gtk.EventBox()
 			gmailevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
@@ -490,7 +498,7 @@ class Epistle:
 
 		if self.Auth[3][1] != None:
 			self.logintwitter()
-			self.updatetwitter()
+#			self.updatetwitter()
 			twlabel = gtk.Label('Twitter')
 			twevent = gtk.EventBox()
 			twevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
@@ -506,16 +514,16 @@ class Epistle:
 			twbox = gtk.VBox()
 			twbox.add(scrolltw)
 
-			tweets = ''
-			x = True
-			y = 1
-			while x == True:
-				try:
-					tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[y].user.screen_name + '</b></p><p>' + self.twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
-					y = y + 1
-				except IndexError:
-					self.viewtw.load_html_string(tweets, 'file:///')
-					x = False
+#			tweets = ''
+#			x = True
+#			y = 1
+#			while x == True:
+#				try:
+#					tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[y].user.screen_name + '</b></p><p>' + self.twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
+#					y = y + 1
+#				except IndexError:
+#					self.viewtw.load_html_string(tweets, 'file:///')
+#					x = False
 			self.notebook.append_page(twbox, twevent)
 
 		if self.Auth[5][1] != None:
@@ -534,18 +542,18 @@ class Epistle:
 			scrollfb.add(self.viewfb)
 			fbbox = gtk.VBox()
 			fbbox.add(scrollfb)
-			fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
-			fbfeed = fbposts.read()
-			fbposts.close()
-			fbparsed = ''
-			fbfeed = fbfeed.split('"',fbfeed.count('"'))
-			for x in xrange(0,(len(fbfeed))):
-				if fbfeed[x] == 'name':
-					if fbfeed[x-2] == 'from': 
-						fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
-				if fbfeed[x] == 'message':
-					fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
-			self.viewfb.load_html_string(fbparsed, 'file:///')
+#			fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
+#			fbfeed = fbposts.read()
+#			fbposts.close()
+#			fbparsed = ''
+#			fbfeed = fbfeed.split('"',fbfeed.count('"'))
+#			for x in xrange(0,(len(fbfeed))):
+#				if fbfeed[x] == 'name':
+#					if fbfeed[x-2] == 'from': 
+#						fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
+#				if fbfeed[x] == 'message':
+#					fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
+#			self.viewfb.load_html_string(fbparsed, 'file:///')
 			self.notebook.append_page(fbbox, fbevent)
 
 		refreshimage = gtk.Image()
@@ -561,9 +569,11 @@ class Epistle:
 
 		vbox.add(self.notebook)
 		window.add(vbox)
+		self.refresh(0,0)
 		window.show_all()
 
 	def destroy(self, widget, data=None):
+		''' This function destroys the GTK instance and the logs out of IMAP. '''
 		if self.Auth[1][1] != None:
 			self.imap.logout()
 			self.db.close()
@@ -602,6 +612,7 @@ class Epistle:
 		self.Mail = Database().mailread()
 
 	def send(self, widget):
+		''' Sends data. '''
 		body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
 		if self.Auth[1][1] != None:
 			if self.mailcheck.get_active() == True:
@@ -626,6 +637,7 @@ class Epistle:
 		self.discard(0)
 
 	def discard(self, widget):
+		''' Discards message. '''
 		if self.Auth[5][1] != None:
 			if self.mailcheck.get_active() == True:
 				self.toentry.set_text('')
@@ -634,6 +646,7 @@ class Epistle:
 		self.charcount(0,0)
 
 	def showhidemail(self, widget):
+		''' Shows or hides the mail objects. '''
 		if self.mailcheck.get_active() == True:
 			self.composevbox.remove(self.bodyhbox)
 			self.composevbox.remove(self.actionhbox)
@@ -646,6 +659,7 @@ class Epistle:
 			self.composevbox.remove(self.subjecthbox)
 
 	def showhidetw(self, widget):
+		''' Shows or hides the Twitter objects. '''
 		if self.twcheck.get_active() == True:
 			self.actionhbox.pack_end(self.count, True, True, 0)
 			gtk.Widget.show(self.count)
@@ -653,6 +667,7 @@ class Epistle:
 			self.actionhbox.remove(self.count)
 
 	def charcount(self, widget, callback):
+		''' Gets the number of characters in the body. '''
 		num = self.buffer.get_char_count()
 		if num != 0: num = num + 1
 		num = 140 - num
