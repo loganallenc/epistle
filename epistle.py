@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
+from multiprocessing import Pool
 import facebooksdk
-import threading
 import sqlite3
 import imaplib
 import smtplib
@@ -83,7 +83,6 @@ class Account:
 	def __init__(self, *args, **kwargs):
 		''' Initializes objects. '''
 		self.__dict__.update(kwargs)
-		gtk.gdk.threads_init()
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.set_resizable(False)
 		self.window.set_title('Epistle')
@@ -368,8 +367,10 @@ class Epistle:
 	def __init__(self, *args, **kwargs):
 		''' Initializes objects. '''
 		self.__dict__.update(kwargs)
+#		pool = Pool(processes=1)
+#		dbcheck = pool.apply_async(Database().check())
+#		self.path,self.Auth = dbcheck.get(timeout=10)
 		self.path,self.Auth = Database().check()
-		gtk.gdk.threads_init()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		window.set_resizable(True)
 		window.set_title('Epistle')
@@ -460,7 +461,6 @@ class Epistle:
 		
 		if self.Auth[1][1] != None:
 			self.logingmail()
-#			self.getmail()
 			gmaillabel = gtk.Label('Gmail')
 			gmailevent = gtk.EventBox()
 			gmailevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
@@ -498,7 +498,6 @@ class Epistle:
 
 		if self.Auth[3][1] != None:
 			self.logintwitter()
-#			self.updatetwitter()
 			twlabel = gtk.Label('Twitter')
 			twevent = gtk.EventBox()
 			twevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
@@ -513,17 +512,6 @@ class Epistle:
 			scrolltw.add(self.viewtw)
 			twbox = gtk.VBox()
 			twbox.add(scrolltw)
-
-#			tweets = ''
-#			x = True
-#			y = 1
-#			while x == True:
-#				try:
-#					tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[y].user.screen_name + '</b></p><p>' + self.twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
-#					y = y + 1
-#				except IndexError:
-#					self.viewtw.load_html_string(tweets, 'file:///')
-#					x = False
 			self.notebook.append_page(twbox, twevent)
 
 		if self.Auth[5][1] != None:
@@ -542,18 +530,6 @@ class Epistle:
 			scrollfb.add(self.viewfb)
 			fbbox = gtk.VBox()
 			fbbox.add(scrollfb)
-#			fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
-#			fbfeed = fbposts.read()
-#			fbposts.close()
-#			fbparsed = ''
-#			fbfeed = fbfeed.split('"',fbfeed.count('"'))
-#			for x in xrange(0,(len(fbfeed))):
-#				if fbfeed[x] == 'name':
-#					if fbfeed[x-2] == 'from': 
-#						fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
-#				if fbfeed[x] == 'message':
-#					fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
-#			self.viewfb.load_html_string(fbparsed, 'file:///')
 			self.notebook.append_page(fbbox, fbevent)
 
 		refreshimage = gtk.Image()
@@ -575,41 +551,50 @@ class Epistle:
 	def destroy(self, widget, data=None):
 		''' This function destroys the GTK instance and the logs out of IMAP. '''
 		if self.Auth[1][1] != None:
-			self.imap.logout()
-			self.db.close()
+			try:
+				self.imap.logout()
+				self.db.close()
+			except AttributeError:
+				pass
 		gtk.main_quit()
 
 	def getmail(self):
 		''' This function reads unread messages from Gmail. '''
-		label,inbox = self.imap.select()
-		inbox = int(inbox[0])
-		unread = len(self.imap.search('Inbox', '(UNSEEN)')[1][0].split())
-		self.db,self.database = Database().connect()
-		self.database.execute('select main from auth where id=1')
-		for row in self.database:
-			self.save = row[0]
-		while self.save < inbox:
-			self.save = self.save + 1
-			resp, data = self.imap.fetch(self.save, '(RFC822)')
-			mailitem = email.message_from_string(data[0][1])
-			header = email.parser.HeaderParser().parsestr(data[0][1])
+		try:
+			label,inbox = self.imap.select()
+			inbox = int(inbox[0])
+			unread = len(self.imap.search('Inbox', '(UNSEEN)')[1][0].split())
+			self.db,self.database = Database().connect()
+			self.database.execute('select main from auth where id=1')
+			for row in self.database:
+				self.save = row[0]
+			while self.save < inbox:
+				self.save = self.save + 1
+				resp, data = self.imap.fetch(self.save, '(RFC822)')
+				mailitem = email.message_from_string(data[0][1])
+				header = email.parser.HeaderParser().parsestr(data[0][1])
 			
-			for mailpart in mailitem.walk():
-				if mailpart.get_content_maintype() == 'multipart':
-					continue
-				#if mailpart.get_filename() != None:
-				#	fp = open(self.path + '/' + mailpart.get_filename(), 'w')
-				#	fp.write(mailpart.get_payload(decode=True))
-				#	fp.close()
-				message = str(mailpart.get_payload(decode=True))
-			self.database.execute('update auth set main = ? where id = 1', [self.save])
-
-			if header['Subject'] == None: header['Subject'] = '(No Subject)'
-			header['Subject'] = unicode(header['Subject'], 'utf-8')
-
-			self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ self.save, header['From'], header['Subject'], header['To'], message ])
-			self.db.commit()
-		self.Mail = Database().mailread()
+				for mailpart in mailitem.walk():
+					if mailpart.get_content_maintype() == 'multipart':
+						continue
+					#if mailpart.get_filename() != None:
+					#	fp = open(self.path + '/' + mailpart.get_filename(), 'w')
+					#	fp.write(mailpart.get_payload(decode=True))
+					#	fp.close()
+					message = str(mailpart.get_payload(decode=True))
+				self.database.execute('update auth set main = ? where id = 1', [self.save])
+				if header['Subject'] == None: header['Subject'] = '(No Subject)'
+				header['Subject'] = unicode(header['Subject'], 'utf-8')
+	
+				self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ self.save, header['From'], header['Subject'], header['To'], message ])
+				self.db.commit()
+			self.Mail = Database().mailread()
+		except AttributeError:
+			self.db,self.database = Database().connect()
+			self.database.execute('select main from auth where id=1')
+			for row in self.database:
+				self.save = row[0]
+			self.Mail = Database().mailread()
 
 	def send(self, widget):
 		''' Sends data. '''
@@ -675,7 +660,10 @@ class Epistle:
 			
 	def updatetwitter(self):
 		''' This function updates the user's Tweets. '''
-		self.twitterupdate = self.Twitter.home_timeline()
+		try:
+			self.twitterupdate = self.Twitter.home_timeline()
+		except:
+			pass
 
 	def refresh(self, widget, widget2):
 		''' Refreshes data. '''
@@ -688,26 +676,32 @@ class Epistle:
 			tweets = ''
 			x = True
 			y = 1
-			while x == True:
-				try:
-					tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[y].user.screen_name + '</b></p><p>' + self.twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
-					y = y + 1
-				except IndexError:
-					self.viewtw.load_html_string(tweets, 'file:///')
-					x = False
+			try:
+				while x == True:
+					try:
+						tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[y].user.screen_name + '</b></p><p>' + self.twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
+						y = y + 1
+					except IndexError:
+						self.viewtw.load_html_string(tweets, 'file:///')
+						x = False
+			except AttributeError:
+				self.viewtw.load_html_string('<h1>Could not load Tweets at this time.</h1>','file:///')
 		if self.Auth[5][1] != None:
-			fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
-			fbfeed = fbposts.read()
-			fbposts.close()
-			fbparsed = ''
-			fbfeed = fbfeed.split('"',fbfeed.count('"'))
-			for x in xrange(0,(len(fbfeed))):
-				if fbfeed[x] == 'name':
-					if fbfeed[x-2] == 'from': 
-						fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
-				if fbfeed[x] == 'message':
-					fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
-			self.viewfb.load_html_string(fbparsed, 'file:///')
+			try:
+				fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
+				fbfeed = fbposts.read()
+				fbposts.close()
+				fbparsed = ''
+				fbfeed = fbfeed.split('"',fbfeed.count('"'))
+				for x in xrange(0,(len(fbfeed))):
+					if fbfeed[x] == 'name':
+						if fbfeed[x-2] == 'from': 
+							fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
+					if fbfeed[x] == 'message':
+						fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
+				self.viewfb.load_html_string(fbparsed, 'file:///')
+			except IOError:
+				self.viewfb.load_html_string('<h1>Could not load Facebook posts at this time.</h1>','file:///')
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
@@ -744,19 +738,28 @@ class Epistle:
 
 	def logingmail(self):
 		''' Logs in to Gmail. '''
-		self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
-		self.imap.login(self.Auth[1][1], self.Auth[2][1])
+		try:
+			self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
+			self.imap.login(self.Auth[1][1], self.Auth[2][1])
+		except:
+			pass
 
 	def logintwitter(self):
 		''' Logs into Twitter. '''
-		self.auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-		self.auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-		self.auth.set_access_token(self.Auth[3][1], self.Auth[4][1])
-		self.Twitter = tweepy.API(self.auth)
+		try:
+			self.auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+			self.auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+			self.auth.set_access_token(self.Auth[3][1], self.Auth[4][1])
+			self.Twitter = tweepy.API(self.auth)
+		except:
+			pass
 
 	def loginfb(self):
 		''' Logs into Facebook. '''
-		self.Facebook = facebooksdk.GraphAPI(self.Auth[5][1])
+		try:
+			self.Facebook = facebooksdk.GraphAPI(self.Auth[5][1])
+		except:
+			pass
 
 	def main(self):
 		''' This function includes the interface of Epistle, and all the function calls. '''
