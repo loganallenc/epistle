@@ -86,7 +86,7 @@ class Account:
 		self.window.set_resizable(False)
 		self.window.set_title('Epistle')
 		self.window.set_size_request(800, 500)
-		gtk.window_set_default_icon_from_file('/usr/lib/epistle/Icon.png')
+		gtk.window_set_default_icon_from_file('Icon.png')
 		self.window.connect('destroy', self.destroy)
 		self.window.set_border_width(0)
 
@@ -499,6 +499,7 @@ class Epistle:
 			twevent = gtk.EventBox()
 			twevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
 			twevent.set_visible_window(False)
+			twevent.connect_after('button-press-event', self.loadtw)
 			twevent.add(twlabel)
 			gtk.Widget.show(twlabel)
 
@@ -517,6 +518,7 @@ class Epistle:
 			fbevent = gtk.EventBox()
 			fbevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
 			fbevent.set_visible_window(False)
+			fbevent.connect_after('button-press-event', self.loadfb)
 			fbevent.add(fblabel)
 			gtk.Widget.show(fblabel)
 			
@@ -556,11 +558,20 @@ class Epistle:
 
 	def startrf(self,a,b):
 		Process(target=self.refresh,args=(0,0)).start()
-		self.Data = self.q.get()
+		self.datamade = False
+
+	def loadtw(self,widget,widget2):
+		if self.datamade == False:
+			self.Data = self.q.get(block=False)
+			self.datamade = True
 		try:
 			self.viewtw.load_html_string(self.Data[2], 'file:///')
 		except AttributeError:
 			pass
+	def loadfb(self,widget,widget2):
+		if self.datamade == False:
+			self.Data = self.q.get(block=False)
+			self.datamade = True
 		try:
 			self.viewfb.load_html_string(self.Data[3], 'file:///')
 		except AttributeError:
@@ -736,6 +747,9 @@ class Epistle:
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
+		if self.datamade == False:
+			self.Data = self.q.get(block=False)
+			self.datamade = True
 		if self.listed == False:
 			if self.Data[0] < 50:
 				for x in xrange(0,(self.Data[0]-1)):
