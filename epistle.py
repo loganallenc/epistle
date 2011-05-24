@@ -556,15 +556,13 @@ class Epistle:
 
 	def startrf(self,a,b):
 		Process(target=self.refresh,args=(0,0)).start()
-		Data = self.q.get()
-		self.save = Data[0]
-		self.Mail = Data[1]
+		self.Data = self.q.get()
 		try:
-			self.viewtw.load_html_string(Data[2], 'file:///')
+			self.viewtw.load_html_string(self.Data[2], 'file:///')
 		except AttributeError:
 			pass
 		try:
-			self.viewfb.load_html_string(Data[3], 'file:///')
+			self.viewfb.load_html_string(self.Data[3], 'file:///')
 		except AttributeError:
 			pass
 
@@ -668,13 +666,6 @@ class Epistle:
 		if num != 0: num = num + 1
 		num = 140 - num
 		self.count.set_text(str(num))
-			
-	def updatetwitter(self):
-		''' This function updates the user's Tweets. '''
-		try:
-			self.twitterupdate = self.Twitter.home_timeline()
-		except:
-			pass
 
 	def refresh(self, widget, widget2):
 		''' Refreshes data. '''
@@ -692,14 +683,17 @@ class Epistle:
 			except AttributeError:
 				pass
 		if self.Auth[0][3][1] != None:
-			self.updatetwitter()
+			try:
+				twitterupdate = self.Twitter.home_timeline()
+			except:
+				pass
 			tweets = ''
 			x = True
 			y = 1
 			try:
 				while x == True:
 					try:
-						tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[y].user.screen_name + '</b></p><p>' + self.twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
+						tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + twitterupdate[y].user.screen_name + '</b></p><p>' + twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
 						y = y + 1
 					except IndexError:
 						x = False
@@ -743,16 +737,16 @@ class Epistle:
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
 		if self.listed == False:
-			if self.save < 50:
-				for x in xrange(0,(self.save-1)):
-					y = self.save - x
-					msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*500 + str(x)
+			if self.Data[0] < 50:
+				for x in xrange(0,(self.Data[0]-1)):
+					y = self.Data[0] - x
+					msg = self.Data[1][y][2] + ' - ' + self.Data[1][y][1] + ' '*500 + str(x)
 					self.iterator = self.model.prepend()
 					self.model.set(self.iterator, 0, msg)
 			else:
 				for x in xrange(0,49):
-					y = self.save + x - 50
-					msg = self.Mail[y][2] + ' - ' + self.Mail[y][1] + ' '*500 + str(x)
+					y = self.Data[0] + x - 50
+					msg = self.Data[1][y][2] + ' - ' + self.Data[1][y][1] + ' '*500 + str(x)
 					self.iterator = self.model.prepend()
 					self.model.set(self.iterator, 0, msg)
 			self.listed = True
@@ -769,10 +763,10 @@ class Epistle:
 			x = int(x[last-2] + x[last-1])
 		else:
 			x = int(x[last-1])
-		y = self.save + x - 50
-		to = self.Mail[y][1].replace('<', '&lt;')
+		y = self.Data[0] + x - 50
+		to = self.Data[1][y][1].replace('<', '&lt;')
 		to = to.replace('>', '&gt;')
-		self.viewmail.load_html_string('<p>To: ' + to + '</p><p>Subject: ' + self.Mail[y][2] + '</p><hr />' +self.Mail[y][4], 'file:///')
+		self.viewmail.load_html_string('<p>To: ' + to + '</p><p>Subject: ' + self.Data[1][y][2] + '</p><hr />' +self.Data[1][y][4], 'file:///')
 
 	def logintwitter(self):
 		''' Logs into Twitter. '''
