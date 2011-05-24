@@ -557,10 +557,12 @@ class Epistle:
 		gtk.main_quit()
 
 	def startrf(self,a,b):
+		''' Starts refresh process. '''
 		Process(target=self.refresh,args=(0,0)).start()
 		self.datamade = False
 
 	def loadtw(self,widget,widget2):
+		''' Loads tweets from self.Data '''
 		if self.datamade == False:
 			self.Data = self.q.get(block=False)
 			self.datamade = True
@@ -569,6 +571,7 @@ class Epistle:
 		except AttributeError:
 			pass
 	def loadfb(self,widget,widget2):
+		''' Loads posts from self.Data '''
 		if self.datamade == False:
 			self.Data = self.q.get(block=False)
 			self.datamade = True
