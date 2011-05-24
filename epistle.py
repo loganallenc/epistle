@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-from multiprocessing import Pool
+from multiprocessing import Process,Queue
 import facebooksdk
 import sqlite3
 import imaplib
@@ -16,9 +16,8 @@ import os
 
 class Database:
 	''' Checks for existing database and if one does not exist creates the database. '''
-	def __init__(self, *args, **kwargs):
+	def __init__(self):
 		''' Initializes variables. '''
-		self.__dict__.update(kwargs)
 		if sys.platform == 'linux2':
 			self.path = '/home/' + os.environ['USER'] + '/.local/share/epistle.db'
 		if sys.platform == 'win32':
@@ -38,14 +37,15 @@ class Database:
 		self.db.text_factory = str
 		return self.db, self.database
 
-	def check(self):
+	def check(self,q):
 		''' Checks if database exists. '''
 		self.connect()
 		if self.checkdb == False:
 			self.gmailusername,self.gmailpassword,self.twoauth,self.twcheck,self.fboauth = Account().finish(0)
 			self.setup()
 		self.Auth = self.authread()
-		return self.path,self.Auth
+		q.put([self.path,self.Auth])
+		#return self.path,self.Auth
 
 	def authread(self):
 		''' Reads from auth. '''
@@ -80,9 +80,8 @@ class Database:
 
 class Account:
 	''' This function is responsible for adding and removing account information used in Epistle. '''
-	def __init__(self, *args, **kwargs):
+	def __init__(self):
 		''' Initializes objects. '''
-		self.__dict__.update(kwargs)
 		self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		self.window.set_resizable(False)
 		self.window.set_title('Epistle')
@@ -246,7 +245,6 @@ class Account:
 			self.fboauth = widget.get_main_frame().get_uri()
 			self.fboauth = self.fboauth.replace('http://www.loganfynne.com/#access_token=','')
 			self.fboauth = self.fboauth.replace('&expires_in=0','')
-			print self.fboauth
 
 	def back(self, widget):
 		''' Go the previous page. '''
@@ -364,20 +362,19 @@ class Account:
 
 class Epistle:
 	''' This is the main application class. '''
-	def __init__(self, *args, **kwargs):
+	def __init__(self):
 		''' Initializes objects. '''
-		self.__dict__.update(kwargs)
-#		pool = Pool(processes=1)
-#		dbcheck = pool.apply_async(Database().check())
-#		self.path,self.Auth = dbcheck.get(timeout=10)
-		self.path,self.Auth = Database().check()
+		q = Queue()
+		Process(target=Database().check, args=(q,)).start()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		window.set_resizable(True)
 		window.set_title('Epistle')
 		window.set_size_request(900, 450)
 		gtk.window_set_default_icon_from_file('Icon.png')
 		window.connect('destroy', self.destroy)
-		if self.Auth[3][1] != None:
+		self.Auth = q.get(block=False)
+		self.path = self.Auth.pop(0)
+		if self.Auth[0][3][1] != None:
 			window.connect('key-press-event', self.charcount)
 		window.set_border_width(0)
 
@@ -392,7 +389,7 @@ class Epistle:
 		composelabel = gtk.Label('Compose')
 		gtk.Widget.show(composelabel)
 
-		if self.Auth[1][1] != None:
+		if self.Auth[0][1][1] != None:
 			self.tohbox = gtk.HBox(False, 0)
 			self.composevbox.pack_start(self.tohbox, False, False, 7)
 			tolabel = gtk.Label('To: ')
@@ -431,14 +428,14 @@ class Epistle:
 		self.twcheck.set_active(False)
 		self.fbcheck = gtk.CheckButton(None)
 		self.fbcheck.set_active(False)
-		if self.Auth[5][1] != None:
+		if self.Auth[0][5][1] != None:
 			self.fbimage = gtk.Image()
 			fbpixbuf = gtk.gdk.pixbuf_new_from_file('Facebook.png')
 			fbpixbuf = fbpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
 			self.fbimage.set_from_pixbuf(fbpixbuf)
 			self.actionhbox.pack_end(self.fbcheck, False, True, 5)
 			self.actionhbox.pack_end(self.fbimage, False, True, 0)
-		if self.Auth[3][1] != None:
+		if self.Auth[0][3][1] != None:
 			self.twimage = gtk.Image()
 			twpixbuf = gtk.gdk.pixbuf_new_from_file('Twitter.png')
 			twpixbuf = twpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
@@ -446,7 +443,7 @@ class Epistle:
 			self.twcheck.connect('toggled', self.showhidetw)
 			self.actionhbox.pack_end(self.twcheck, False, True, 5)
 			self.actionhbox.pack_end(self.twimage, False, True, 0)
-		if self.Auth[1][1] != None:
+		if self.Auth[0][1][1] != None:
 			self.mailimage = gtk.Image()
 			mailpixbuf = gtk.gdk.pixbuf_new_from_file('Gmail.png')
 			mailpixbuf = mailpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
@@ -455,12 +452,12 @@ class Epistle:
 			self.mailcheck.set_active(True)
 			self.actionhbox.pack_end(self.mailcheck, False, True, 5)
 			self.actionhbox.pack_end(self.mailimage, False, True, 0)
-		else: self.mailcheck.set_active(False)
+		else:
+			self.mailcheck.set_active(False)
 		self.composevbox.pack_start(self.actionhbox, False, False, 10)
 		self.notebook.append_page(self.composevbox, composelabel)
 		
-		if self.Auth[1][1] != None:
-			self.logingmail()
+		if self.Auth[0][1][1] != None:
 			gmaillabel = gtk.Label('Gmail')
 			gmailevent = gtk.EventBox()
 			gmailevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
@@ -496,7 +493,7 @@ class Epistle:
 			self.treeview.append_column(column)
 			self.notebook.append_page(hpane, gmailevent)
 
-		if self.Auth[3][1] != None:
+		if self.Auth[0][3][1] != None:
 			self.logintwitter()
 			twlabel = gtk.Label('Twitter')
 			twevent = gtk.EventBox()
@@ -514,7 +511,7 @@ class Epistle:
 			twbox.add(scrolltw)
 			self.notebook.append_page(twbox, twevent)
 
-		if self.Auth[5][1] != None:
+		if self.Auth[0][5][1] != None:
 			self.loginfb()
 			fblabel = gtk.Label('Facebook')
 			fbevent = gtk.EventBox()
@@ -532,31 +529,44 @@ class Epistle:
 			fbbox.add(scrollfb)
 			self.notebook.append_page(fbbox, fbevent)
 
+		self.q = Queue()
 		refreshimage = gtk.Image()
 		refreshimage.set_from_stock(gtk.STOCK_REFRESH,gtk.ICON_SIZE_SMALL_TOOLBAR)
 		refreshevent = gtk.EventBox()
 		refreshevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
 		refreshevent.set_visible_window(False)
-		refreshevent.connect_after('button-press-event', self.refresh)
+		refreshevent.connect_after('button-press-event', self.startrf)
 		refreshevent.add(refreshimage)
 		gtk.Widget.show(refreshimage)
 		refreshbox = gtk.VBox()
 		self.notebook.append_page(refreshbox, refreshevent)
-
+		self.startrf(0,0)
 		vbox.add(self.notebook)
 		window.add(vbox)
-		self.refresh(0,0)
 		window.show_all()
 
 	def destroy(self, widget, data=None):
 		''' This function destroys the GTK instance and the logs out of IMAP. '''
-		if self.Auth[1][1] != None:
+		if self.Auth[0][1][1] != None:
 			try:
-				self.imap.logout()
 				self.db.close()
 			except AttributeError:
 				pass
 		gtk.main_quit()
+
+	def startrf(self,a,b):
+		Process(target=self.refresh,args=(0,0)).start()
+		Data = self.q.get()
+		self.save = Data[0]
+		self.Mail = Data[1]
+		try:
+			self.viewtw.load_html_string(Data[2], 'file:///')
+		except AttributeError:
+			pass
+		try:
+			self.viewfb.load_html_string(Data[3], 'file:///')
+		except AttributeError:
+			pass
 
 	def getmail(self):
 		''' This function reads unread messages from Gmail. '''
@@ -583,7 +593,8 @@ class Epistle:
 					#	fp.close()
 					message = str(mailpart.get_payload(decode=True))
 				self.database.execute('update auth set main = ? where id = 1', [self.save])
-				if header['Subject'] == None: header['Subject'] = '(No Subject)'
+				if header['Subject'] == None:
+					header['Subject'] = '(No Subject)'
 				header['Subject'] = unicode(header['Subject'], 'utf-8')
 	
 				self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ self.save, header['From'], header['Subject'], header['To'], message ])
@@ -599,31 +610,31 @@ class Epistle:
 	def send(self, widget):
 		''' Sends data. '''
 		body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
-		if self.Auth[1][1] != None:
+		if self.Auth[0][1][1] != None:
 			if self.mailcheck.get_active() == True:
 				self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-				self.smtp.login(self.Auth[1][1], self.Auth[2][1])
+				self.smtp.login(self.Auth[0][1][1], self.Auth[0][2][1])
 				to = self.toentry.get_text()
 				subject = self.subjectentry.get_text()
-				headers = ["from: " + self.Auth[1][1],
+				headers = ["from: " + self.Auth[0][1][1],
 					"subject: " + subject,
 					"to: " + to,
 					"mime-version: 1.0",
 					"content-type: text/html"]
 				headers = "\r\n".join(headers)
-				self.smtp.sendmail(self.Auth[1][1], to, headers + '\r\n\r\n<p>' + body + '</p>')
+				self.smtp.sendmail(self.Auth[0][1][1], to, headers + '\r\n\r\n<p>' + body + '</p>')
 				self.smtp.quit()
-		if self.Auth[3][1] != None:
+		if self.Auth[0][3][1] != None:
 			if self.twcheck.get_active() == True:
 				self.Twitter.update_status(body)
-		if self.Auth[5][1] != None:
+		if self.Auth[0][5][1] != None:
 			if self.fbcheck.get_active() == True:
 				self.Facebook.put_wall_post(message=body,attachment={})
 		self.discard(0)
 
 	def discard(self, widget):
 		''' Discards message. '''
-		if self.Auth[5][1] != None:
+		if self.Auth[0][5][1] != None:
 			if self.mailcheck.get_active() == True:
 				self.toentry.set_text('')
 				self.subjectentry.set_text('')
@@ -667,11 +678,20 @@ class Epistle:
 
 	def refresh(self, widget, widget2):
 		''' Refreshes data. '''
-		if self.Auth[1][1] != None:
+		if self.Auth[0][1][1] != None:
+			try:
+				self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
+				self.imap.login(self.Auth[0][1][1], self.Auth[0][2][1])
+			except:
+				pass
 			self.listed = False
 			self.model.clear()
 			self.getmail()
-		if self.Auth[3][1] != None:
+			try:
+				self.imap.logout()
+			except AttributeError:
+				pass
+		if self.Auth[0][3][1] != None:
 			self.updatetwitter()
 			tweets = ''
 			x = True
@@ -682,13 +702,12 @@ class Epistle:
 						tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + self.twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + self.twitterupdate[y].user.screen_name + '</b></p><p>' + self.twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
 						y = y + 1
 					except IndexError:
-						self.viewtw.load_html_string(tweets, 'file:///')
 						x = False
 			except AttributeError:
-				self.viewtw.load_html_string('<h1>Could not load Tweets at this time.</h1>','file:///')
-		if self.Auth[5][1] != None:
+				tweets = '<h1>Could not load Tweets at this time.</h1>'
+		if self.Auth[0][5][1] != None:
 			try:
-				fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1])
+				fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[0][5][1])
 				fbfeed = fbposts.read()
 				fbposts.close()
 				fbparsed = ''
@@ -699,9 +718,27 @@ class Epistle:
 							fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
 					if fbfeed[x] == 'message':
 						fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
-				self.viewfb.load_html_string(fbparsed, 'file:///')
 			except IOError:
-				self.viewfb.load_html_string('<h1>Could not load Facebook posts at this time.</h1>','file:///')
+				fbparsed = '<h1>Could not load Facebook posts at this time.</h1>'
+		if self.Auth[0][1][1] != None:
+			if self.Auth[0][3][1] != None: 
+				if self.Auth[0][5][1] != None:
+					self.q.put([self.save, self.Mail, tweets, fbparsed])
+				else:
+					self.q.put([self.save, self.Mail, tweets, None])
+			else:
+				if self.Auth[0][5][1] != None:
+					self.q.put([self.save, self.Mail, None, fbparsed])
+				else:
+					self.q.put([self.save, self.Mail, None, None])
+		else:
+			if self.Auth[0][3][1] != None:
+				if self.Auth[0][5][1] != None:
+					self.q.put([None, None, tweets, fbparsed])
+				else:
+					self.q.put([None, None, tweets, None])
+			else:
+				self.q.put([None, None, None, fbparsed])
 
 	def listmail(self, widget, widget2):
 		''' Shows list of mail. '''
@@ -730,26 +767,19 @@ class Epistle:
 		x = list(x)
 		if x[last-2].isdigit():
 			x = int(x[last-2] + x[last-1])
-		else: x = int(x[last-1])
+		else:
+			x = int(x[last-1])
 		y = self.save + x - 50
 		to = self.Mail[y][1].replace('<', '&lt;')
 		to = to.replace('>', '&gt;')
 		self.viewmail.load_html_string('<p>To: ' + to + '</p><p>Subject: ' + self.Mail[y][2] + '</p><hr />' +self.Mail[y][4], 'file:///')
-
-	def logingmail(self):
-		''' Logs in to Gmail. '''
-		try:
-			self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
-			self.imap.login(self.Auth[1][1], self.Auth[2][1])
-		except:
-			pass
 
 	def logintwitter(self):
 		''' Logs into Twitter. '''
 		try:
 			self.auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 			self.auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-			self.auth.set_access_token(self.Auth[3][1], self.Auth[4][1])
+			self.auth.set_access_token(self.Auth[0][3][1], self.Auth[0][4][1])
 			self.Twitter = tweepy.API(self.auth)
 		except:
 			pass
@@ -757,7 +787,7 @@ class Epistle:
 	def loginfb(self):
 		''' Logs into Facebook. '''
 		try:
-			self.Facebook = facebooksdk.GraphAPI(self.Auth[5][1])
+			self.Facebook = facebooksdk.GraphAPI(self.Auth[0][5][1])
 		except:
 			pass
 
