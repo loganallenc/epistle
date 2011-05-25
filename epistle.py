@@ -1,12 +1,12 @@
 #!/usr/bin/env python2
 from multiprocessing import Process,Queue
 import facebooksdk
+import urllib2
 import sqlite3
 import imaplib
 import smtplib
 import gobject
 import tweepy
-import urllib
 import webkit
 import email
 import gtk
@@ -711,11 +711,11 @@ class Epistle:
 						y = y + 1
 					except IndexError:
 						x = False
-			except AttributeError:
+			except UnboundLocalError:
 				tweets = '<h1>Could not load Tweets at this time.</h1>'
 		if self.Auth[0][5][1] != None:
 			try:
-				fbposts = urllib.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[0][5][1])
+				fbposts = urllib2.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[0][5][1], timeout=10)
 				fbfeed = fbposts.read()
 				fbposts.close()
 				fbparsed = ''
@@ -726,7 +726,7 @@ class Epistle:
 							fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
 					if fbfeed[x] == 'message':
 						fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
-			except IOError:
+			except:
 				fbparsed = '<h1>Could not load Facebook posts at this time.</h1>'
 		if self.Auth[0][1][1] != None:
 			if self.Auth[0][3][1] != None: 
