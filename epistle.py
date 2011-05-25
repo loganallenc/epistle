@@ -489,7 +489,7 @@ class Epistle:
 			self.treeview.show()
 			cell = gtk.CellRendererText()
 			column = gtk.TreeViewColumn(None, cell, text=0)
-			column.set_max_width(438)
+			column.set_max_width(427)
 			self.treeview.append_column(column)
 			self.notebook.append_page(hpane, gmailevent)
 
