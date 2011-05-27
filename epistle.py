@@ -365,6 +365,7 @@ class Epistle:
 	def __init__(self):
 		''' Initializes objects. '''
 		q = Queue()
+		self.q = Queue()
 		Process(target=Database().check, args=(q,)).start()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		window.set_resizable(True)
@@ -431,14 +432,14 @@ class Epistle:
 		if self.Auth[0][5][1] != None:
 			self.fbimage = gtk.Image()
 			fbpixbuf = gtk.gdk.pixbuf_new_from_file('Facebook.png')
-			fbpixbuf = fbpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
+			fbpixbuf = fbpixbuf.scale_simple(24, 24, gtk.gdk.INTERP_BILINEAR)
 			self.fbimage.set_from_pixbuf(fbpixbuf)
 			self.actionhbox.pack_end(self.fbcheck, False, True, 5)
 			self.actionhbox.pack_end(self.fbimage, False, True, 0)
 		if self.Auth[0][3][1] != None:
 			self.twimage = gtk.Image()
 			twpixbuf = gtk.gdk.pixbuf_new_from_file('Twitter.png')
-			twpixbuf = twpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
+			twpixbuf = twpixbuf.scale_simple(24, 24, gtk.gdk.INTERP_BILINEAR)
 			self.twimage.set_from_pixbuf(twpixbuf)
 			self.twcheck.connect('toggled', self.showhidetw)
 			self.actionhbox.pack_end(self.twcheck, False, True, 5)
@@ -446,7 +447,7 @@ class Epistle:
 		if self.Auth[0][1][1] != None:
 			self.mailimage = gtk.Image()
 			mailpixbuf = gtk.gdk.pixbuf_new_from_file('Gmail.png')
-			mailpixbuf = mailpixbuf.scale_simple(22, 22, gtk.gdk.INTERP_BILINEAR)
+			mailpixbuf = mailpixbuf.scale_simple(24, 24, gtk.gdk.INTERP_BILINEAR)
 			self.mailimage.set_from_pixbuf(mailpixbuf)
 			self.mailcheck.connect('toggled', self.showhidemail)
 			self.mailcheck.set_active(True)
@@ -531,7 +532,6 @@ class Epistle:
 			fbbox.add(scrollfb)
 			self.notebook.append_page(fbbox, fbevent)
 
-		self.q = Queue()
 		refreshimage = gtk.Image()
 		refreshimage.set_from_stock(gtk.STOCK_REFRESH,gtk.ICON_SIZE_SMALL_TOOLBAR)
 		refreshevent = gtk.EventBox()
@@ -543,6 +543,7 @@ class Epistle:
 		refreshbox = gtk.VBox()
 		self.notebook.append_page(refreshbox, refreshevent)
 		self.startrf(0,0)
+		
 		vbox.add(self.notebook)
 		window.add(vbox)
 		window.show_all()
