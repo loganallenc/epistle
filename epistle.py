@@ -382,10 +382,8 @@ class Epistle:
 		vbox = gtk.VBox()
 		self.notebook = gtk.Notebook()
 		self.notebook.set_tab_pos(gtk.POS_TOP)
-
 		self.count = gtk.Label()
 		self.count.set_text('0')
-
 		self.composevbox = gtk.VBox(False, 0)
 		composelabel = gtk.Label('Compose')
 		gtk.Widget.show(composelabel)
