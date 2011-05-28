@@ -794,7 +794,6 @@ class Epistle:
 			fbposts.close()
 			fbparsed = ''
 			fbfeed = fbfeed.split('"',fbfeed.count('"'))
-			fbfeed = fbfeed.replace('\n','<br />')
 			for x in xrange(0,(len(fbfeed))):
 				if fbfeed[x] == 'name':
 					if fbfeed[x-2] == 'from': 
