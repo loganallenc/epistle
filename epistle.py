@@ -365,7 +365,9 @@ class Epistle:
 	def __init__(self):
 		''' Initializes objects. '''
 		q = Queue()
-		self.q = Queue()
+		self.gmq = Queue()
+		self.twq = Queue()
+		self.fbq = Queue()
 		Process(target=Database().check, args=(q,)).start()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		window.set_resizable(True)
@@ -557,25 +559,53 @@ class Epistle:
 
 	def startrf(self,a,b):
 		''' Starts refresh process. '''
-		Process(target=self.refresh,args=(0,0)).start()
-		self.datamade = False
+		if self.Auth[0][1][1] != None:
+			Process(target=self.gmrefresh,args=()).start()
+			self.gmdone = False
+		if self.Auth[0][3][1] != None:
+			Process(target=self.twrefresh,args=()).start()
+			self.twdone = False
+		if self.Auth[0][5][1] != None:
+			Process(target=self.fbrefresh,args=()).start()
+			self.fbdone = False
+
+	def listmail(self, widget, widget2):
+		''' Shows list of mail. '''
+		if self.gmdone == False:
+			self.gmData = self.gmq.get(block=False)
+			self.gmdone = True
+		if self.listed == False:
+			if self.gmData[0] < 50:
+				for x in xrange(0,(self.gmData[0]-1)):
+					y = self.gmData[0] - x
+					msg = self.gmData[1][y][2] + ' - ' + self.gmData[1][y][1] + ' '*500 + str(x)
+					self.iterator = self.model.prepend()
+					self.model.set(self.iterator, 0, msg)
+			else:
+				for x in xrange(0,49):
+					y = self.gmData[0] + x - 50
+					msg = self.gmData[1][y][2] + ' - ' + self.gmData[1][y][1] + ' '*500 + str(x)
+					self.iterator = self.model.prepend()
+					self.model.set(self.iterator, 0, msg)
+			self.listed = True
 
 	def loadtw(self,widget,widget2):
 		''' Loads tweets from self.Data '''
-		if self.datamade == False:
-			self.Data = self.q.get(block=False)
-			self.datamade = True
+		if self.twdone == False:
+			self.twData = self.twq.get(block=False)
+			self.twdone = True
 		try:
-			self.viewtw.load_html_string(self.Data[2], 'file:///')
+			self.viewtw.load_html_string(self.twData, 'file:///')
 		except AttributeError:
 			pass
+
 	def loadfb(self,widget,widget2):
 		''' Loads posts from self.Data '''
-		if self.datamade == False:
-			self.Data = self.q.get(block=False)
-			self.datamade = True
+		if self.fbdone == False:
+			self.fbData = self.fbq.get(block=False)
+			self.fbdone = True
 		try:
-			self.viewfb.load_html_string(self.Data[3], 'file:///')
+			self.viewfb.load_html_string(self.fbData, 'file:///')
 		except AttributeError:
 			pass
 
@@ -676,96 +706,64 @@ class Epistle:
 	def charcount(self, widget, callback):
 		''' Gets the number of characters in the body. '''
 		num = self.buffer.get_char_count()
-		if num != 0: num = num + 1
+		if num != 0:
+			num = num + 1
 		num = 140 - num
 		self.count.set_text(str(num))
 
-	def refresh(self, widget, widget2):
-		''' Refreshes data. '''
-		if self.Auth[0][1][1] != None:
-			try:
-				self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
-				self.imap.login(self.Auth[0][1][1], self.Auth[0][2][1])
-			except:
-				pass
-			self.listed = False
-			self.model.clear()
-			self.getmail()
-			try:
-				self.imap.logout()
-			except AttributeError:
-				pass
-		if self.Auth[0][3][1] != None:
-			try:
-				twitterupdate = self.Twitter.home_timeline()
-			except:
-				pass
-			tweets = ''
-			x = True
-			y = 1
-			try:
-				while x == True:
-					try:
-						tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + twitterupdate[y].user.screen_name + '</b></p><p>' + twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
-						y = y + 1
-					except IndexError:
-						x = False
-			except UnboundLocalError:
-				tweets = '<h1>Could not load Tweets at this time.</h1>'
-		if self.Auth[0][5][1] != None:
-			try:
-				fbposts = urllib2.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[0][5][1], timeout=10)
-				fbfeed = fbposts.read()
-				fbposts.close()
-				fbparsed = ''
-				fbfeed = fbfeed.split('"',fbfeed.count('"'))
-				for x in xrange(0,(len(fbfeed))):
-					if fbfeed[x] == 'name':
-						if fbfeed[x-2] == 'from': 
-							fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
-					if fbfeed[x] == 'message':
-						fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
-			except:
-				fbparsed = '<h1>Could not load Facebook posts at this time.</h1>'
-		if self.Auth[0][1][1] != None:
-			if self.Auth[0][3][1] != None: 
-				if self.Auth[0][5][1] != None:
-					self.q.put([self.save, self.Mail, tweets, fbparsed])
-				else:
-					self.q.put([self.save, self.Mail, tweets, None])
-			else:
-				if self.Auth[0][5][1] != None:
-					self.q.put([self.save, self.Mail, None, fbparsed])
-				else:
-					self.q.put([self.save, self.Mail, None, None])
-		else:
-			if self.Auth[0][3][1] != None:
-				if self.Auth[0][5][1] != None:
-					self.q.put([None, None, tweets, fbparsed])
-				else:
-					self.q.put([None, None, tweets, None])
-			else:
-				self.q.put([None, None, None, fbparsed])
-
-	def listmail(self, widget, widget2):
-		''' Shows list of mail. '''
-		if self.datamade == False:
-			self.Data = self.q.get(block=False)
-			self.datamade = True
-		if self.listed == False:
-			if self.Data[0] < 50:
-				for x in xrange(0,(self.Data[0]-1)):
-					y = self.Data[0] - x
-					msg = self.Data[1][y][2] + ' - ' + self.Data[1][y][1] + ' '*500 + str(x)
-					self.iterator = self.model.prepend()
-					self.model.set(self.iterator, 0, msg)
-			else:
-				for x in xrange(0,49):
-					y = self.Data[0] + x - 50
-					msg = self.Data[1][y][2] + ' - ' + self.Data[1][y][1] + ' '*500 + str(x)
-					self.iterator = self.model.prepend()
-					self.model.set(self.iterator, 0, msg)
-			self.listed = True
+	def gmrefresh(self):
+		''' Refreshes Mail data. '''
+		try:
+			self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
+			self.imap.login(self.Auth[0][1][1], self.Auth[0][2][1])
+		except:
+			pass
+		self.listed = False
+		self.model.clear()
+		self.getmail()
+		try:
+			self.imap.logout()
+		except AttributeError:
+			pass
+		self.gmq.put([self.save, self.Mail])
+			
+	def twrefresh(self):
+		''' Refreshes Twitter data. '''
+		try:
+			twitterupdate = self.Twitter.home_timeline()
+		except:
+			pass
+		tweets = ''
+		x = True
+		y = 1
+		try:
+			while x == True:
+				try:
+					tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + twitterupdate[y].user.screen_name + '</b></p><p>' + twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
+					y = y + 1
+				except IndexError:
+					x = False
+		except UnboundLocalError:
+			tweets = '<h1>Could not load Tweets at this time.</h1>'
+		self.twq.put(tweets)
+		
+	def fbrefresh(self):
+		''' Refreshes Facebook data. '''
+		try:
+			fbposts = urllib2.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[0][5][1], timeout=10)
+			fbfeed = fbposts.read()
+			fbposts.close()
+			fbparsed = ''
+			fbfeed = fbfeed.split('"',fbfeed.count('"'))
+			for x in xrange(0,(len(fbfeed))):
+				if fbfeed[x] == 'name':
+					if fbfeed[x-2] == 'from': 
+						fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
+				if fbfeed[x] == 'message':
+					fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
+		except:
+			fbparsed = '<h1>Could not load Facebook posts at this time.</h1>'
+		self.fbq.put(fbparsed)
 
 	def showmail(self, widget):
 		''' This function displays email messages. '''
@@ -779,10 +777,10 @@ class Epistle:
 			x = int(x[last-2] + x[last-1])
 		else:
 			x = int(x[last-1])
-		y = self.Data[0] + x - 50
-		to = self.Data[1][y][1].replace('<', '&lt;')
+		y = self.gmData[0] + x - 50
+		to = self.gmData[1][y][1].replace('<', '&lt;')
 		to = to.replace('>', '&gt;')
-		self.viewmail.load_html_string('<p>To: ' + to + '</p><p>Subject: ' + self.Data[1][y][2] + '</p><hr />' +self.Data[1][y][4], 'file:///')
+		self.viewmail.load_html_string('<p>To: ' + to + '</p><p>Subject: ' + self.gmData[1][y][2] + '</p><hr />' +self.gmData[1][y][4], 'file:///')
 
 	def logintwitter(self):
 		''' Logs into Twitter. '''
