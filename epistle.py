@@ -498,7 +498,7 @@ class Epistle:
 			gmailevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
 			gmailevent.set_visible_window(False)
 			self.listed = False
-			gmailevent.connect_after('button-press-event', self.listmail)
+			gmailevent.connect_after('button-press-event', self.loadmail)
 			gmailevent.add(gmaillabel)
 			gtk.Widget.show(gmaillabel)
 
@@ -603,7 +603,7 @@ class Epistle:
 			Process(target=self.fbrefresh,args=()).start()
 			self.fbdone = False
 
-	def listmail(self, widget, widget2):
+	def loadmail(self, widget, widget2):
 		''' Shows list of mail. '''
 		if self.gmdone == False:
 			self.gmData = self.gmq.get(block=False)
