@@ -566,6 +566,7 @@ class Epistle:
 			fbbox.add(scrollfb)
 			self.notebook.append_page(fbbox, fbevent)
 
+		self.gmailrf = True
 		refreshimage = gtk.Image()
 		refreshimage.set_from_stock(gtk.STOCK_REFRESH,gtk.ICON_SIZE_SMALL_TOOLBAR)
 		refreshevent = gtk.EventBox()
@@ -594,8 +595,10 @@ class Epistle:
 	def startrf(self,a,b):
 		''' Starts refresh process. '''
 		if self.Auth[1][1] != None:
-			Process(target=self.gmrefresh,args=()).start()
-			self.gmdone = False
+			if self.gmailrf == True:
+				self.gmailrf = False
+				Process(target=self.gmrefresh,args=()).start()
+				self.gmdone = False
 		if self.Auth[3][1] != None:
 			Process(target=self.twrefresh,args=()).start()
 			self.twdone = False
@@ -607,6 +610,7 @@ class Epistle:
 		''' Shows list of mail. '''
 		if self.gmdone == False:
 			self.gmData = self.gmq.get(block=False)
+			self.gmailrf = self.gmData[2]
 			self.gmdone = True
 		if self.listed == False:
 			if self.gmData[0] < 50:
@@ -658,7 +662,7 @@ class Epistle:
 				resp, data = self.imap.fetch(self.save, '(RFC822)')
 				mailitem = email.message_from_string(data[0][1])
 				header = email.parser.HeaderParser().parsestr(data[0][1])
-			
+
 				for mailpart in mailitem.walk():
 					if mailpart.get_content_maintype() == 'multipart':
 						continue
@@ -671,7 +675,6 @@ class Epistle:
 				if header['Subject'] == None:
 					header['Subject'] = '(No Subject)'
 				header['Subject'] = unicode(header['Subject'], 'utf-8')
-	
 				self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ self.save, header['From'], header['Subject'], header['To'], message ])
 				self.db.commit()
 			self.Mail = Database().mailread()
@@ -681,6 +684,7 @@ class Epistle:
 			for row in self.database:
 				self.save = row[0]
 			self.Mail = Database().mailread()
+		self.gmailrf = True
 
 	def send(self, widget):
 		''' Sends data. '''
@@ -688,16 +692,16 @@ class Epistle:
 		if self.Auth[1][1] != None:
 			if self.mailcheck.get_active() == True:
 				self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-				self.smtp.login(self.Auth[0][1][1], self.Auth[0][2][1])
+				self.smtp.login(self.Auth[1][1], self.Auth[2][1])
 				to = self.toentry.get_text()
 				subject = self.subjectentry.get_text()
-				headers = ["from: " + self.Auth[0][1][1],
+				headers = ["from: " + self.Auth[1][1],
 					"subject: " + subject,
 					"to: " + to,
 					"mime-version: 1.0",
 					"content-type: text/html"]
 				headers = "\r\n".join(headers)
-				self.smtp.sendmail(self.Auth[0][1][1], to, headers + '\r\n\r\n<p>' + body + '</p>')
+				self.smtp.sendmail(self.Auth[1][1], to, headers + '\r\n\r\n<p>' + body + '</p>')
 				self.smtp.quit()
 		if self.Auth[3][1] != None:
 			if self.twcheck.get_active() == True:
@@ -747,19 +751,20 @@ class Epistle:
 
 	def gmrefresh(self):
 		''' Refreshes Mail data. '''
-		try:
-			self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
-			self.imap.login(self.Auth[1][1], self.Auth[2][1])
-		except:
-			pass
-		self.listed = False
-		self.model.clear()
-		self.getmail()
-		try:
-			self.imap.logout()
-		except AttributeError:
-			pass
-		self.gmq.put([self.save, self.Mail])
+		if self.gmailrf == True:
+			try:
+				self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
+				self.imap.login(self.Auth[1][1], self.Auth[2][1])
+			except:
+				pass
+			self.listed = False
+			self.model.clear()
+			self.getmail()
+			try:
+				self.imap.logout()
+			except AttributeError:
+				pass
+			self.gmq.put([self.save, self.Mail, self.gmailrf])
 			
 	def twrefresh(self):
 		''' Refreshes Twitter data. '''
@@ -784,7 +789,7 @@ class Epistle:
 	def fbrefresh(self):
 		''' Refreshes Facebook data. '''
 		try:
-			fbposts = urllib2.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[0][5][1], timeout=10)
+			fbposts = urllib2.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[0][5][1], timeout=20)
 			fbfeed = fbposts.read()
 			fbposts.close()
 			fbparsed = ''
@@ -819,10 +824,10 @@ class Epistle:
 	def logintwitter(self):
 		''' Logs into Twitter. '''
 		try:
-			self.auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-			self.auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-			self.auth.set_access_token(self.Auth[3][1], self.Auth[4][1])
-			self.Twitter = tweepy.API(self.auth)
+			auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+			auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
+			auth.set_access_token(self.Auth[3][1], self.Auth[4][1])
+			self.Twitter = tweepy.API(auth)
 		except:
 			pass
 
