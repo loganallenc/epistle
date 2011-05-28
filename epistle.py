@@ -789,7 +789,7 @@ class Epistle:
 	def fbrefresh(self):
 		''' Refreshes Facebook data. '''
 		try:
-			fbposts = urllib2.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[0][5][1], timeout=20)
+			fbposts = urllib2.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1], timeout=20)
 			fbfeed = fbposts.read()
 			fbposts.close()
 			fbparsed = ''
