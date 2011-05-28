@@ -31,21 +31,19 @@ class Database:
 
 	def connect(self):
 		''' Connects to database. '''
-		self.checkdb = os.path.exists(self.path)
 		self.db = sqlite3.connect(self.path)
 		self.database = self.db.cursor()
 		self.db.text_factory = str
 		return self.db, self.database
 
-	def check(self,q):
+	def check(self):
 		''' Checks if database exists. '''
-		self.connect()
+		self.checkdb = os.path.exists(self.path)
 		if self.checkdb == False:
 			self.gmailusername,self.gmailpassword,self.twoauth,self.twcheck,self.fboauth = Account().finish(0)
 			self.setup()
 		self.Auth = self.authread()
-		q.put([self.path,self.Auth])
-		#return self.path,self.Auth
+		return self.path,self.Auth
 
 	def authread(self):
 		''' Reads from auth. '''
@@ -63,6 +61,7 @@ class Database:
 
 	def setup(self):
 		''' Sets up database. '''
+		self.connect()
 		self.database.execute('''create table auth (id integer primary key, main)''')
 		self.database.execute('insert into auth (id, main) values (1,1)')
 		self.database.execute('insert into auth (id, main) values (2,?)', [self.gmailusername])
@@ -158,6 +157,12 @@ class Account:
 		self.vbox.pack_end(placebutton_one, False, False, 10)
 
 		self.gmailwindow = gtk.VBox(False, 0)
+		self.topm = gtk.HBox(False, 0)
+		self.mimage = gtk.Image()
+		self.mimage.set_from_pixbuf(mailpixbuf)
+		gmlabel = gtk.Label(' Gmail ')
+		mseparator = gtk.HSeparator()
+		
 		self.userhbox = gtk.HBox(False, 0)
 		userlabel = gtk.Label(' Username: ')
 		self.userentry = gtk.Entry()
@@ -169,15 +174,19 @@ class Account:
 		conflabel = gtk.Label(' Confirm: ')
 		self.confentry = gtk.Entry()
 		self.confentry.set_visibility(gtk.FALSE)
+		self.topm.pack_start(self.mimage, False, True, 15)
+		self.topm.pack_start(gmlabel, False, True, 15)
 		self.userhbox.pack_start(userlabel, False, True, 15)
 		self.userhbox.pack_start(self.userentry, True, True, 7)
 		self.passhbox.pack_start(passlabel, False, True, 15)
 		self.passhbox.pack_start(self.passentry, True, True, 7)
 		self.confhbox.pack_start(conflabel, False, True, 15)
 		self.confhbox.pack_start(self.confentry, True, True, 7)
-		self.gmailwindow.add(self.userhbox)
-		self.gmailwindow.add(self.passhbox)
-		self.gmailwindow.add(self.confhbox)
+		self.gmailwindow.pack_start(self.topm, False, True, 15)
+		self.gmailwindow.pack_start(mseparator, False, True, 5)
+		self.gmailwindow.pack_start(self.userhbox, False, True, 30)
+		self.gmailwindow.pack_start(self.passhbox, False, True, 20)
+		self.gmailwindow.pack_start(self.confhbox, False, True, 10)
 		self.placebutton_two = gtk.HBox(False, 0)
 		forward_two = gtk.Button('Continue')
 		forward_two.connect('clicked', self.forward)
@@ -189,6 +198,12 @@ class Account:
 		self.gmailwindow.pack_end(self.placebutton_two, False, False, 10)
 
 		self.twwindow = gtk.VBox(False, 0)
+		self.topt = gtk.HBox(False, 0)
+		self.timage = gtk.Image()
+		self.timage.set_from_pixbuf(twpixbuf)
+		twlabel = gtk.Label(' Twitter ')
+		tseparator = gtk.HSeparator()
+		
 		self.twhpane = gtk.HPaned()
 		twhbox = gtk.HBox(False, 0)
 		twitterlabel = gtk.Label('Twitter PIN: ')
@@ -197,7 +212,11 @@ class Account:
 		twhbox.pack_start(self.twentry, True, True, 15)
 		self.twhpane.pack1(twhbox)
 		self.twhpane.pack2(self.scroll_window)
-		self.twwindow.add(self.twhpane)
+		self.topt.pack_start(self.timage, False, True, 15)
+		self.topt.pack_start(twlabel, False, True, 15)
+		self.twwindow.pack_start(self.topt, False, True, 15)
+		self.twwindow.pack_start(tseparator, False, True, 5)
+		self.twwindow.pack_start(self.twhpane, True, True, 0)
 		self.twchecklabel = gtk.Label('You have to enter in the PIN.')	
 		self.placebutton_three = gtk.HBox(False, 0)
 		forward_three = gtk.Button('Continue')
@@ -209,7 +228,17 @@ class Account:
 		self.twwindow.pack_end(self.placebutton_three, False, False, 10)
 
 		self.fbwindow = gtk.VBox(False, 0)
+		self.topf = gtk.HBox(False, 0)
+		self.fimage = gtk.Image()
+		self.fimage.set_from_pixbuf(fbpixbuf)
+		fblabel = gtk.Label(' Facebook ')
+		fseparator = gtk.HSeparator()
+		
 		self.fbpage = gtk.VBox(False, 0)
+		self.topf.pack_start(self.fimage, False, True, 15)
+		self.topf.pack_start(fblabel, False, True, 15)
+		self.fbwindow.pack_start(self.topf, False, True, 15)
+		self.fbwindow.pack_start(fseparator, False, True, 5)
 		self.placebutton_four = gtk.HBox(False, 0)
 		forward_four = gtk.Button('Continue')
 		forward_four.connect('clicked', self.forward)
@@ -270,7 +299,7 @@ class Account:
 				self.window.add(self.twwindow)
 			else:
 				if self.mailcheck.get_active() == True:
-					self.window.add(self.mailwindow)
+					self.window.add(self.gmailwindow)
 				else:
 					self.window.add(self.vbox)
 	def forward(self, widget):
@@ -304,6 +333,8 @@ class Account:
 						self.gmailwindow.pack_end(self.placebutton_two, False, False, 10)
 				else:
 					if self.twcheck.get_active() == True:
+						self.fbwindow.remove(self.scroll_window)
+						self.twhpane.pack2(self.scroll_window)
 						self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 						auth_url = self.twoauth.get_authorization_url()
 						self.html.open(auth_url)
@@ -357,27 +388,30 @@ class Account:
 		self.window.show_all()
 		
 	def finish(self, widget):
-		return self.gmailusername,self.gmailpassword,self.twoauth,self.twcheck,self.fboauth
+		try:
+			self.gmailusername
+			self.twoauth
+			self.fboauth
+			return self.gmailusername,self.gmailpassword,self.twoauth,self.twcheck,self.fboauth
+		except AttributeError:
+			sys.exit()
 
 
 class Epistle:
 	''' This is the main application class. '''
 	def __init__(self):
 		''' Initializes objects. '''
-		q = Queue()
 		self.gmq = Queue()
 		self.twq = Queue()
 		self.fbq = Queue()
-		Process(target=Database().check, args=(q,)).start()
+		self.path, self.Auth = Database().check()
 		window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 		window.set_resizable(True)
 		window.set_title('Epistle')
 		window.set_size_request(900, 450)
 		gtk.window_set_default_icon_from_file('Icon.png')
 		window.connect('destroy', self.destroy)
-		self.Auth = q.get(block=False)
-		self.path = self.Auth.pop(0)
-		if self.Auth[0][3][1] != None:
+		if self.Auth[3][1] != None:
 			window.connect('key-press-event', self.charcount)
 		window.set_border_width(0)
 
@@ -390,7 +424,7 @@ class Epistle:
 		composelabel = gtk.Label('Compose')
 		gtk.Widget.show(composelabel)
 
-		if self.Auth[0][1][1] != None:
+		if self.Auth[1][1] != None:
 			self.tohbox = gtk.HBox(False, 0)
 			self.composevbox.pack_start(self.tohbox, False, False, 7)
 			tolabel = gtk.Label('To: ')
@@ -429,14 +463,14 @@ class Epistle:
 		self.twcheck.set_active(False)
 		self.fbcheck = gtk.CheckButton(None)
 		self.fbcheck.set_active(False)
-		if self.Auth[0][5][1] != None:
+		if self.Auth[5][1] != None:
 			self.fbimage = gtk.Image()
 			fbpixbuf = gtk.gdk.pixbuf_new_from_file('Facebook.png')
 			fbpixbuf = fbpixbuf.scale_simple(24, 24, gtk.gdk.INTERP_BILINEAR)
 			self.fbimage.set_from_pixbuf(fbpixbuf)
 			self.actionhbox.pack_end(self.fbcheck, False, True, 5)
 			self.actionhbox.pack_end(self.fbimage, False, True, 0)
-		if self.Auth[0][3][1] != None:
+		if self.Auth[3][1] != None:
 			self.twimage = gtk.Image()
 			twpixbuf = gtk.gdk.pixbuf_new_from_file('Twitter.png')
 			twpixbuf = twpixbuf.scale_simple(24, 24, gtk.gdk.INTERP_BILINEAR)
@@ -444,7 +478,7 @@ class Epistle:
 			self.twcheck.connect('toggled', self.showhidetw)
 			self.actionhbox.pack_end(self.twcheck, False, True, 5)
 			self.actionhbox.pack_end(self.twimage, False, True, 0)
-		if self.Auth[0][1][1] != None:
+		if self.Auth[1][1] != None:
 			self.mailimage = gtk.Image()
 			mailpixbuf = gtk.gdk.pixbuf_new_from_file('Gmail.png')
 			mailpixbuf = mailpixbuf.scale_simple(24, 24, gtk.gdk.INTERP_BILINEAR)
@@ -458,7 +492,7 @@ class Epistle:
 		self.composevbox.pack_start(self.actionhbox, False, False, 10)
 		self.notebook.append_page(self.composevbox, composelabel)
 		
-		if self.Auth[0][1][1] != None:
+		if self.Auth[1][1] != None:
 			gmaillabel = gtk.Label('Gmail')
 			gmailevent = gtk.EventBox()
 			gmailevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
@@ -494,7 +528,7 @@ class Epistle:
 			self.treeview.append_column(column)
 			self.notebook.append_page(hpane, gmailevent)
 
-		if self.Auth[0][3][1] != None:
+		if self.Auth[3][1] != None:
 			self.logintwitter()
 			twlabel = gtk.Label('Twitter')
 			twevent = gtk.EventBox()
@@ -513,7 +547,7 @@ class Epistle:
 			twbox.add(scrolltw)
 			self.notebook.append_page(twbox, twevent)
 
-		if self.Auth[0][5][1] != None:
+		if self.Auth[5][1] != None:
 			self.loginfb()
 			fblabel = gtk.Label('Facebook')
 			fbevent = gtk.EventBox()
@@ -550,7 +584,7 @@ class Epistle:
 
 	def destroy(self, widget, data=None):
 		''' This function destroys the GTK instance and the logs out of IMAP. '''
-		if self.Auth[0][1][1] != None:
+		if self.Auth[1][1] != None:
 			try:
 				self.db.close()
 			except AttributeError:
@@ -559,13 +593,13 @@ class Epistle:
 
 	def startrf(self,a,b):
 		''' Starts refresh process. '''
-		if self.Auth[0][1][1] != None:
+		if self.Auth[1][1] != None:
 			Process(target=self.gmrefresh,args=()).start()
 			self.gmdone = False
-		if self.Auth[0][3][1] != None:
+		if self.Auth[3][1] != None:
 			Process(target=self.twrefresh,args=()).start()
 			self.twdone = False
-		if self.Auth[0][5][1] != None:
+		if self.Auth[5][1] != None:
 			Process(target=self.fbrefresh,args=()).start()
 			self.fbdone = False
 
@@ -651,7 +685,7 @@ class Epistle:
 	def send(self, widget):
 		''' Sends data. '''
 		body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
-		if self.Auth[0][1][1] != None:
+		if self.Auth[1][1] != None:
 			if self.mailcheck.get_active() == True:
 				self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 				self.smtp.login(self.Auth[0][1][1], self.Auth[0][2][1])
@@ -665,17 +699,17 @@ class Epistle:
 				headers = "\r\n".join(headers)
 				self.smtp.sendmail(self.Auth[0][1][1], to, headers + '\r\n\r\n<p>' + body + '</p>')
 				self.smtp.quit()
-		if self.Auth[0][3][1] != None:
+		if self.Auth[3][1] != None:
 			if self.twcheck.get_active() == True:
 				self.Twitter.update_status(body)
-		if self.Auth[0][5][1] != None:
+		if self.Auth[5][1] != None:
 			if self.fbcheck.get_active() == True:
 				self.Facebook.put_wall_post(message=body,attachment={})
 		self.discard(0)
 
 	def discard(self, widget):
 		''' Discards message. '''
-		if self.Auth[0][5][1] != None:
+		if self.Auth[5][1] != None:
 			if self.mailcheck.get_active() == True:
 				self.toentry.set_text('')
 				self.subjectentry.set_text('')
@@ -715,7 +749,7 @@ class Epistle:
 		''' Refreshes Mail data. '''
 		try:
 			self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
-			self.imap.login(self.Auth[0][1][1], self.Auth[0][2][1])
+			self.imap.login(self.Auth[1][1], self.Auth[2][1])
 		except:
 			pass
 		self.listed = False
@@ -787,7 +821,7 @@ class Epistle:
 		try:
 			self.auth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 			self.auth.set_request_token('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
-			self.auth.set_access_token(self.Auth[0][3][1], self.Auth[0][4][1])
+			self.auth.set_access_token(self.Auth[3][1], self.Auth[4][1])
 			self.Twitter = tweepy.API(self.auth)
 		except:
 			pass
@@ -795,7 +829,7 @@ class Epistle:
 	def loginfb(self):
 		''' Logs into Facebook. '''
 		try:
-			self.Facebook = facebooksdk.GraphAPI(self.Auth[0][5][1])
+			self.Facebook = facebooksdk.GraphAPI(self.Auth[5][1])
 		except:
 			pass
 
