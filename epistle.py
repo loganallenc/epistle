@@ -42,6 +42,7 @@ class Database:
 		if self.checkdb == False:
 			self.gmailusername,self.gmailpassword,self.twoauth,self.twcheck,self.fboauth = Account().finish(0)
 			self.setup()
+			self.getmail()
 		self.Auth = self.authread()
 		return self.path,self.Auth
 
@@ -51,6 +52,44 @@ class Database:
 		self.database.execute('select * from auth')
 		self.Auth = self.database.fetchall()
 		return self.Auth
+
+	def getmail(self):
+		''' This function reads unread messages from Gmail. '''
+		self.Auth = self.authread()
+		try:
+			self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
+			self.imap.login(self.Auth[1][1], self.Auth[2][1])
+			label,inbox = self.imap.select()
+			inbox = int(inbox[0])
+			unread = len(self.imap.search('Inbox', '(UNSEEN)')[1][0].split())
+			self.database.execute('select main from auth where id=1')
+			for row in self.database:
+				self.save = row[0]
+			while self.save < inbox:
+				self.save = self.save + 1
+				resp, data = self.imap.fetch(self.save, '(RFC822)')
+				mailitem = email.message_from_string(data[0][1])
+				header = email.parser.HeaderParser().parsestr(data[0][1])
+
+				for mailpart in mailitem.walk():
+					if mailpart.get_content_maintype() == 'multipart':
+						continue
+					#if mailpart.get_filename() != None:
+					#	fp = open(self.path + '/' + mailpart.get_filename(), 'w')
+					#	fp.write(mailpart.get_payload(decode=True))
+					#	fp.close()
+					message = str(mailpart.get_payload(decode=True))
+				self.database.execute('update auth set main = ? where id = 1', [self.save])
+				if header['Subject'] == None:
+					header['Subject'] = '(No Subject)'
+				header['Subject'] = unicode(header['Subject'], 'utf-8')
+				self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ self.save, header['From'], header['Subject'], header['To'], message ])
+				self.db.commit()
+			self.imap.logout()
+		except AttributeError:
+			self.database.execute('select main from auth where id=1')
+			for row in self.database:
+				self.save = row[0]
 
 	def mailread(self):
 		''' Reads from mail. '''
@@ -609,23 +648,28 @@ class Epistle:
 	def loadmail(self, widget, widget2):
 		''' Shows list of mail. '''
 		if self.gmdone == False:
-			self.gmData = self.gmq.get(block=False)
-			self.gmailrf = self.gmData[2]
-			self.gmdone = True
-		if self.listed == False:
-			if self.gmData[0] < 50:
-				for x in xrange(0,(self.gmData[0]-1)):
-					y = self.gmData[0] - x
-					msg = self.gmData[1][y][2] + ' - ' + self.gmData[1][y][1] + ' '*500 + str(x)
-					self.iterator = self.model.prepend()
-					self.model.set(self.iterator, 0, msg)
-			else:
-				for x in xrange(0,49):
-					y = self.gmData[0] + x - 50
-					msg = self.gmData[1][y][2] + ' - ' + self.gmData[1][y][1] + ' '*500 + str(x)
-					self.iterator = self.model.prepend()
-					self.model.set(self.iterator, 0, msg)
-			self.listed = True
+			try:
+				self.gmData = self.gmq.get(block=False)
+				self.gmailrf = self.gmData[2]
+				self.gmdone = True
+				if self.listed == False:
+					if self.gmData[0] < 50:
+						for x in xrange(0,(self.gmData[0]-1)):
+							y = self.gmData[0] - x
+							msg = self.gmData[1][y][2] + ' - ' + self.gmData[1][y][1] + ' '*500 + str(x)
+							self.iterator = self.model.prepend()
+							self.model.set(self.iterator, 0, msg)
+					else:
+						for x in xrange(0,49):
+							y = self.gmData[0] + x - 50
+							msg = self.gmData[1][y][2] + ' - ' + self.gmData[1][y][1] + ' '*500 + str(x)
+							self.iterator = self.model.prepend()
+							self.model.set(self.iterator, 0, msg)
+					self.listed = True
+			except:
+				self.gmdone = False
+				self.listed = False
+
 
 	def loadtw(self,widget,widget2):
 		''' Loads tweets from self.Data '''
@@ -671,6 +715,7 @@ class Epistle:
 					#	fp.write(mailpart.get_payload(decode=True))
 					#	fp.close()
 					message = str(mailpart.get_payload(decode=True))
+				print self.save
 				self.database.execute('update auth set main = ? where id = 1', [self.save])
 				if header['Subject'] == None:
 					header['Subject'] = '(No Subject)'
