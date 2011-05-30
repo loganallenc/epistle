@@ -55,7 +55,7 @@ class Database:
 
 	def getmail(self):
 		''' This function reads unread messages from Gmail. '''
-		self.Auth = self.authread()
+		self.authread()
 		try:
 			self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
 			self.imap.login(self.Auth[1][1], self.Auth[2][1])
@@ -635,7 +635,6 @@ class Epistle:
 		''' Starts refresh process. '''
 		if self.Auth[1][1] != None:
 			if self.gmailrf == True:
-				self.gmailrf = False
 				Process(target=self.gmrefresh,args=()).start()
 				self.gmdone = False
 		if self.Auth[3][1] != None:
