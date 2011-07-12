@@ -56,8 +56,9 @@ class Database:
 	def getmail(self):
 		''' This function reads unread messages from Gmail. '''
 		self.authread()
+		server = self.Auth[1][1].partition('@')
 		try:
-			self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
+			self.imap = imaplib.IMAP4_SSL('imap.' + server[2], 993)
 			self.imap.login(self.Auth[1][1], self.Auth[2][1])
 			label,inbox = self.imap.select()
 			inbox = int(inbox[0])
@@ -78,7 +79,7 @@ class Database:
 					#	fp = open(self.path + '/' + mailpart.get_filename(), 'w')
 					#	fp.write(mailpart.get_payload(decode=True))
 					#	fp.close()
-					message = str(mailpart.get_payload(decode=True))
+					message = mailpart.get_payload(decode=True)
 				self.database.execute('update auth set main = ? where id = 1', [self.save])
 				if header['Subject'] == None:
 					header['Subject'] = '(No Subject)'
@@ -108,7 +109,7 @@ class Database:
 		if self.twcheck.get_active() == False:
 			self.database.execute('insert into auth (id, main) values (4,?)', [None])
 			self.database.execute('insert into auth (id, main) values (5,?)', [None])
-		elif self.twcheck.get_active() == True:
+		else:
 			self.database.execute('insert into auth (id, main) values (4,?)', [self.twoauth.access_token.key])
 			self.database.execute('insert into auth (id, main) values (5,?)', [self.twoauth.access_token.secret])
 		self.database.execute('insert into auth (id, main) values (6,?)', [self.fboauth])
@@ -151,7 +152,7 @@ class Account:
 		self.mailimage.set_from_pixbuf(mailpixbuf)
 		self.mailcheck = gtk.CheckButton(None)
 		self.mailcheck.set_active(True)
-		maillabel = gtk.Label('Gmail')
+		maillabel = gtk.Label('Email')
 		selecthboxmail.pack_start(maillabel, False, True, 19)
 		selecthboxmail.pack_start(self.mailcheck, False, True, 15)
 		selecthboxmail.pack_start(self.mailimage, False, True, 4)
@@ -199,11 +200,11 @@ class Account:
 		self.topm = gtk.HBox(False, 0)
 		self.mimage = gtk.Image()
 		self.mimage.set_from_pixbuf(mailpixbuf)
-		gmlabel = gtk.Label(' Gmail ')
+		gmlabel = gtk.Label(' Email ')
 		mseparator = gtk.HSeparator()
 		
 		self.userhbox = gtk.HBox(False, 0)
-		userlabel = gtk.Label(' Username: ')
+		userlabel = gtk.Label(' Username (Must have @example.com): ')
 		self.userentry = gtk.Entry()
 		self.passhbox = gtk.HBox(False, 0)
 		passlabel = gtk.Label(' Password: ')
@@ -497,7 +498,6 @@ class Epistle:
 		self.actionhbox.pack_start(discard, False, True, 5)
 		
 		self.mailcheck = gtk.CheckButton(None)
-
 		self.twcheck = gtk.CheckButton(None)
 		self.twcheck.set_active(False)
 		self.fbcheck = gtk.CheckButton(None)
@@ -656,12 +656,14 @@ class Epistle:
 						for x in xrange(0,(self.gmData[0]-1)):
 							y = self.gmData[0] - x
 							msg = self.gmData[1][y][2] + ' - ' + self.gmData[1][y][1] + ' '*500 + str(x)
+							msg = msg.encode('utf-8')
 							self.iterator = self.model.prepend()
 							self.model.set(self.iterator, 0, msg)
 					else:
 						for x in xrange(0,49):
 							y = self.gmData[0] + x - 50
 							msg = self.gmData[1][y][2] + ' - ' + self.gmData[1][y][1] + ' '*500 + str(x)
+							msg = msg.encode('utf-8')
 							self.iterator = self.model.prepend()
 							self.model.set(self.iterator, 0, msg)
 					self.listed = True
@@ -703,6 +705,7 @@ class Epistle:
 			while self.save < inbox:
 				self.save = self.save + 1
 				resp, data = self.imap.fetch(self.save, '(RFC822)')
+				print data
 				mailitem = email.message_from_string(data[0][1])
 				header = email.parser.HeaderParser().parsestr(data[0][1])
 
@@ -713,8 +716,8 @@ class Epistle:
 					#	fp = open(self.path + '/' + mailpart.get_filename(), 'w')
 					#	fp.write(mailpart.get_payload(decode=True))
 					#	fp.close()
-					message = str(mailpart.get_payload(decode=True))
-				print self.save
+					message = mailpart.get_payload(decode=True)
+
 				self.database.execute('update auth set main = ? where id = 1', [self.save])
 				if header['Subject'] == None:
 					header['Subject'] = '(No Subject)'
@@ -735,7 +738,8 @@ class Epistle:
 		body = self.buffer.get_text(self.buffer.get_start_iter(),self.buffer.get_end_iter())
 		if self.Auth[1][1] != None:
 			if self.mailcheck.get_active() == True:
-				self.smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+				server = self.Auth[1][1].partition('@')
+				self.smtp = smtplib.SMTP_SSL('smtp.' + server[2], 465)
 				self.smtp.login(self.Auth[1][1], self.Auth[2][1])
 				to = self.toentry.get_text()
 				subject = self.subjectentry.get_text()
