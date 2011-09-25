@@ -40,7 +40,7 @@ class Database:
 		''' Checks if database exists. '''
 		self.checkdb = os.path.exists(self.path)
 		if self.checkdb == False:
-			self.gmailusername,self.gmailpassword,self.twoauth,self.twcheck,self.fboauth = Account().finish(0)
+			self.emailusername,self.emailpassword,self.twoauth,self.twcheck,self.fboauth = Account().finish(0)
 			self.setup()
 			self.getmail()
 		self.Auth = self.authread()
@@ -54,7 +54,7 @@ class Database:
 		return self.Auth
 
 	def getmail(self):
-		''' This function reads unread messages from Gmail. '''
+		''' This function reads unread messages from Email server. '''
 		self.authread()
 		server = self.Auth[1][1].partition('@')
 		try:
@@ -104,8 +104,8 @@ class Database:
 		self.connect()
 		self.database.execute('''create table auth (id integer primary key, main)''')
 		self.database.execute('insert into auth (id, main) values (1,1)')
-		self.database.execute('insert into auth (id, main) values (2,?)', [self.gmailusername])
-		self.database.execute('insert into auth (id, main) values (3,?)', [self.gmailpassword])
+		self.database.execute('insert into auth (id, main) values (2,?)', [self.emailusername])
+		self.database.execute('insert into auth (id, main) values (3,?)', [self.emailpassword])
 		if self.twcheck.get_active() == False:
 			self.database.execute('insert into auth (id, main) values (4,?)', [None])
 			self.database.execute('insert into auth (id, main) values (5,?)', [None])
@@ -147,7 +147,7 @@ class Account:
 		containermail = gtk.HBox(False, 0)
 		selecthboxmail = gtk.HBox(False, 0)
 		self.mailimage = gtk.Image()
-		mailpixbuf = gtk.gdk.pixbuf_new_from_file('Gmail.png')
+		mailpixbuf = gtk.gdk.pixbuf_new_from_file('Email.png')
 		mailpixbuf = mailpixbuf.scale_simple(48, 48, gtk.gdk.INTERP_BILINEAR)
 		self.mailimage.set_from_pixbuf(mailpixbuf)
 		self.mailcheck = gtk.CheckButton(None)
@@ -196,7 +196,7 @@ class Account:
 		placebutton_one.pack_end(forward_one, False, True, 10)
 		self.vbox.pack_end(placebutton_one, False, False, 10)
 
-		self.gmailwindow = gtk.VBox(False, 0)
+		self.emailwindow = gtk.VBox(False, 0)
 		self.topm = gtk.HBox(False, 0)
 		self.mimage = gtk.Image()
 		self.mimage.set_from_pixbuf(mailpixbuf)
@@ -204,7 +204,7 @@ class Account:
 		mseparator = gtk.HSeparator()
 		
 		self.userhbox = gtk.HBox(False, 0)
-		userlabel = gtk.Label(' Username (Must have @example.com): ')
+		userlabel = gtk.Label(' Username: ')
 		self.userentry = gtk.Entry()
 		self.passhbox = gtk.HBox(False, 0)
 		passlabel = gtk.Label(' Password: ')
@@ -222,11 +222,11 @@ class Account:
 		self.passhbox.pack_start(self.passentry, True, True, 7)
 		self.confhbox.pack_start(conflabel, False, True, 15)
 		self.confhbox.pack_start(self.confentry, True, True, 7)
-		self.gmailwindow.pack_start(self.topm, False, True, 15)
-		self.gmailwindow.pack_start(mseparator, False, True, 5)
-		self.gmailwindow.pack_start(self.userhbox, False, True, 30)
-		self.gmailwindow.pack_start(self.passhbox, False, True, 20)
-		self.gmailwindow.pack_start(self.confhbox, False, True, 10)
+		self.emailwindow.pack_start(self.topm, False, True, 15)
+		self.emailwindow.pack_start(mseparator, False, True, 5)
+		self.emailwindow.pack_start(self.userhbox, False, True, 30)
+		self.emailwindow.pack_start(self.passhbox, False, True, 20)
+		self.emailwindow.pack_start(self.confhbox, False, True, 10)
 		self.placebutton_two = gtk.HBox(False, 0)
 		forward_two = gtk.Button('Continue')
 		forward_two.connect('clicked', self.forward)
@@ -235,7 +235,7 @@ class Account:
 		self.placebutton_two.pack_start(back_two, False, True, 10)
 		self.placebutton_two.pack_end(forward_two, False, True, 10)
 		self.passchecklabel = gtk.Label('Passwords do not match')
-		self.gmailwindow.pack_end(self.placebutton_two, False, False, 10)
+		self.emailwindow.pack_end(self.placebutton_two, False, False, 10)
 
 		self.twwindow = gtk.VBox(False, 0)
 		self.topt = gtk.HBox(False, 0)
@@ -319,13 +319,13 @@ class Account:
 		''' Go the previous page. '''
 		if self.pagenum == 1:
 			self.pagenum = 0
-			self.window.remove(self.gmailwindow)
+			self.window.remove(self.emailwindow)
 			self.window.add(self.vbox)
 		elif self.pagenum == 2:
 			self.pagenum = 1
 			self.window.remove(self.twwindow)
 			if self.mailcheck.get_active() == True:
-				self.window.add(self.gmailwindow)
+				self.window.add(self.emailwindow)
 			else:
 				self.window.add(self.vbox)
 		elif self.pagenum == 3:
@@ -339,7 +339,7 @@ class Account:
 				self.window.add(self.twwindow)
 			else:
 				if self.mailcheck.get_active() == True:
-					self.window.add(self.gmailwindow)
+					self.window.add(self.emailwindow)
 				else:
 					self.window.add(self.vbox)
 	def forward(self, widget):
@@ -350,16 +350,16 @@ class Account:
 			if self.pagenum == 0:
 				self.window.remove(self.vbox)
 				if self.mailcheck.get_active() == True:
-					self.window.add(self.gmailwindow)
+					self.window.add(self.emailwindow)
 					self.wait = True	
 				self.pagenum = 1
 		if self.wait == False:
 			if self.pagenum == 1:
 				if self.mailcheck.get_active() == True:
 					if self.passentry.get_text() == self.confentry.get_text():
-						self.window.remove(self.gmailwindow)
-						self.gmailusername = self.userentry.get_text()
-						self.gmailpassword = self.passentry.get_text()
+						self.window.remove(self.emailwindow)
+						self.emailusername = self.userentry.get_text()
+						self.emailpassword = self.passentry.get_text()
 						if self.twcheck.get_active() == True:
 							self.twoauth = tweepy.OAuthHandler('yE6isPwi45JwhEnHMphdcQ', '90JOy6EL74Y9tdkG7ya9P7XpwCpOUbATYWZvoYiuCw')
 							auth_url = self.twoauth.get_authorization_url()
@@ -368,9 +368,9 @@ class Account:
 							self.wait = True
 						self.pagenum = 2
 					else:
-						self.gmailwindow.remove(self.placebutton_two)
-						self.gmailwindow.pack_end(self.passchecklabel, False, False, 10)
-						self.gmailwindow.pack_end(self.placebutton_two, False, False, 10)
+						self.emailwindow.remove(self.placebutton_two)
+						self.emailwindow.pack_end(self.passchecklabel, False, False, 10)
+						self.emailwindow.pack_end(self.placebutton_two, False, False, 10)
 				else:
 					if self.twcheck.get_active() == True:
 						self.fbwindow.remove(self.scroll_window)
@@ -381,8 +381,8 @@ class Account:
 						self.window.add(self.twwindow)
 						self.wait = True
 					self.pagenum = 2
-					self.gmailusername = None
-					self.gmailpassword = None
+					self.emailusername = None
+					self.emailpassword = None
 		if self.wait == False:
 			if self.pagenum == 2:
 				if self.twcheck.get_active() == True:
@@ -429,10 +429,10 @@ class Account:
 		
 	def finish(self, widget):
 		try:
-			self.gmailusername
+			self.emailusername
 			self.twoauth
 			self.fboauth
-			return self.gmailusername,self.gmailpassword,self.twoauth,self.twcheck,self.fboauth
+			return self.emailusername,self.emailpassword,self.twoauth,self.twcheck,self.fboauth
 		except AttributeError:
 			sys.exit()
 
@@ -519,7 +519,7 @@ class Epistle:
 			self.actionhbox.pack_end(self.twimage, False, True, 0)
 		if self.Auth[1][1] != None:
 			self.mailimage = gtk.Image()
-			mailpixbuf = gtk.gdk.pixbuf_new_from_file('Gmail.png')
+			mailpixbuf = gtk.gdk.pixbuf_new_from_file('Email.png')
 			mailpixbuf = mailpixbuf.scale_simple(24, 24, gtk.gdk.INTERP_BILINEAR)
 			self.mailimage.set_from_pixbuf(mailpixbuf)
 			self.mailcheck.connect('toggled', self.showhidemail)
@@ -532,14 +532,14 @@ class Epistle:
 		self.notebook.append_page(self.composevbox, composelabel)
 		
 		if self.Auth[1][1] != None:
-			gmaillabel = gtk.Label('Gmail')
-			gmailevent = gtk.EventBox()
-			gmailevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
-			gmailevent.set_visible_window(False)
+			emaillabel = gtk.Label('Email')
+			emailevent = gtk.EventBox()
+			emailevent.set_events(gtk.gdk.BUTTON_PRESS_MASK)
+			emailevent.set_visible_window(False)
 			self.listed = False
-			gmailevent.connect_after('button-press-event', self.loadmail)
-			gmailevent.add(gmaillabel)
-			gtk.Widget.show(gmaillabel)
+			emailevent.connect_after('button-press-event', self.loadmail)
+			emailevent.add(emaillabel)
+			gtk.Widget.show(emaillabel)
 
 			self.viewmail = webkit.WebView()
 			self.scrollmsg = gtk.ScrolledWindow(None, None)
@@ -565,7 +565,7 @@ class Epistle:
 			column = gtk.TreeViewColumn(None, cell, text=0)
 			column.set_max_width(427)
 			self.treeview.append_column(column)
-			self.notebook.append_page(hpane, gmailevent)
+			self.notebook.append_page(hpane, emailevent)
 
 		if self.Auth[3][1] != None:
 			self.logintwitter()
@@ -605,7 +605,7 @@ class Epistle:
 			fbbox.add(scrollfb)
 			self.notebook.append_page(fbbox, fbevent)
 
-		self.gmailrf = True
+		self.emailrf = True
 		refreshimage = gtk.Image()
 		refreshimage.set_from_stock(gtk.STOCK_REFRESH,gtk.ICON_SIZE_SMALL_TOOLBAR)
 		refreshevent = gtk.EventBox()
@@ -634,7 +634,7 @@ class Epistle:
 	def startrf(self,a,b):
 		''' Starts refresh process. '''
 		if self.Auth[1][1] != None:
-			if self.gmailrf == True:
+			if self.emailrf == True:
 				Process(target=self.gmrefresh,args=()).start()
 				self.gmdone = False
 		if self.Auth[3][1] != None:
@@ -649,7 +649,7 @@ class Epistle:
 		if self.gmdone == False:
 			try:
 				self.gmData = self.gmq.get(block=False)
-				self.gmailrf = self.gmData[2]
+				self.eemailrf = self.gmData[2]
 				self.gmdone = True
 				if self.listed == False:
 					if self.gmData[0] < 50:
@@ -693,7 +693,7 @@ class Epistle:
 			pass
 
 	def getmail(self):
-		''' This function reads unread messages from Gmail. '''
+		''' This function reads unread messages from Email server. '''
 		try:
 			label,inbox = self.imap.select()
 			inbox = int(inbox[0])
@@ -731,7 +731,7 @@ class Epistle:
 			for row in self.database:
 				self.save = row[0]
 			self.Mail = Database().mailread()
-		self.gmailrf = True
+		self.emailrf = True
 
 	def send(self, widget):
 		''' Sends data. '''
@@ -799,9 +799,10 @@ class Epistle:
 
 	def gmrefresh(self):
 		''' Refreshes Mail data. '''
-		if self.gmailrf == True:
+		if self.emailrf == True:
 			try:
-				self.imap = imaplib.IMAP4_SSL('imap.gmail.com', 993)
+				server = self.Auth[1][1].partition('@')
+				self.imap = imaplib.IMAP4_SSL('imap.' + server[2], 993)
 				self.imap.login(self.Auth[1][1], self.Auth[2][1])
 			except:
 				pass
@@ -812,14 +813,11 @@ class Epistle:
 				self.imap.logout()
 			except AttributeError:
 				pass
-			self.gmq.put([self.save, self.Mail, self.gmailrf])
+			self.gmq.put([self.save, self.Mail, self.emailrf])
 			
 	def twrefresh(self):
 		''' Refreshes Twitter data. '''
-		try:
-			twitterupdate = self.Twitter.home_timeline()
-		except:
-			pass
+		twitterupdate = self.Twitter.home_timeline()
 		tweets = ''
 		x = True
 		y = 1
