@@ -20,7 +20,7 @@ class Database:
 		''' Initializes variables. '''
 		if sys.platform == 'linux2':
 			self.path = '/home/' + os.environ['USER'] + '/.local/share/epistle.db'
-		if sys.platform == 'win32':
+		elif sys.platform == 'win32':
 			self.path = 'C:/Users/' + os.getenv('USERNAME') + '/AppData/Local/epistle.db'
 		elif sys.platform == 'darwin':
 			self.path = '/Users/' + os.getenv('USERNAME') + '/epistle.db'
@@ -80,10 +80,11 @@ class Database:
 					#	fp.write(mailpart.get_payload(decode=True))
 					#	fp.close()
 					message = mailpart.get_payload(decode=True)
+					message = message.decode('utf-8')
 				self.database.execute('update auth set main = ? where id = 1', [self.save])
 				if header['Subject'] == None:
 					header['Subject'] = '(No Subject)'
-				header['Subject'] = unicode(header['Subject'], 'utf-8')
+				header['Subject'] = header['Subject'].decode('utf-8')
 				self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ self.save, header['From'], header['Subject'], header['To'], message ])
 				self.db.commit()
 			self.imap.logout()
@@ -717,11 +718,11 @@ class Epistle:
 					#	fp.write(mailpart.get_payload(decode=True))
 					#	fp.close()
 					message = mailpart.get_payload(decode=True)
-
+					message = message.decode('utf-8')
 				self.database.execute('update auth set main = ? where id = 1', [self.save])
 				if header['Subject'] == None:
 					header['Subject'] = '(No Subject)'
-				header['Subject'] = unicode(header['Subject'], 'utf-8')
+				header['Subject'] = header['Subject'].decode('utf-8')
 				self.database.execute('insert into mail (id,fromaddress,subject,toaddress,body) values (?,?,?,?,?)', [ self.save, header['From'], header['Subject'], header['To'], message ])
 				self.db.commit()
 			self.Mail = Database().mailread()
@@ -828,6 +829,7 @@ class Epistle:
 					y = y + 1
 				except IndexError:
 					x = False
+			tweets = tweets.decode('utf-8')
 		except UnboundLocalError:
 			tweets = '<h1>Could not load Tweets at this time.</h1>'
 		self.twq.put(tweets)
@@ -846,6 +848,7 @@ class Epistle:
 						fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
 				if fbfeed[x] == 'message':
 					fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
+			fbparsed = fbparsed.decode('utf-8')
 		except:
 			fbparsed = '<h1>Could not load Facebook posts at this time.</h1>'
 		self.fbq.put(fbparsed)
@@ -865,7 +868,9 @@ class Epistle:
 		y = self.gmData[0] + x - 50
 		to = self.gmData[1][y][1].replace('<', '&lt;')
 		to = to.replace('>', '&gt;')
-		self.viewmail.load_html_string('<p>To: ' + to + '</p><p>Subject: ' + self.gmData[1][y][2] + '</p><hr />' +self.gmData[1][y][4], 'file:///')
+		showing = '<p>To: ' + to + '</p><p>Subject: ' + self.gmData[1][y][2] + '</p><hr />' +self.gmData[1][y][4]
+		showing = showing.decode('utf-8')
+		self.viewmail.load_html_string(showing, 'file:///')
 
 	def logintwitter(self):
 		''' Logs into Twitter. '''
