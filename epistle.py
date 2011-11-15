@@ -9,6 +9,7 @@ import gobject
 import tweepy
 import webkit
 import email
+import json
 import gtk
 import sys
 import os
@@ -840,17 +841,19 @@ class Epistle:
 			fbposts = urllib2.urlopen('https://graph.facebook.com/me/home?access_token=' + self.Auth[5][1], timeout=20)
 			fbfeed = fbposts.read()
 			fbposts.close()
+#			fbparsed = json.loads(fbposts)
 			fbparsed = ''
 			fbfeed = fbfeed.split('"',fbfeed.count('"'))
-			for x in xrange(0,(len(fbfeed))):
+			for x in xrange(len(fbfeed),0):
 				if fbfeed[x] == 'name':
 					if fbfeed[x-2] == 'from': 
 						fbparsed = fbparsed + '<p><b>' + fbfeed[x+2] + '</b></p>'
 				if fbfeed[x] == 'message':
 					fbparsed = fbparsed + '<p>' + fbfeed[x+2] + '</p><hr />'
-			fbparsed = fbparsed.decode('utf-8')
+#<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img style="border: 1px solid #3    33; -webkit-border-radius: 5px; -webkit-box-shadow: 0 3px 5px rgba(0,0,0, .3);" src="' + twitterupdate[y].user.profile_image_url + '"></img></span><span style="floa    t: right; width: 90%;"><p><b>' + twitterupdate[y].user.screen_name + '</b></p><p>' + twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
 		except:
 			fbparsed = '<h1>Could not load Facebook posts at this time.</h1>'
+			
 		self.fbq.put(fbparsed)
 
 	def showmail(self, widget):
