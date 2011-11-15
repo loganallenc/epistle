@@ -825,7 +825,7 @@ class Epistle:
 		try:
 			while x == True:
 				try:
-					tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img src="' + twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + twitterupdate[y].user.screen_name + '</b></p><p>' + twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
+					tweets = tweets + '<div style="width: 100%; display: inline-block;"><span style="vertical-align: middle;"><br /><img style="border: 1px solid #333; -webkit-border-radius: 5px; -webkit-box-shadow: 0 3px 5px rgba(0,0,0, .3);" src="' + twitterupdate[y].user.profile_image_url + '"></img></span><span style="float: right; width: 90%;"><p><b>' + twitterupdate[y].user.screen_name + '</b></p><p>' + twitterupdate[y].text + '</p></span><hr style="width: 100%;" /></div>'
 					y = y + 1
 				except IndexError:
 					x = False
