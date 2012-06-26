@@ -81,7 +81,6 @@ class Database:
 					#	fp.write(mailpart.get_payload(decode=True))
 					#	fp.close()
 					message = mailpart.get_payload(decode=True)
-					message = message.decode('utf-8')
 				self.database.execute('update auth set main = ? where id = 1', [self.save])
 				if header['Subject'] == None:
 					header['Subject'] = '(No Subject)'
@@ -719,7 +718,6 @@ class Epistle:
 					#	fp.write(mailpart.get_payload(decode=True))
 					#	fp.close()
 					message = mailpart.get_payload(decode=True)
-					message = message.decode('utf-8')
 				self.database.execute('update auth set main = ? where id = 1', [self.save])
 				if header['Subject'] == None:
 					header['Subject'] = '(No Subject)'
